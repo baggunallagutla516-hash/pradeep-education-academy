@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-sand-50 font-sans text-ink-900 antialiased;
+    background-image: theme('backgroundImage.mesh');
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    @apply bg-lagoon-200 text-ink-900;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-lagoon-500;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .anim-delay-1 {
+    animation-delay: 80ms;
+  }
+  .anim-delay-2 {
+    animation-delay: 160ms;
+  }
+  .anim-delay-3 {
+    animation-delay: 260ms;
+  }
+  .anim-delay-4 {
+    animation-delay: 360ms;
+  }
+  .anim-delay-5 {
+    animation-delay: 460ms;
+  }
+  .anim-delay-6 {
+    animation-delay: 560ms;
+  }
+
+  .title-mix {
+    background-image: linear-gradient(
+      115deg,
+      #0b1c28 0%,
+      #147361 28%,
+      #e8852f 55%,
+      #115c4f 78%,
+      #0b1c28 100%
+    );
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
