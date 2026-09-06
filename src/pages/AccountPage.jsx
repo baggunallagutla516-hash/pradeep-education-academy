@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pencil, UserRound, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { UserRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/authApi';
-import { CLASS_FALLBACK } from '../constants/site';
+import { SITE } from '../constants/site';
 import { getErrorMessage } from '../utils/errors';
+import { classLabel } from '../utils/classLabel';
 import { PageShell } from '../components/layout/PageShell';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Select } from '../components/ui/Select';
 import { Alert } from '../components/ui/Alert';
 import { EmptyState } from '../components/ui/EmptyState';
 import { LoadingState } from '../components/ui/LoadingState';
@@ -39,27 +38,8 @@ function formatDate(value) {
   }
 }
 
-function formFromStudent(student) {
-  return {
-    fullName: student.fullName || '',
-    email: student.email || '',
-    phone: student.phone || '',
-    studentClass: student.studentClass || '',
-    schoolName: student.schoolName || '',
-    rollNumber: student.rollNumber || '',
-  };
-}
-
 export function AccountPage() {
-  const { student, updateProfile } = useAuth();
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState(() => (student ? formFromStudent(student) : null));
-  const [classes, setClasses] = useState(CLASS_FALLBACK);
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [saving, setSaving] = useState(false);
-
+  const { student } = useAuth();
   const [parents, setParents] = useState([]);
   const [parentsStatus, setParentsStatus] = useState('loading');
   const [parentsError, setParentsError] = useState('');
@@ -78,31 +58,8 @@ export function AccountPage() {
   }, []);
 
   useEffect(() => {
-    if (student && !editing) {
-      setForm(formFromStudent(student));
-    }
-  }, [student, editing]);
-
-  useEffect(() => {
     loadParents();
   }, [loadParents]);
-
-  useEffect(() => {
-    let active = true;
-    authApi
-      .classes()
-      .then(({ data }) => {
-        if (!active) return;
-        const list = data.data.classes || [];
-        setClasses(list.length ? list : CLASS_FALLBACK);
-      })
-      .catch(() => {
-        if (active) setClasses(CLASS_FALLBACK);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   if (!student) {
     return (
@@ -116,96 +73,38 @@ export function AccountPage() {
     );
   }
 
-  function startEdit() {
-    setForm(formFromStudent(student));
-    setFieldErrors({});
-    setError('');
-    setSuccess('');
-    setEditing(true);
-  }
-
-  function cancelEdit() {
-    setForm(formFromStudent(student));
-    setFieldErrors({});
-    setError('');
-    setEditing(false);
-  }
-
-  function updateField(event) {
-    const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setFieldErrors((prev) => ({ ...prev, [name]: '' }));
-  }
-
-  function validate() {
-    const next = {};
-    if (!form.fullName.trim() || form.fullName.trim().length < 2) {
-      next.fullName = 'Full name must be at least 2 characters.';
-    }
-    if (!form.email.trim()) {
-      next.email = 'Email is required.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-      next.email = 'Enter a valid email address.';
-    }
-    const phone = form.phone.replace(/\D/g, '').slice(-10);
-    if (!/^[6-9]\d{9}$/.test(phone)) {
-      next.phone = 'Enter a valid 10-digit Indian mobile number.';
-    }
-    if (!form.studentClass) {
-      next.studentClass = 'Please select your class.';
-    }
-    setFieldErrors(next);
-    return Object.keys(next).length === 0;
-  }
-
-  async function handleSave(event) {
-    event.preventDefault();
-    setError('');
-    setSuccess('');
-    if (!validate()) return;
-
-    setSaving(true);
-    try {
-      await updateProfile({
-        fullName: form.fullName.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        studentClass: form.studentClass,
-        schoolName: form.schoolName.trim(),
-        rollNumber: form.rollNumber.trim(),
-      });
-      setEditing(false);
-      setSuccess('Profile updated successfully.');
-    } catch (err) {
-      setError(getErrorMessage(err, 'Could not update profile. Please try again.'));
-    } finally {
-      setSaving(false);
-    }
-  }
-
   return (
     <PageShell
       embedded
       eyebrow="Account"
       title="My account"
       description="These details were saved during registration and will appear on results and certificates later."
-      actions={
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge tone="lagoon">{student.studentClass}</Badge>
-          {!editing ? (
-            <Button variant="secondary" size="sm" onClick={startEdit}>
-              <Pencil className="h-4 w-4" />
-              Edit
-            </Button>
-          ) : null}
-        </div>
-      }
+      actions={<Badge tone="lagoon">{classLabel(student)}</Badge>}
     >
-      {success ? (
-        <Alert type="success" title="Saved" onClose={() => setSuccess('')} className="mb-4">
-          {success}
-        </Alert>
-      ) : null}
+      <Alert type="info" title="Need a change?" className="mb-4">
+        Profile details cannot be edited here. Contact the academy admin to update your information
+        via{' '}
+        <a
+          href={SITE.whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-lagoon-700 underline underline-offset-2"
+        >
+          WhatsApp
+        </a>
+        ,{' '}
+        <a
+          href={`mailto:${SITE.supportEmail}`}
+          className="font-semibold text-lagoon-700 underline underline-offset-2"
+        >
+          {SITE.supportEmail}
+        </a>
+        , or the{' '}
+        <Link to="/contact" className="font-semibold text-lagoon-700 underline underline-offset-2">
+          contact form
+        </Link>
+        .
+      </Alert>
 
       <Card>
         <div className="mb-4 flex items-center gap-3">
@@ -218,90 +117,16 @@ export function AccountPage() {
           </div>
         </div>
 
-        {editing ? (
-          <form className="space-y-4" onSubmit={handleSave} noValidate>
-            {error ? (
-              <Alert type="error" title="Update failed" onClose={() => setError('')}>
-                {error}
-              </Alert>
-            ) : null}
-
-            <Input
-              label="Full name"
-              name="fullName"
-              value={form.fullName}
-              onChange={updateField}
-              required
-              error={fieldErrors.fullName}
-            />
-            <Input
-              label="Email"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={updateField}
-              required
-              error={fieldErrors.email}
-            />
-            <Input
-              label="Phone"
-              name="phone"
-              value={form.phone}
-              onChange={updateField}
-              required
-              error={fieldErrors.phone}
-              hint="10-digit Indian mobile number"
-            />
-            <Select
-              label="Class"
-              name="studentClass"
-              value={form.studentClass}
-              onChange={updateField}
-              required
-              error={fieldErrors.studentClass}
-            >
-              <option value="">Select class</option>
-              {classes.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </Select>
-            <Input
-              label="School"
-              name="schoolName"
-              value={form.schoolName}
-              onChange={updateField}
-            />
-            <Input
-              label="Roll number"
-              name="rollNumber"
-              value={form.rollNumber}
-              onChange={updateField}
-            />
-
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Button type="submit" loading={saving}>
-                Save changes
-              </Button>
-              <Button type="button" variant="secondary" onClick={cancelEdit} disabled={saving}>
-                <X className="h-4 w-4" />
-                Cancel
-              </Button>
-            </div>
-          </form>
-        ) : (
-          <dl>
-            <DetailRow label="Full name" value={student.fullName} />
-            <DetailRow label="Email" value={student.email} />
-            <DetailRow label="Phone" value={student.phone} />
-            <DetailRow label="Class" value={student.studentClass} />
-            <DetailRow label="School" value={student.schoolName} />
-            <DetailRow label="Roll number" value={student.rollNumber} />
-            <DetailRow label="Member since" value={formatDate(student.createdAt)} />
-            <DetailRow label="Last login" value={formatDate(student.lastLoginAt)} />
-          </dl>
-        )}
+        <dl>
+          <DetailRow label="Full name" value={student.fullName} />
+          <DetailRow label="Email" value={student.email} />
+          <DetailRow label="Phone" value={student.phone} />
+          <DetailRow label="Class" value={classLabel(student)} />
+          <DetailRow label="School" value={student.schoolName} />
+          <DetailRow label="Roll number" value={student.rollNumber} />
+          <DetailRow label="Member since" value={formatDate(student.createdAt)} />
+          <DetailRow label="Last login" value={formatDate(student.lastLoginAt)} />
+        </dl>
       </Card>
 
       <Card className="mt-6">

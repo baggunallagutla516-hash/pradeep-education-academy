@@ -19,8 +19,14 @@ export const adminApi = {
   student(id) {
     return api.get(`/admin/students/${id}`);
   },
+  updateStudent(id, payload) {
+    return api.patch(`/admin/students/${id}`, payload);
+  },
   setStudentActive(id, isActive) {
     return api.patch(`/admin/students/${id}/active`, { isActive });
+  },
+  deleteStudent(id) {
+    return api.delete(`/admin/students/${id}`);
   },
   addParentToStudent(studentId, payload) {
     return api.post(`/admin/students/${studentId}/parents`, payload);
@@ -42,25 +48,6 @@ export const adminApi = {
   },
   unlinkParentStudent(payload) {
     return api.post('/admin/parents/unlink', payload);
-  },
-  posts() {
-    return api.get('/admin/posts');
-  },
-  post(id) {
-    return api.get(`/admin/posts/${id}`);
-  },
-  createPost(formData) {
-    return api.post('/admin/posts', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  },
-  updatePost(id, formData) {
-    return api.patch(`/admin/posts/${id}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-  },
-  deletePost(id) {
-    return api.delete(`/admin/posts/${id}`);
   },
   news() {
     return api.get('/admin/news');
@@ -105,6 +92,26 @@ export const adminApi = {
   deleteContactQuery(id) {
     return api.delete(`/admin/contact-queries/${id}`);
   },
+  settings() {
+    return api.get('/admin/settings');
+  },
+  uploadLogo(formData) {
+    return api.post('/admin/settings/logo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  removeLogo() {
+    return api.delete('/admin/settings/logo');
+  },
+  createClass(payload) {
+    return api.post('/admin/settings/classes', payload);
+  },
+  updateClass(id, payload) {
+    return api.patch(`/admin/settings/classes/${id}`, payload);
+  },
+  deleteClass(id) {
+    return api.delete(`/admin/settings/classes/${id}`);
+  },
 };
 
 export const contentApi = {
@@ -116,6 +123,9 @@ export const contentApi = {
   },
   news() {
     return api.get('/content/news');
+  },
+  site() {
+    return api.get('/content/site');
   },
 };
 

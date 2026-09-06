@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 import { authApi } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
-import { CLASS_FALLBACK } from '../constants/site';
 import { getErrorMessage } from '../utils/errors';
 import { PageShell } from '../components/layout/PageShell';
 import { Alert } from '../components/ui/Alert';
@@ -42,12 +41,7 @@ export function RegisterPage() {
     setClassesError('');
     try {
       const { data } = await authApi.classes();
-      const list = data.data.classes || [];
-      if (list.length === 0) {
-        setClasses(CLASS_FALLBACK);
-      } else {
-        setClasses(list);
-      }
+      setClasses(data.data.classes || []);
       setClassesStatus('ready');
     } catch (err) {
       setClassesStatus('error');
@@ -206,8 +200,8 @@ export function RegisterPage() {
               >
                 <option value="">Select class</option>
                 {classes.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
+                  <option key={item.id} value={item.id}>
+                    {item.name}
                   </option>
                 ))}
               </Select>
@@ -271,6 +265,11 @@ export function RegisterPage() {
           Parent?{' '}
           <Link to="/parent/login" className="font-semibold text-lagoon-700 hover:underline">
             Parent login
+          </Link>
+          {' · '}
+          Educator?{' '}
+          <Link to="/educator/register" className="font-semibold text-lagoon-700 hover:underline">
+            Educator registration
           </Link>
         </p>
       </Card>

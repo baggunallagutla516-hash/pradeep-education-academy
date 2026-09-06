@@ -1,17 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import {
-  ChevronsLeft,
-  ChevronsRight,
-  LayoutDashboard,
-  LogOut,
-  UserRound,
-  Users,
-} from 'lucide-react';
+import { LayoutDashboard, LogOut, UserRound, Users } from 'lucide-react';
 import { useParentAuth } from '../../context/ParentAuthContext';
 import { SITE } from '../../constants/site';
 import { getErrorMessage } from '../../utils/errors';
 import { cn } from '../../utils/cn';
+import { SidebarCollapseToggle } from '../layout/SidebarCollapseToggle';
+import { SiteLogoMark } from '../layout/SiteLogoMark';
 
 const STORAGE_KEY = 'parent-sidebar-expanded';
 
@@ -74,9 +69,13 @@ export function ParentSidebar({ expanded, onExpandedChange }) {
           to="/parent/dashboard"
           title={SITE.name}
           aria-label={SITE.name}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ember-500 text-white shadow-soft transition hover:scale-[1.03]"
+          className="transition hover:scale-[1.03]"
         >
-          <Users className="h-5 w-5" />
+          <SiteLogoMark
+            fallbackTone="ember"
+            boxClassName="h-10 w-10 rounded-xl shadow-soft"
+            iconClassName="h-5 w-5"
+          />
         </Link>
         {expanded ? (
           <span className="min-w-0 truncate font-display text-sm font-extrabold leading-tight text-ink-900">
@@ -85,7 +84,7 @@ export function ParentSidebar({ expanded, onExpandedChange }) {
         ) : null}
       </div>
 
-      <div className={cn('mb-3 h-px bg-ink-900/10', expanded ? 'mx-1' : 'w-8')} />
+      <SidebarCollapseToggle expanded={expanded} onExpandedChange={onExpandedChange} />
 
       <nav
         aria-label="Parent menu"
@@ -97,27 +96,6 @@ export function ParentSidebar({ expanded, onExpandedChange }) {
       </nav>
 
       <div className={cn('mt-auto flex flex-col gap-2', expanded ? '' : 'items-center')}>
-        <button
-          type="button"
-          title={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
-          aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
-          aria-expanded={expanded}
-          onClick={() => onExpandedChange(!expanded)}
-          className={cn(
-            'flex h-10 items-center rounded-xl text-ink-800/55 transition hover:bg-ink-900/5 hover:text-ink-800',
-            expanded ? 'w-full gap-3 px-3' : 'w-10 justify-center'
-          )}
-        >
-          {expanded ? (
-            <>
-              <ChevronsLeft className="h-5 w-5 shrink-0" strokeWidth={1.85} aria-hidden />
-              <span className="text-sm font-semibold">Collapse</span>
-            </>
-          ) : (
-            <ChevronsRight className="h-5 w-5" strokeWidth={1.85} aria-hidden />
-          )}
-        </button>
-
         <button
           type="button"
           title="Logout"

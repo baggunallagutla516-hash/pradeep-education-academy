@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FileImage, MessageSquare, Newspaper, Users, Eye } from 'lucide-react';
+import { MessageSquare, Newspaper, Users, Eye } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { getErrorMessage } from '../../utils/errors';
 import { PageShell } from '../../components/layout/PageShell';
@@ -77,12 +77,6 @@ export function AdminDashboardPage() {
             value={stats.contactQueries.total}
             hint={`${stats.contactQueries.new} new`}
             to="/admin/contact-queries"
-          />
-          <StatCard
-            icon={FileImage}
-            label="Posts"
-            value={stats.posts.total}
-            to="/admin/posts"
           />
           <StatCard
             icon={Newspaper}

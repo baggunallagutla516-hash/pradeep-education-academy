@@ -112,8 +112,8 @@ export function ContactPage() {
         <Card>
           <h2 className="font-display text-2xl font-bold text-ink-900">Send a query</h2>
           <p className="mt-2 text-sm text-ink-900/60">
-            Your message is saved securely. Email delivery to the inbox will be connected in a later
-            stage — for now every query is stored and acknowledged here.
+            Your message is sent to {SITE.supportEmail} and also stored securely so the academy can
+            follow up.
           </p>
 
           {error ? (

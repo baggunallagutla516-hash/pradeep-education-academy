@@ -104,6 +104,11 @@ export function ParentLoginPage() {
             <Link to="/login" className="font-semibold text-lagoon-700 hover:underline">
               Student login
             </Link>
+            {' · '}
+            Educator?{' '}
+            <Link to="/educator/login" className="font-semibold text-lagoon-700 hover:underline">
+              Educator login
+            </Link>
           </p>
         </Card>
       </div>

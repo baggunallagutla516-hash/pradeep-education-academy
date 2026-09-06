@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Download } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
+import { classLabel } from '../../utils/classLabel';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -107,7 +108,7 @@ export function AdminWorksheetsPage() {
                   <Badge tone={item.isPublished ? 'lagoon' : 'ink'}>
                     {item.isPublished ? 'Published' : 'Draft'}
                   </Badge>
-                  <Badge tone="ink">{item.studentClass}</Badge>
+                  <Badge tone="ink">{classLabel(item)}</Badge>
                 </div>
                 <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
                 <p className="mt-1 line-clamp-2 text-sm text-ink-900/60">

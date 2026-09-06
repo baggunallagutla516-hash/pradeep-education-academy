@@ -1,17 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Download, FileStack } from 'lucide-react';
-import { worksheetApi } from '../api/adminApi';
-import { useAuth } from '../context/AuthContext';
-import { mediaUrl } from '../utils/media';
-import { getErrorMessage } from '../utils/errors';
-import { classLabel } from '../utils/classLabel';
-import { PageShell } from '../components/layout/PageShell';
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
-import { LoadingState } from '../components/ui/LoadingState';
-import { ErrorState } from '../components/ui/ErrorState';
-import { EmptyState } from '../components/ui/EmptyState';
+import { educatorApi } from '../../api/educatorApi';
+import { mediaUrl } from '../../utils/media';
+import { getErrorMessage } from '../../utils/errors';
+import { classLabel } from '../../utils/classLabel';
+import { PageShell } from '../../components/layout/PageShell';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
+import { Select } from '../../components/ui/Select';
+import { LoadingState } from '../../components/ui/LoadingState';
+import { ErrorState } from '../../components/ui/ErrorState';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 function formatBytes(bytes) {
   if (!bytes) return '';
@@ -20,43 +20,70 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function WorksheetsPage() {
-  const { student } = useAuth();
+export function EducatorWorksheetsPage() {
   const [worksheets, setWorksheets] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [classFilter, setClassFilter] = useState('');
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
 
-  async function load() {
+  const load = useCallback(async () => {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await worksheetApi.list();
-      setWorksheets(data.data.worksheets);
+      const params = classFilter ? { studentClass: classFilter } : undefined;
+      const { data } = await educatorApi.worksheets(params);
+      setWorksheets(data.data.worksheets || []);
+      if (Array.isArray(data.data.classes) && data.data.classes.length > 0) {
+        setClasses(data.data.classes);
+      }
       setStatus('ready');
     } catch (err) {
       setStatus('error');
       setError(getErrorMessage(err, 'Could not load worksheets.'));
     }
-  }
+  }, [classFilter]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   return (
     <PageShell
       embedded
       eyebrow="Resources"
       title="Worksheets & files"
-      description="Download question papers, slides, and study resources for your class."
-      actions={<Badge>{classLabel(student) || 'Student'}</Badge>}
+      description="Published resources for all classes. Filter by class if you want a shorter list."
+      actions={
+        <div className="w-full min-w-[11rem] sm:w-48">
+          <Select
+            label="Class filter"
+            name="studentClass"
+            value={classFilter}
+            onChange={(event) => setClassFilter(event.target.value)}
+          >
+            <option value="">All classes</option>
+            {classes.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+      }
     >
       {status === 'loading' ? <LoadingState label="Loading worksheets…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
       {status === 'ready' && worksheets.length === 0 ? (
         <EmptyState
           title="Nothing here yet"
-          description={`No worksheets have been uploaded for ${classLabel(student) || 'your class'} yet. Check back soon.`}
+          description={
+            classFilter
+              ? `No published worksheets for ${
+                  classes.find((c) => c.id === classFilter)?.name || 'this class'
+                } yet.`
+              : 'No published worksheets are available yet. Check back soon.'
+          }
           icon={FileStack}
         />
       ) : null}
@@ -71,6 +98,9 @@ export function WorksheetsPage() {
                   alt=""
                   className="h-full w-full object-cover"
                 />
+                <div className="absolute left-3 top-3">
+                  <Badge>{classLabel(item)}</Badge>
+                </div>
               </div>
               <div className="p-4">
                 <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>

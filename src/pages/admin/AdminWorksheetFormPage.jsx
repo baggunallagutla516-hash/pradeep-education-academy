@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { CLASS_FALLBACK } from '../../constants/site';
+import { authApi } from '../../api/authApi';
 import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
 import { PageShell } from '../../components/layout/PageShell';
@@ -18,7 +18,7 @@ import { ErrorState } from '../../components/ui/ErrorState';
 const emptyForm = {
   title: '',
   description: '',
-  studentClass: CLASS_FALLBACK[0],
+  studentClass: '',
   isPublished: 'true',
 };
 
@@ -28,40 +28,56 @@ export function AdminWorksheetFormPage() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState(emptyForm);
+  const [classes, setClasses] = useState([]);
   const [coverFile, setCoverFile] = useState(null);
   const [resourceFile, setResourceFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState('');
   const [existingFileName, setExistingFileName] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(isEdit);
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!isEdit) return;
     let active = true;
     setLoading(true);
-    adminApi
-      .worksheet(id)
-      .then(({ data }) => {
+    setLoadError('');
+
+    async function load() {
+      try {
+        const classesRes = await authApi.classes();
         if (!active) return;
-        const item = data.data.worksheet;
-        setForm({
-          title: item.title,
-          description: item.description || '',
-          studentClass: item.studentClass,
-          isPublished: item.isPublished ? 'true' : 'false',
-        });
-        setCoverPreview(mediaUrl(item.coverImageUrl));
-        setExistingFileName(item.fileName || 'Uploaded file');
+        const list = classesRes.data.data.classes || [];
+        setClasses(list);
+
+        if (isEdit) {
+          const { data } = await adminApi.worksheet(id);
+          if (!active) return;
+          const item = data.data.worksheet;
+          setForm({
+            title: item.title,
+            description: item.description || '',
+            studentClass: item.studentClass || '',
+            isPublished: item.isPublished ? 'true' : 'false',
+          });
+          setCoverPreview(mediaUrl(item.coverImageUrl));
+          setExistingFileName(item.fileName || 'Uploaded file');
+        } else {
+          setForm((prev) => ({
+            ...prev,
+            studentClass: list[0]?.id || '',
+          }));
+        }
         setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!active) return;
-        setLoadError(getErrorMessage(err, 'Could not load worksheet.'));
+        setLoadError(getErrorMessage(err, 'Could not load form.'));
         setLoading(false);
-      });
+      }
+    }
+
+    load();
     return () => {
       active = false;
     };
@@ -134,7 +150,7 @@ export function AdminWorksheetFormPage() {
 
   if (loadError) {
     return (
-      <PageShell embedded title="Edit worksheet">
+      <PageShell embedded title={isEdit ? 'Edit worksheet' : 'New worksheet'}>
         <ErrorState description={loadError} onRetry={() => window.location.reload()} />
       </PageShell>
     );
@@ -187,9 +203,10 @@ export function AdminWorksheetFormPage() {
             required
             error={fieldErrors.studentClass}
           >
-            {CLASS_FALLBACK.map((c) => (
-              <option key={c} value={c}>
-                {c}
+            <option value="">Select class</option>
+            {classes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
               </option>
             ))}
           </Select>
@@ -217,14 +234,12 @@ export function AdminWorksheetFormPage() {
             </label>
             {fieldErrors.coverImage ? (
               <p className="mt-1 text-xs font-medium text-red-600">{fieldErrors.coverImage}</p>
-            ) : (
-              <p className="mt-1 text-xs text-ink-900/55">JPEG, PNG, WebP, or GIF · max 25MB</p>
-            )}
+            ) : null}
             {coverPreview ? (
               <img
                 src={coverPreview}
                 alt=""
-                className="mt-3 h-40 w-full max-w-md rounded-xl object-cover"
+                className="mt-3 h-36 w-full rounded-xl object-cover"
               />
             ) : null}
           </div>
@@ -232,30 +247,24 @@ export function AdminWorksheetFormPage() {
           <div>
             <label className="block space-y-1.5">
               <span className="text-sm font-semibold text-ink-800">
-                File{!isEdit ? <span className="ml-0.5 text-ember-600">*</span> : null}
+                Worksheet file{!isEdit ? <span className="ml-0.5 text-ember-600">*</span> : null}
               </span>
               <input
                 type="file"
-                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,image/jpeg,image/png,image/webp,image/gif,application/pdf"
                 onChange={onFileChange}
                 className="block w-full text-sm text-ink-800 file:mr-3 file:rounded-lg file:border-0 file:bg-lagoon-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-lagoon-800"
               />
             </label>
             {fieldErrors.file ? (
               <p className="mt-1 text-xs font-medium text-red-600">{fieldErrors.file}</p>
-            ) : (
-              <p className="mt-1 text-xs text-ink-900/55">
-                PDF, Word, PowerPoint, Excel, ZIP, or image · max 25MB
-                {isEdit && existingFileName && !resourceFile
-                  ? ` · current: ${existingFileName}`
-                  : ''}
-                {resourceFile ? ` · selected: ${resourceFile.name}` : ''}
-              </p>
-            )}
+            ) : null}
+            {existingFileName && !resourceFile ? (
+              <p className="mt-1 text-xs text-ink-900/50">Current: {existingFileName}</p>
+            ) : null}
           </div>
 
           <Button type="submit" loading={saving}>
-            {isEdit ? 'Save changes' : 'Upload worksheet'}
+            {isEdit ? 'Save changes' : 'Create worksheet'}
           </Button>
         </form>
       </Card>

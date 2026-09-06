@@ -1,28 +1,24 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
+  FileStack,
   LayoutDashboard,
   LogOut,
-  MessageSquare,
-  Newspaper,
-  FileStack,
-  Settings,
-  Users,
+  UserRound,
 } from 'lucide-react';
-import { useAdminAuth } from '../../context/AdminAuthContext';
+import { useEducatorAuth } from '../../context/EducatorAuthContext';
 import { SITE } from '../../constants/site';
 import { getErrorMessage } from '../../utils/errors';
 import { cn } from '../../utils/cn';
 import { SidebarCollapseToggle } from '../layout/SidebarCollapseToggle';
 import { SiteLogoMark } from '../layout/SiteLogoMark';
-const STORAGE_KEY = 'admin-sidebar-expanded';
+
+const STORAGE_KEY = 'educator-sidebar-expanded';
 
 const links = [
-  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/admin/students', label: 'Students', icon: Users },
-  { to: '/admin/contact-queries', label: 'Contact', icon: MessageSquare },
-  { to: '/admin/worksheets', label: 'Worksheets', icon: FileStack },
-  { to: '/admin/news', label: 'News', icon: Newspaper },
+  { to: '/educator/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/educator/worksheets', label: 'Worksheets', icon: FileStack },
+  { to: '/educator/account', label: 'My account', icon: UserRound },
 ];
 
 function RailLink({ to, label, icon: Icon, end, expanded }) {
@@ -48,8 +44,8 @@ function RailLink({ to, label, icon: Icon, end, expanded }) {
   );
 }
 
-export function AdminSidebar({ expanded, onExpandedChange }) {
-  const { logout, admin } = useAdminAuth();
+export function EducatorSidebar({ expanded, onExpandedChange }) {
+  const { logout, educator } = useEducatorAuth();
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -58,9 +54,9 @@ export function AdminSidebar({ expanded, onExpandedChange }) {
     setLoggingOut(true);
     try {
       await logout();
-      navigate('/admin/login');
+      navigate('/');
     } catch (err) {
-      window.alert(getErrorMessage(err, 'Could not log out.'));
+      window.alert(getErrorMessage(err, 'Could not log out. Please try again.'));
     } finally {
       setLoggingOut(false);
     }
@@ -75,21 +71,25 @@ export function AdminSidebar({ expanded, onExpandedChange }) {
     >
       <div className={cn('mb-3 flex items-center', expanded ? 'gap-2.5 px-1' : 'justify-center')}>
         <Link
-          to="/admin"
-          title="Admin"
-          aria-label="Admin dashboard"
+          to="/educator/dashboard"
+          title={SITE.name}
+          aria-label={SITE.name}
           className="transition hover:scale-[1.03]"
         >
           <SiteLogoMark
-            fallbackTone="ink"
+            fallbackTone="ember"
             boxClassName="h-10 w-10 rounded-xl shadow-soft"
             iconClassName="h-5 w-5"
           />
         </Link>
         {expanded ? (
           <div className="min-w-0">
-            <p className="truncate font-display text-sm font-extrabold text-ink-900">Admin</p>
-            <p className="truncate text-[11px] text-ink-900/50">{admin?.fullName || SITE.name}</p>
+            <p className="truncate font-display text-sm font-extrabold leading-tight text-ink-900">
+              Educator portal
+            </p>
+            <p className="truncate text-[11px] text-ink-900/50">
+              {educator?.fullName || SITE.name}
+            </p>
           </div>
         ) : null}
       </div>
@@ -97,7 +97,7 @@ export function AdminSidebar({ expanded, onExpandedChange }) {
       <SidebarCollapseToggle expanded={expanded} onExpandedChange={onExpandedChange} />
 
       <nav
-        aria-label="Admin menu"
+        aria-label="Educator menu"
         className={cn('flex flex-1 flex-col gap-2', expanded ? '' : 'items-center')}
       >
         {links.map((link) => (
@@ -106,7 +106,6 @@ export function AdminSidebar({ expanded, onExpandedChange }) {
       </nav>
 
       <div className={cn('mt-auto flex flex-col gap-2', expanded ? '' : 'items-center')}>
-        <RailLink to="/admin/settings" label="Settings" icon={Settings} expanded={expanded} />
         <button
           type="button"
           title="Logout"
@@ -118,7 +117,7 @@ export function AdminSidebar({ expanded, onExpandedChange }) {
             expanded ? 'w-full gap-3 px-3' : 'w-10 justify-center'
           )}
         >
-          <LogOut className="h-5 w-5 shrink-0" strokeWidth={1.85} />
+          <LogOut className="h-5 w-5 shrink-0" strokeWidth={1.85} aria-hidden />
           {expanded ? <span className="text-sm font-semibold">Logout</span> : null}
         </button>
       </div>
@@ -126,7 +125,7 @@ export function AdminSidebar({ expanded, onExpandedChange }) {
   );
 }
 
-export function useAdminSidebarExpanded() {
+export function useEducatorSidebarExpanded() {
   const [expanded, setExpanded] = useState(() => {
     try {
       return localStorage.getItem(STORAGE_KEY) === '1';

@@ -68,16 +68,6 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:h-[4.25rem] sm:px-6 lg:px-8">
         <BrandMark compact />
 
-        {!isAuthenticated ? (
-          <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
-            {publicLinks.map((link) => (
-              <NavItem key={link.to + link.label} to={link.to} label={link.label} />
-            ))}
-          </nav>
-        ) : (
-          <div className="hidden md:block" />
-        )}
-
         <div className="hidden items-center gap-2 md:flex">
           {isLoading ? (
             <span className="text-sm text-ink-900/50">Checking session…</span>
@@ -96,18 +86,11 @@ export function Navbar() {
               </Button>
             </>
           ) : (
-            <>
-              <Link to="/login">
-                <Button variant="ghost" size="sm">
-                  Log in
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button size="sm" variant="ember">
-                  Register
-                </Button>
-              </Link>
-            </>
+            <nav className="flex items-center gap-1" aria-label="Primary">
+              {publicLinks.map((link) => (
+                <NavItem key={link.to + link.label} to={link.to} label={link.label} />
+              ))}
+            </nav>
           )}
         </div>
 
@@ -143,60 +126,41 @@ export function Navbar() {
                   />
                 ))
               : null}
-            <div
-              className={cn(
-                'flex flex-col gap-2',
-                !isAuthenticated ? 'mt-3 border-t border-ink-900/8 pt-3' : ''
-              )}
-            >
-              {isAuthenticated ? (
-                <>
-                  <p className="px-3 text-sm text-ink-900/60">
-                    Signed in as <strong>{student?.fullName}</strong>
-                  </p>
-                  <Link
-                    to="/dashboard"
-                    className="rounded-xl px-3 py-2 text-sm font-semibold text-ink-800"
-                    onClick={() => setOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    to="/account"
-                    className="rounded-xl px-3 py-2 text-sm font-semibold text-ink-800"
-                    onClick={() => setOpen(false)}
-                  >
-                    My Account
-                  </Link>
-                  <Button variant="secondary" onClick={handleLogout} loading={loggingOut}>
-                    <LogOut className="h-4 w-4" />
-                    Logout
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" onClick={() => setOpen(false)}>
-                    <Button variant="secondary" fullWidth>
-                      Log in
-                    </Button>
-                  </Link>
-                  <Link to="/register" onClick={() => setOpen(false)}>
-                    <Button variant="ember" fullWidth>
-                      Create student account
-                    </Button>
-                  </Link>
-                </>
-              )}
+            {isAuthenticated ? (
+              <div className="flex flex-col gap-2">
+                <p className="px-3 text-sm text-ink-900/60">
+                  Signed in as <strong>{student?.fullName}</strong>
+                </p>
+                <Link
+                  to="/dashboard"
+                  className="rounded-xl px-3 py-2 text-sm font-semibold text-ink-800"
+                  onClick={() => setOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/account"
+                  className="rounded-xl px-3 py-2 text-sm font-semibold text-ink-800"
+                  onClick={() => setOpen(false)}
+                >
+                  My Account
+                </Link>
+                <Button variant="secondary" onClick={handleLogout} loading={loggingOut}>
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
+              </div>
+            ) : (
               <a
                 href={SITE.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-xl px-3 py-2 text-center text-sm font-semibold text-lagoon-700"
+                className="mt-2 rounded-xl px-3 py-2 text-center text-sm font-semibold text-lagoon-700"
                 onClick={() => setOpen(false)}
               >
                 WhatsApp {SITE.whatsappNumber}
               </a>
-            </div>
+            )}
           </nav>
         </div>
       ) : null}

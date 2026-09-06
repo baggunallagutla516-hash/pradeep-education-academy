@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 import { useParentAuth } from '../../context/ParentAuthContext';
 import { parentApi } from '../../api/parentApi';
 import { getErrorMessage } from '../../utils/errors';
+import { classLabel } from '../../utils/classLabel';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -63,7 +64,7 @@ export function ParentDashboardPage() {
                   <h2 className="font-display text-lg font-bold text-ink-900">{child.fullName}</h2>
                   <p className="mt-1 truncate text-sm text-ink-900/55">{child.email}</p>
                 </div>
-                <Badge>{child.studentClass}</Badge>
+                <Badge>{classLabel(child)}</Badge>
               </div>
               <dl className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between gap-3">

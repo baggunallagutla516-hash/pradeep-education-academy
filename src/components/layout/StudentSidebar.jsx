@@ -1,18 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import {
-  ChevronsLeft,
-  ChevronsRight,
-  FileStack,
-  LayoutDashboard,
-  LogOut,
-  UserRound,
-} from 'lucide-react';
+import { FileStack, LayoutDashboard, LogOut, UserRound } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { SITE } from '../../constants/site';
 import { getErrorMessage } from '../../utils/errors';
 import { cn } from '../../utils/cn';
-
+import { SidebarCollapseToggle } from './SidebarCollapseToggle';
+import { SiteLogoMark } from './SiteLogoMark';
 const STORAGE_KEY = 'student-sidebar-expanded';
 
 const links = [
@@ -40,9 +34,7 @@ function RailLink({ to, label, icon: Icon, end, expanded, onNavigate }) {
       }
     >
       <Icon className="h-5 w-5 shrink-0" strokeWidth={1.85} aria-hidden />
-      {expanded ? (
-        <span className="truncate text-sm font-semibold">{label}</span>
-      ) : null}
+      {expanded ? <span className="truncate text-sm font-semibold">{label}</span> : null}
     </NavLink>
   );
 }
@@ -72,28 +64,17 @@ export function StudentSidebar({ expanded, onExpandedChange }) {
         expanded ? 'w-56 px-3' : 'w-14 items-center'
       )}
     >
-      <div
-        className={cn(
-          'mb-3 flex items-center',
-          expanded ? 'gap-2.5 px-1' : 'justify-center'
-        )}
-      >
+      <div className={cn('mb-3 flex items-center', expanded ? 'gap-2.5 px-1' : 'justify-center')}>
         <Link
           to="/dashboard"
           title={SITE.name}
           aria-label={SITE.name}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-lagoon-600 text-white shadow-soft transition hover:scale-[1.03]"
+          className="transition hover:scale-[1.03]"
         >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
-            <path
-              d="M5 17V7l7 5 7-5v10"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <circle cx="12" cy="5.5" r="1.6" fill="#E8852F" />
-          </svg>
+          <SiteLogoMark
+            boxClassName="h-10 w-10 rounded-xl shadow-soft"
+            iconClassName="h-5 w-5"
+          />
         </Link>
         {expanded ? (
           <span className="min-w-0 truncate font-display text-sm font-extrabold leading-tight text-ink-900">
@@ -102,7 +83,7 @@ export function StudentSidebar({ expanded, onExpandedChange }) {
         ) : null}
       </div>
 
-      <div className={cn('mb-3 h-px bg-ink-900/10', expanded ? 'mx-1' : 'w-8')} />
+      <SidebarCollapseToggle expanded={expanded} onExpandedChange={onExpandedChange} />
 
       <nav
         aria-label="Student menu"
@@ -114,27 +95,6 @@ export function StudentSidebar({ expanded, onExpandedChange }) {
       </nav>
 
       <div className={cn('mt-auto flex flex-col gap-2', expanded ? '' : 'items-center')}>
-        <button
-          type="button"
-          title={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
-          aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
-          aria-expanded={expanded}
-          onClick={() => onExpandedChange(!expanded)}
-          className={cn(
-            'flex h-10 items-center rounded-xl text-ink-800/55 transition hover:bg-ink-900/5 hover:text-ink-800',
-            expanded ? 'w-full gap-3 px-3' : 'w-10 justify-center'
-          )}
-        >
-          {expanded ? (
-            <>
-              <ChevronsLeft className="h-5 w-5 shrink-0" strokeWidth={1.85} aria-hidden />
-              <span className="text-sm font-semibold">Collapse</span>
-            </>
-          ) : (
-            <ChevronsRight className="h-5 w-5" strokeWidth={1.85} aria-hidden />
-          )}
-        </button>
-
         <button
           type="button"
           title="Logout"

@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, UserRound } from 'lucide-react';
 import { parentApi } from '../../api/parentApi';
 import { getErrorMessage } from '../../utils/errors';
+import { classLabel } from '../../utils/classLabel';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -54,7 +55,7 @@ export function ParentChildDetailPage() {
       description="Profile details for a student linked to your parent account."
       actions={
         <div className="flex flex-wrap items-center gap-2">
-          {child ? <Badge>{child.studentClass}</Badge> : null}
+          {child ? <Badge>{classLabel(child)}</Badge> : null}
           <Link to="/parent/children">
             <Button variant="secondary" size="sm">
               <ArrowLeft className="h-4 w-4" />
@@ -82,7 +83,7 @@ export function ParentChildDetailPage() {
             <DetailRow label="Full name" value={child.fullName} />
             <DetailRow label="Email" value={child.email} />
             <DetailRow label="Phone" value={child.phone} />
-            <DetailRow label="Class" value={child.studentClass} />
+            <DetailRow label="Class" value={classLabel(child)} />
             <DetailRow label="School" value={child.schoolName} />
             <DetailRow label="Roll number" value={child.rollNumber} />
           </dl>

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, Pencil, Trash2 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { getErrorMessage } from '../../utils/errors';
+import { classLabel } from '../../utils/classLabel';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -63,12 +64,36 @@ export function AdminStudentsPage() {
     }
   }
 
+  async function handleDelete(student) {
+    if (
+      !window.confirm(
+        `Delete ${student.fullName}? They will be removed from the list and cannot log in.`
+      )
+    ) {
+      return;
+    }
+    setActionError('');
+    setBusyId(student.id);
+    try {
+      await adminApi.deleteStudent(student.id);
+      setStudents((prev) => prev.filter((s) => s.id !== student.id));
+      setPagination((prev) => ({
+        ...prev,
+        total: Math.max(0, (prev.total || 1) - 1),
+      }));
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not delete student.'));
+    } finally {
+      setBusyId('');
+    }
+  }
+
   return (
     <PageShell
       embedded
       eyebrow="Admin"
       title="Students"
-      description="Search registered students and activate or deactivate accounts."
+      description="Search registered students, activate or deactivate accounts, or soft-delete a student."
     >
       <Card className="mb-4">
         <form
@@ -122,14 +147,17 @@ export function AdminStudentsPage() {
       {status === 'ready' && students.length > 0 ? (
         <div className="space-y-3">
           {students.map((student) => (
-            <Card key={student.id} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Card
+              key={student.id}
+              className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+            >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-display text-lg font-bold text-ink-900">{student.fullName}</p>
                   <Badge tone={student.isActive ? 'lagoon' : 'ink'}>
                     {student.isActive ? 'Active' : 'Inactive'}
                   </Badge>
-                  <Badge>{student.studentClass}</Badge>
+                  <Badge>{classLabel(student)}</Badge>
                 </div>
                 <p className="mt-1 truncate text-sm text-ink-900/60">
                   {student.email} · {student.phone}
@@ -141,6 +169,12 @@ export function AdminStudentsPage() {
                     View
                   </Button>
                 </Link>
+                <Link to={`/admin/students/${student.id}/edit`}>
+                  <Button variant="secondary" size="sm">
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit
+                  </Button>
+                </Link>
                 <Button
                   size="sm"
                   variant={student.isActive ? 'danger' : 'primary'}
@@ -148,6 +182,15 @@ export function AdminStudentsPage() {
                   onClick={() => toggleActive(student)}
                 >
                   {student.isActive ? 'Deactivate' : 'Activate'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  loading={busyId === student.id}
+                  onClick={() => handleDelete(student)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
                 </Button>
               </div>
             </Card>

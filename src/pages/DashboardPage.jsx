@@ -12,6 +12,7 @@ import {
   Trophy,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { classLabel } from '../utils/classLabel';
 import { PageShell } from '../components/layout/PageShell';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -77,12 +78,12 @@ export function DashboardPage() {
       eyebrow="Dashboard"
       title={`Hello, ${student?.fullName?.split(' ')[0] || 'student'}`}
       description="You are logged in. Open work sheets for your class, or check back as more tools unlock."
-      actions={<Badge>{student?.studentClass || 'Student'}</Badge>}
+      actions={<Badge>{classLabel(student) || 'Student'}</Badge>}
     >
       <section className="mb-10">
         <h2 className="mb-2 font-display text-xl font-bold text-ink-900">Available now</h2>
         <p className="mb-4 text-sm text-ink-900/60">
-          Resources shared by your teacher for {student?.studentClass || 'your class'}.
+          Resources shared by your teacher for {classLabel(student) || 'your class'}.
         </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {ready.map((item) => (

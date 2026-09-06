@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Users } from 'lucide-react';
 import { parentApi } from '../../api/parentApi';
 import { getErrorMessage } from '../../utils/errors';
+import { classLabel } from '../../utils/classLabel';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -61,7 +62,7 @@ export function ParentChildrenPage() {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-display text-lg font-bold text-ink-900">{child.fullName}</h2>
-                  <Badge>{child.studentClass}</Badge>
+                  <Badge>{classLabel(child)}</Badge>
                 </div>
                 <p className="mt-1 text-sm text-ink-900/55">
                   {child.email} · {child.phone}

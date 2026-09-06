@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { getErrorMessage } from '../utils/errors';
-import { PageShell } from '../components/layout/PageShell';
-import { Alert } from '../components/ui/Alert';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
+import { useEducatorAuth } from '../../context/EducatorAuthContext';
+import { getErrorMessage } from '../../utils/errors';
+import { PageShell } from '../../components/layout/PageShell';
+import { Alert } from '../../components/ui/Alert';
+import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
+import { Input } from '../../components/ui/Input';
 
-export function LoginPage() {
-  const { login } = useAuth();
+export function EducatorLoginPage() {
+  const { login } = useEducatorAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTo = location.state?.from || '/dashboard';
+  const redirectTo = location.state?.from || '/educator/dashboard';
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [fieldErrors, setFieldErrors] = useState({});
@@ -47,7 +47,7 @@ export function LoginPage() {
       });
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      setError(getErrorMessage(err, 'Login failed. Please check your details.'));
+      setError(getErrorMessage(err, 'Educator login failed. Please check your details.'));
     } finally {
       setSubmitting(false);
     }
@@ -55,9 +55,9 @@ export function LoginPage() {
 
   return (
     <PageShell
-      eyebrow="Student login"
-      title="Welcome back"
-      description="Sign in to open your dashboard, account details, and future learning tools."
+      eyebrow="Educator login"
+      title="Welcome, teacher"
+      description="Sign in to browse worksheets and resources for every class."
     >
       <div className="mx-auto max-w-md">
         <Card>
@@ -76,7 +76,7 @@ export function LoginPage() {
               onChange={updateField}
               required
               error={fieldErrors.email}
-              placeholder="student@email.com"
+              placeholder="teacher@email.com"
               autoComplete="email"
             />
             <Input
@@ -97,20 +97,15 @@ export function LoginPage() {
           </form>
 
           <p className="mt-5 text-center text-sm text-ink-900/65">
-            New student?{' '}
-            <Link to="/register" className="font-semibold text-lagoon-700 hover:underline">
+            New educator?{' '}
+            <Link to="/educator/register" className="font-semibold text-lagoon-700 hover:underline">
               Create an account
             </Link>
           </p>
           <p className="mt-2 text-center text-sm text-ink-900/55">
-            Parent?{' '}
-            <Link to="/parent/login" className="font-semibold text-lagoon-700 hover:underline">
-              Parent login
-            </Link>
-            {' · '}
-            Educator?{' '}
-            <Link to="/educator/login" className="font-semibold text-lagoon-700 hover:underline">
-              Educator login
+            Student instead?{' '}
+            <Link to="/login" className="font-semibold text-lagoon-700 hover:underline">
+              Student login
             </Link>
           </p>
         </Card>
