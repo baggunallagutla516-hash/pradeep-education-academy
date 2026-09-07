@@ -36,10 +36,11 @@ export function ContactPage() {
     if (!form.name.trim() || form.name.trim().length < 2) {
       next.name = 'Please enter your name (at least 2 characters).';
     }
-    if (!form.email.trim()) {
-      next.email = 'Email is required.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-      next.email = 'Enter a valid email address.';
+    const email = form.email.trim();
+    if (!email) {
+      next.email = 'A valid email is required so we can reply to you.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      next.email = 'Enter a valid email address (example: you@gmail.com).';
     }
     if (form.phone.trim() && !/^[6-9]\d{9}$/.test(form.phone.replace(/\D/g, '').slice(-10))) {
       next.phone = 'Phone must be a valid 10-digit Indian mobile number.';
@@ -112,8 +113,8 @@ export function ContactPage() {
         <Card>
           <h2 className="font-display text-2xl font-bold text-ink-900">Send a query</h2>
           <p className="mt-2 text-sm text-ink-900/60">
-            Your message is sent to {SITE.supportEmail} and also stored securely so the academy can
-            follow up.
+            Use a valid email — the academy replies to that address. Your message is also stored in
+            the admin Contact list.
           </p>
 
           {error ? (
@@ -152,8 +153,9 @@ export function ContactPage() {
                 onChange={updateField}
                 required
                 error={fieldErrors.email}
-                placeholder="you@email.com"
+                placeholder="you@gmail.com"
                 autoComplete="email"
+                hint="Required — we reply to this address"
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">

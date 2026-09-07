@@ -35,16 +35,18 @@ export function SiteLogoMark({
     });
   }, []);
 
+  const sizeClass = boxClassName || 'h-11 w-11';
+
   if (logoUrl) {
     return (
       <span
         className={cn(
-          'flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-lift ring-1 ring-ink-900/8',
-          boxClassName,
+          'flex items-center justify-center overflow-hidden rounded-2xl bg-white shadow-lift ring-1 ring-ink-900/8',
+          sizeClass,
           className
         )}
       >
-        <img src={mediaUrl(logoUrl)} alt="" className="h-full w-full object-contain p-1" />
+        <img src={mediaUrl(logoUrl)} alt="" className="h-full w-full object-contain p-0.5" />
       </span>
     );
   }
@@ -59,9 +61,9 @@ export function SiteLogoMark({
   return (
     <span
       className={cn(
-        'flex h-11 w-11 items-center justify-center rounded-2xl shadow-lift',
+        'flex items-center justify-center rounded-2xl shadow-lift',
         toneClass,
-        boxClassName,
+        sizeClass,
         className
       )}
     >

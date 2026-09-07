@@ -8,7 +8,10 @@ export function BrandMark({ className, compact = false, tone = 'light' }) {
 
   return (
     <Link to="/" className={cn('group inline-flex items-center gap-3', className)}>
-      <SiteLogoMark className="transition group-hover:scale-[1.03]" />
+      <SiteLogoMark
+        className="transition group-hover:scale-[1.03]"
+        boxClassName="h-12 w-12 sm:h-14 sm:w-14"
+      />
       <span className="min-w-0 leading-tight">
         <span
           className={cn(

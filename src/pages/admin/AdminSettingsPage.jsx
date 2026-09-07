@@ -156,7 +156,8 @@ export function AdminSettingsPage() {
           <Card>
             <h2 className="font-display text-lg font-bold text-ink-900">Website logo</h2>
             <p className="mt-1 text-sm text-ink-900/55">
-              Shown in the site header. JPEG, PNG, WebP, or GIF up to 2 MB.
+              Shown in the site header. Stored on Supabase Storage. JPEG, PNG, WebP, or GIF up to 2
+              MB.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-4">
               <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-lagoon-100 text-lagoon-700">
