@@ -3,5 +3,5 @@ export const SITE = {
   tagline: 'Learn with clarity. Grow with confidence.',
   whatsappNumber: '9505820072',
   whatsappUrl: 'https://wa.me/919505820072',
-  supportEmail: 'pradeep.acad.infor@gmail.com',
+  supportEmail: 'pradeep.acad.info@gmail.com',
 };
