@@ -22,4 +22,10 @@ export const educatorApi = {
   worksheet(id) {
     return api.get(`/educator/worksheets/${id}`);
   },
+  unitTests(params) {
+    return api.get('/educator/unit-tests', { params });
+  },
+  unitTest(id) {
+    return api.get(`/educator/unit-tests/${id}`);
+  },
 };

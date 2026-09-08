@@ -4,6 +4,7 @@ import {
   FileStack,
   LayoutDashboard,
   LogOut,
+  PenLine,
   UserRound,
 } from 'lucide-react';
 import { useEducatorAuth } from '../../context/EducatorAuthContext';
@@ -18,6 +19,7 @@ const STORAGE_KEY = 'educator-sidebar-expanded';
 const links = [
   { to: '/educator/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/educator/worksheets', label: 'Worksheets', icon: FileStack },
+  { to: '/educator/unit-tests', label: 'Unit tests', icon: PenLine },
   { to: '/educator/account', label: 'My account', icon: UserRound },
 ];
 

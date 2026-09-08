@@ -6,6 +6,7 @@ export function ErrorState({
   title = 'Something went wrong',
   description,
   onRetry,
+  retryLabel,
   className,
 }) {
   return (
@@ -25,8 +26,8 @@ export function ErrorState({
       ) : null}
       {onRetry ? (
         <Button className="mt-6" variant="secondary" onClick={onRetry}>
-          <RefreshCw className="h-4 w-4" />
-          Try again
+          {retryLabel ? null : <RefreshCw className="h-4 w-4" />}
+          {retryLabel || 'Try again'}
         </Button>
       ) : null}
     </div>

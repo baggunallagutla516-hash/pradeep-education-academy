@@ -24,24 +24,27 @@ const ready = [
     icon: FileStack,
     to: '/worksheets',
   },
-];
-
-const upcoming = [
   {
     title: 'Unit test',
-    description: 'Chapter-wise unit tests with marks and feedback.',
+    description: 'Download the question paper for each unit of your class.',
     icon: PenLine,
+    to: '/unit-tests',
   },
   {
     title: 'D.P.P.',
-    description: 'Daily practice problems assigned for regular revision.',
+    description: 'Daily practice problems. Attempt them online and see your score instantly.',
     icon: ClipboardList,
+    to: '/dpps',
   },
   {
     title: 'Slip test',
-    description: 'Short classroom slip tests and quick score updates.',
+    description: 'Chapter and topic tests. Attempt them online and see your score instantly.',
     icon: FileText,
+    to: '/slip-tests',
   },
+];
+
+const upcoming = [
   {
     title: 'Assessments',
     description: 'Periodic assessments to track subject-wise progress.',

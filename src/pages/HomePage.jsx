@@ -31,7 +31,7 @@ const whatYouGet = [
   {
     icon: BookOpenCheck,
     title: 'Practice & exams',
-    body: 'Unit tests, D.P.P., slip tests, and online exams as they unlock.',
+    body: 'Unit test papers, plus daily practice problems and slip tests you attempt online.',
   },
   {
     icon: Sparkles,
@@ -45,25 +45,29 @@ const readyFeatures = [
     title: 'Work sheets',
     description: 'Download question papers, slides, and study resources for your class.',
     icon: FileStack,
+    to: '/worksheets',
+  },
+  {
+    title: 'Unit test',
+    description: 'Download the question paper for each unit of your class.',
+    icon: PenLine,
+    to: '/unit-tests',
+  },
+  {
+    title: 'D.P.P.',
+    description: 'Daily practice problems. Attempt them online and see your score instantly.',
+    icon: ClipboardList,
+    to: '/dpps',
+  },
+  {
+    title: 'Slip test',
+    description: 'Chapter and topic tests. Attempt them online and see your score instantly.',
+    icon: FileText,
+    to: '/slip-tests',
   },
 ];
 
 const upcomingFeatures = [
-  {
-    title: 'Unit test',
-    description: 'Chapter-wise unit tests with marks and feedback.',
-    icon: PenLine,
-  },
-  {
-    title: 'D.P.P.',
-    description: 'Daily practice problems assigned for regular revision.',
-    icon: ClipboardList,
-  },
-  {
-    title: 'Slip test',
-    description: 'Short classroom slip tests and quick score updates.',
-    icon: FileText,
-  },
   {
     title: 'Assessments',
     description: 'Periodic assessments to track subject-wise progress.',
@@ -299,7 +303,7 @@ export function HomePage() {
                 <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink-900/60">{item.description}</p>
                 <Link
-                  to={isAuthenticated ? '/worksheets' : '/register'}
+                  to={isAuthenticated ? item.to : '/register'}
                   className="mt-4 inline-block"
                 >
                   <Button size="sm" variant="ember">

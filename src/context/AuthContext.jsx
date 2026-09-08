@@ -51,11 +51,9 @@ export function AuthProvider({ children }) {
     return data;
   }, []);
 
+  // New accounts start deactivated, so registration does not create a session.
   const register = useCallback(async (payload) => {
     const { data } = await authApi.register(payload);
-    setStudent(data.data.student);
-    setStatus('authenticated');
-    setError(null);
     return data;
   }, []);
 

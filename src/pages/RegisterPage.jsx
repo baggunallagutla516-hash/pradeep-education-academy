@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 import { authApi } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
@@ -26,7 +26,6 @@ const initialForm = {
 
 export function RegisterPage() {
   const { register } = useAuth();
-  const navigate = useNavigate();
 
   const [form, setForm] = useState(initialForm);
   const [classes, setClasses] = useState([]);
@@ -34,6 +33,7 @@ export function RegisterPage() {
   const [classesError, setClassesError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   async function loadClasses() {
@@ -93,7 +93,7 @@ export function RegisterPage() {
 
     setSubmitting(true);
     try {
-      await register({
+      const data = await register({
         fullName: form.fullName.trim(),
         email: form.email.trim(),
         phone: form.phone.trim(),
@@ -103,12 +103,37 @@ export function RegisterPage() {
         password: form.password,
         confirmPassword: form.confirmPassword,
       });
-      navigate('/dashboard', { replace: true });
+      setForm(initialForm);
+      setSuccess(
+        data?.message ||
+          'Registration successful. Your account is not active yet. Please contact the admin to activate it.'
+      );
     } catch (err) {
       setError(getErrorMessage(err, 'Registration failed. Please try again.'));
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (success) {
+    return (
+      <PageShell
+        eyebrow="Registration"
+        title="Account created"
+        description="Your account needs to be activated by the admin before you can log in."
+      >
+        <Card className="mx-auto max-w-2xl">
+          <Alert type="success" title="Registration successful">
+            {success}
+          </Alert>
+          <Link to="/login" className="mt-5 block">
+            <Button variant="secondary" fullWidth>
+              Go to login
+            </Button>
+          </Link>
+        </Card>
+      </PageShell>
+    );
   }
 
   if (classesStatus === 'loading') {
@@ -139,7 +164,7 @@ export function RegisterPage() {
     <PageShell
       eyebrow="Registration"
       title="Create your student account"
-      description="Fill in your details once. After login you will see your student menu and account page."
+      description="Fill in your details once. The admin will activate your account before you can log in."
     >
       <Card className="mx-auto max-w-2xl">
         {error ? (

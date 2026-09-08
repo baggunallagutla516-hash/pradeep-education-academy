@@ -31,6 +31,12 @@ export const adminApi = {
   addParentToStudent(studentId, payload) {
     return api.post(`/admin/students/${studentId}/parents`, payload);
   },
+  educators(params) {
+    return api.get('/admin/educators', { params });
+  },
+  setEducatorActive(id, isActive) {
+    return api.patch(`/admin/educators/${id}/active`, { isActive });
+  },
   parents(params) {
     return api.get('/admin/parents', { params });
   },
@@ -79,6 +85,61 @@ export const adminApi = {
   },
   deleteWorksheet(id) {
     return api.delete(`/admin/worksheets/${id}`);
+  },
+  unitTests() {
+    return api.get('/admin/unit-tests');
+  },
+  unitTest(id) {
+    return api.get(`/admin/unit-tests/${id}`);
+  },
+  createUnitTest(formData) {
+    return api.post('/admin/unit-tests', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  updateUnitTest(id, formData) {
+    return api.patch(`/admin/unit-tests/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  deleteUnitTest(id) {
+    return api.delete(`/admin/unit-tests/${id}`);
+  },
+  dpps() {
+    return api.get('/admin/dpps');
+  },
+  dpp(id) {
+    return api.get(`/admin/dpps/${id}`);
+  },
+  dppResults(id) {
+    return api.get(`/admin/dpps/${id}/results`);
+  },
+  createDpp(payload) {
+    return api.post('/admin/dpps', payload);
+  },
+  updateDpp(id, payload) {
+    return api.patch(`/admin/dpps/${id}`, payload);
+  },
+  deleteDpp(id) {
+    return api.delete(`/admin/dpps/${id}`);
+  },
+  slipTests() {
+    return api.get('/admin/slip-tests');
+  },
+  slipTest(id) {
+    return api.get(`/admin/slip-tests/${id}`);
+  },
+  slipTestResults(id) {
+    return api.get(`/admin/slip-tests/${id}/results`);
+  },
+  createSlipTest(payload) {
+    return api.post('/admin/slip-tests', payload);
+  },
+  updateSlipTest(id, payload) {
+    return api.patch(`/admin/slip-tests/${id}`, payload);
+  },
+  deleteSlipTest(id) {
+    return api.delete(`/admin/slip-tests/${id}`);
   },
   contactQueries(params) {
     return api.get('/admin/contact-queries', { params });
@@ -135,5 +196,50 @@ export const worksheetApi = {
   },
   get(id) {
     return api.get(`/worksheets/${id}`);
+  },
+};
+
+export const unitTestApi = {
+  list() {
+    return api.get('/unit-tests');
+  },
+  get(id) {
+    return api.get(`/unit-tests/${id}`);
+  },
+};
+
+export const dppApi = {
+  list() {
+    return api.get('/dpps');
+  },
+  get(id) {
+    return api.get(`/dpps/${id}`);
+  },
+  start(id) {
+    return api.post(`/dpps/${id}/start`);
+  },
+  submit(id, payload) {
+    return api.post(`/dpps/${id}/submit`, payload);
+  },
+  result(id) {
+    return api.get(`/dpps/${id}/result`);
+  },
+};
+
+export const slipTestApi = {
+  list() {
+    return api.get('/slip-tests');
+  },
+  get(id) {
+    return api.get(`/slip-tests/${id}`);
+  },
+  start(id) {
+    return api.post(`/slip-tests/${id}/start`);
+  },
+  submit(id, payload) {
+    return api.post(`/slip-tests/${id}/submit`, payload);
+  },
+  result(id) {
+    return api.get(`/slip-tests/${id}/result`);
   },
 };

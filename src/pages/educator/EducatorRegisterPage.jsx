@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 import { useEducatorAuth } from '../../context/EducatorAuthContext';
 import { getErrorMessage } from '../../utils/errors';
@@ -20,11 +20,11 @@ const initialForm = {
 
 export function EducatorRegisterPage() {
   const { register } = useEducatorAuth();
-  const navigate = useNavigate();
 
   const [form, setForm] = useState(initialForm);
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   function updateField(event) {
@@ -64,7 +64,7 @@ export function EducatorRegisterPage() {
 
     setSubmitting(true);
     try {
-      await register({
+      const data = await register({
         fullName: form.fullName.trim(),
         email: form.email.trim(),
         phone: form.phone.trim(),
@@ -72,7 +72,11 @@ export function EducatorRegisterPage() {
         password: form.password,
         confirmPassword: form.confirmPassword,
       });
-      navigate('/educator/dashboard', { replace: true });
+      setForm(initialForm);
+      setSuccess(
+        data?.message ||
+          'Registration successful. Your account is not active yet. Please contact the admin to activate it.'
+      );
     } catch (err) {
       setError(getErrorMessage(err, 'Registration failed. Please try again.'));
     } finally {
@@ -80,11 +84,32 @@ export function EducatorRegisterPage() {
     }
   }
 
+  if (success) {
+    return (
+      <PageShell
+        eyebrow="Educator registration"
+        title="Account created"
+        description="Your account needs to be activated by the admin before you can log in."
+      >
+        <Card className="mx-auto max-w-2xl">
+          <Alert type="success" title="Registration successful">
+            {success}
+          </Alert>
+          <Link to="/educator/login" className="mt-5 block">
+            <Button variant="secondary" fullWidth>
+              Go to educator login
+            </Button>
+          </Link>
+        </Card>
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell
       eyebrow="Educator registration"
       title="Create your teacher account"
-      description="Register once to access worksheets and resources across all classes."
+      description="Register once to access worksheets and resources. The admin will activate your account before you can log in."
     >
       <Card className="mx-auto max-w-2xl">
         {error ? (

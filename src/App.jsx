@@ -36,12 +36,28 @@ import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminStudentsPage } from './pages/admin/AdminStudentsPage';
 import { AdminStudentDetailPage } from './pages/admin/AdminStudentDetailPage';
 import { AdminStudentEditPage } from './pages/admin/AdminStudentEditPage';
+import { AdminEducatorsPage } from './pages/admin/AdminEducatorsPage';
 import { AdminNewsPage } from './pages/admin/AdminNewsPage';
 import { AdminWorksheetsPage } from './pages/admin/AdminWorksheetsPage';
 import { AdminWorksheetFormPage } from './pages/admin/AdminWorksheetFormPage';
+import { AdminUnitTestsPage } from './pages/admin/AdminUnitTestsPage';
+import { AdminUnitTestFormPage } from './pages/admin/AdminUnitTestFormPage';
+import { AdminDppsPage } from './pages/admin/AdminDppsPage';
+import { AdminDppFormPage } from './pages/admin/AdminDppFormPage';
+import { AdminDppResultsPage } from './pages/admin/AdminDppResultsPage';
+import { AdminSlipTestsPage } from './pages/admin/AdminSlipTestsPage';
+import { AdminSlipTestFormPage } from './pages/admin/AdminSlipTestFormPage';
+import { AdminSlipTestResultsPage } from './pages/admin/AdminSlipTestResultsPage';
 import { AdminContactQueriesPage } from './pages/admin/AdminContactQueriesPage';
 import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
 import { WorksheetsPage } from './pages/WorksheetsPage';
+import { UnitTestsPage } from './pages/UnitTestsPage';
+import { DppsPage } from './pages/DppsPage';
+import { DppAttemptPage } from './pages/DppAttemptPage';
+import { DppResultPage } from './pages/DppResultPage';
+import { SlipTestsPage } from './pages/SlipTestsPage';
+import { SlipTestAttemptPage } from './pages/SlipTestAttemptPage';
+import { SlipTestResultPage } from './pages/SlipTestResultPage';
 import { ParentLoginPage } from './pages/parent/ParentLoginPage';
 import { ParentDashboardPage } from './pages/parent/ParentDashboardPage';
 import { ParentChildrenPage } from './pages/parent/ParentChildrenPage';
@@ -51,6 +67,7 @@ import { EducatorLoginPage } from './pages/educator/EducatorLoginPage';
 import { EducatorRegisterPage } from './pages/educator/EducatorRegisterPage';
 import { EducatorDashboardPage } from './pages/educator/EducatorDashboardPage';
 import { EducatorWorksheetsPage } from './pages/educator/EducatorWorksheetsPage';
+import { EducatorUnitTestsPage } from './pages/educator/EducatorUnitTestsPage';
 import { EducatorAccountPage } from './pages/educator/EducatorAccountPage';
 
 export default function App() {
@@ -132,6 +149,13 @@ export default function App() {
                 >
                   <Route path="dashboard" element={<DashboardPage />} />
                   <Route path="worksheets" element={<WorksheetsPage />} />
+                  <Route path="unit-tests" element={<UnitTestsPage />} />
+                  <Route path="dpps" element={<DppsPage />} />
+                  <Route path="dpps/:id/attempt" element={<DppAttemptPage />} />
+                  <Route path="dpps/:id/result" element={<DppResultPage />} />
+                  <Route path="slip-tests" element={<SlipTestsPage />} />
+                  <Route path="slip-tests/:id/attempt" element={<SlipTestAttemptPage />} />
+                  <Route path="slip-tests/:id/result" element={<SlipTestResultPage />} />
                   <Route path="account" element={<AccountPage />} />
                 </Route>
 
@@ -158,6 +182,7 @@ export default function App() {
                 >
                   <Route path="educator/dashboard" element={<EducatorDashboardPage />} />
                   <Route path="educator/worksheets" element={<EducatorWorksheetsPage />} />
+                  <Route path="educator/unit-tests" element={<EducatorUnitTestsPage />} />
                   <Route path="educator/account" element={<EducatorAccountPage />} />
                 </Route>
 
@@ -182,9 +207,21 @@ export default function App() {
                   <Route path="students" element={<AdminStudentsPage />} />
                   <Route path="students/:id" element={<AdminStudentDetailPage />} />
                   <Route path="students/:id/edit" element={<AdminStudentEditPage />} />
+                  <Route path="educators" element={<AdminEducatorsPage />} />
                   <Route path="worksheets" element={<AdminWorksheetsPage />} />
                   <Route path="worksheets/new" element={<AdminWorksheetFormPage />} />
                   <Route path="worksheets/:id/edit" element={<AdminWorksheetFormPage />} />
+                  <Route path="unit-tests" element={<AdminUnitTestsPage />} />
+                  <Route path="unit-tests/new" element={<AdminUnitTestFormPage />} />
+                  <Route path="unit-tests/:id/edit" element={<AdminUnitTestFormPage />} />
+                  <Route path="dpps" element={<AdminDppsPage />} />
+                  <Route path="dpps/new" element={<AdminDppFormPage />} />
+                  <Route path="dpps/:id/edit" element={<AdminDppFormPage />} />
+                  <Route path="dpps/:id/results" element={<AdminDppResultsPage />} />
+                  <Route path="slip-tests" element={<AdminSlipTestsPage />} />
+                  <Route path="slip-tests/new" element={<AdminSlipTestFormPage />} />
+                  <Route path="slip-tests/:id/edit" element={<AdminSlipTestFormPage />} />
+                  <Route path="slip-tests/:id/results" element={<AdminSlipTestResultsPage />} />
                   <Route path="news" element={<AdminNewsPage />} />
                   <Route path="contact-queries" element={<AdminContactQueriesPage />} />
                   <Route path="settings" element={<AdminSettingsPage />} />

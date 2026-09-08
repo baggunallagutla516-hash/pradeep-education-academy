@@ -5,6 +5,7 @@ import { adminApi } from '../../api/adminApi';
 import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
+import { formatBytes } from '../../utils/formatBytes';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -13,13 +14,6 @@ import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Alert } from '../../components/ui/Alert';
-
-function formatBytes(bytes) {
-  if (!bytes) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 export function AdminWorksheetsPage() {
   const [worksheets, setWorksheets] = useState([]);

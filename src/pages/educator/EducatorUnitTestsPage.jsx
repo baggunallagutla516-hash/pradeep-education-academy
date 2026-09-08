@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Download, FileStack } from 'lucide-react';
+import { Download, PenLine } from 'lucide-react';
 import { educatorApi } from '../../api/educatorApi';
 import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
 import { formatBytes } from '../../utils/formatBytes';
+import { unitLabel } from '../../utils/unitLabel';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -14,8 +15,8 @@ import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
 
-export function EducatorWorksheetsPage() {
-  const [worksheets, setWorksheets] = useState([]);
+export function EducatorUnitTestsPage() {
+  const [unitTests, setUnitTests] = useState([]);
   const [classes, setClasses] = useState([]);
   const [classFilter, setClassFilter] = useState('');
   const [status, setStatus] = useState('loading');
@@ -26,15 +27,15 @@ export function EducatorWorksheetsPage() {
     setError('');
     try {
       const params = classFilter ? { studentClass: classFilter } : undefined;
-      const { data } = await educatorApi.worksheets(params);
-      setWorksheets(data.data.worksheets || []);
+      const { data } = await educatorApi.unitTests(params);
+      setUnitTests(data.data.unitTests || []);
       if (Array.isArray(data.data.classes) && data.data.classes.length > 0) {
         setClasses(data.data.classes);
       }
       setStatus('ready');
     } catch (err) {
       setStatus('error');
-      setError(getErrorMessage(err, 'Could not load worksheets.'));
+      setError(getErrorMessage(err, 'Could not load unit tests.'));
     }
   }, [classFilter]);
 
@@ -45,9 +46,9 @@ export function EducatorWorksheetsPage() {
   return (
     <PageShell
       embedded
-      eyebrow="Resources"
-      title="Worksheets & files"
-      description="Published resources for all classes. Filter by class if you want a shorter list."
+      eyebrow="Practice"
+      title="Unit tests"
+      description="Published unit test papers for all classes. Filter by class if you want a shorter list."
       actions={
         <div className="w-full min-w-[11rem] sm:w-48">
           <Select
@@ -66,34 +67,41 @@ export function EducatorWorksheetsPage() {
         </div>
       }
     >
-      {status === 'loading' ? <LoadingState label="Loading worksheets…" /> : null}
+      {status === 'loading' ? <LoadingState label="Loading unit tests…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
-      {status === 'ready' && worksheets.length === 0 ? (
+      {status === 'ready' && unitTests.length === 0 ? (
         <EmptyState
           title="Nothing here yet"
           description={
             classFilter
-              ? `No published worksheets for ${
+              ? `No published unit tests for ${
                   classes.find((c) => c.id === classFilter)?.name || 'this class'
                 } yet.`
-              : 'No published worksheets are available yet. Check back soon.'
+              : 'No published unit tests are available yet. Check back soon.'
           }
-          icon={FileStack}
+          icon={PenLine}
         />
       ) : null}
 
-      {status === 'ready' && worksheets.length > 0 ? (
+      {status === 'ready' && unitTests.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {worksheets.map((item) => (
+          {unitTests.map((item) => (
             <Card key={item.id} className="overflow-hidden p-0">
               <div className="relative aspect-[16/10] bg-ink-900/5">
-                <img
-                  src={mediaUrl(item.coverImageUrl)}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute left-3 top-3">
+                {item.coverImageUrl ? (
+                  <img
+                    src={mediaUrl(item.coverImageUrl)}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-lagoon-100 text-lagoon-700">
+                    <PenLine className="h-10 w-10" aria-hidden />
+                  </div>
+                )}
+                <div className="absolute left-3 top-3 flex flex-wrap gap-2">
                   <Badge>{classLabel(item)}</Badge>
+                  <Badge tone="ember">{unitLabel(item)}</Badge>
                 </div>
               </div>
               <div className="p-4">

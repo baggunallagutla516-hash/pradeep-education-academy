@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Download, FileStack } from 'lucide-react';
-import { worksheetApi } from '../api/adminApi';
+import { Download, PenLine } from 'lucide-react';
+import { unitTestApi } from '../api/adminApi';
 import { useAuth } from '../context/AuthContext';
 import { mediaUrl } from '../utils/media';
 import { getErrorMessage } from '../utils/errors';
 import { classLabel } from '../utils/classLabel';
 import { formatBytes } from '../utils/formatBytes';
+import { unitLabel } from '../utils/unitLabel';
 import { PageShell } from '../components/layout/PageShell';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -14,9 +15,9 @@ import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { EmptyState } from '../components/ui/EmptyState';
 
-export function WorksheetsPage() {
+export function UnitTestsPage() {
   const { student } = useAuth();
-  const [worksheets, setWorksheets] = useState([]);
+  const [unitTests, setUnitTests] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
 
@@ -24,12 +25,12 @@ export function WorksheetsPage() {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await worksheetApi.list();
-      setWorksheets(data.data.worksheets);
+      const { data } = await unitTestApi.list();
+      setUnitTests(data.data.unitTests);
       setStatus('ready');
     } catch (err) {
       setStatus('error');
-      setError(getErrorMessage(err, 'Could not load worksheets.'));
+      setError(getErrorMessage(err, 'Could not load unit tests.'));
     }
   }
 
@@ -40,31 +41,40 @@ export function WorksheetsPage() {
   return (
     <PageShell
       embedded
-      eyebrow="Resources"
-      title="Worksheets & files"
-      description="Download question papers, slides, and study resources for your class."
+      eyebrow="Practice"
+      title="Unit tests"
+      description="Download the question paper for each unit of your class."
       actions={<Badge>{classLabel(student) || 'Student'}</Badge>}
     >
-      {status === 'loading' ? <LoadingState label="Loading worksheets…" /> : null}
+      {status === 'loading' ? <LoadingState label="Loading unit tests…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
-      {status === 'ready' && worksheets.length === 0 ? (
+      {status === 'ready' && unitTests.length === 0 ? (
         <EmptyState
           title="Nothing here yet"
-          description={`No worksheets have been uploaded for ${classLabel(student) || 'your class'} yet. Check back soon.`}
-          icon={FileStack}
+          description={`No unit tests have been uploaded for ${classLabel(student) || 'your class'} yet. Check back soon.`}
+          icon={PenLine}
         />
       ) : null}
 
-      {status === 'ready' && worksheets.length > 0 ? (
+      {status === 'ready' && unitTests.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {worksheets.map((item) => (
+          {unitTests.map((item) => (
             <Card key={item.id} className="overflow-hidden p-0">
               <div className="relative aspect-[16/10] bg-ink-900/5">
-                <img
-                  src={mediaUrl(item.coverImageUrl)}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                {item.coverImageUrl ? (
+                  <img
+                    src={mediaUrl(item.coverImageUrl)}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-lagoon-100 text-lagoon-700">
+                    <PenLine className="h-10 w-10" aria-hidden />
+                  </div>
+                )}
+                <div className="absolute left-3 top-3">
+                  <Badge tone="ember">{unitLabel(item)}</Badge>
+                </div>
               </div>
               <div className="p-4">
                 <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>

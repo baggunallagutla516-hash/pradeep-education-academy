@@ -1,16 +1,18 @@
-import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 const styles = {
   error: 'border-red-200 bg-red-50 text-red-800',
   success: 'border-lagoon-200 bg-lagoon-50 text-lagoon-900',
   info: 'border-sky-200 bg-sky-50 text-sky-900',
+  warning: 'border-ember-400/40 bg-ember-400/10 text-ember-700',
 };
 
 const icons = {
   error: AlertCircle,
   success: CheckCircle2,
   info: Info,
+  warning: AlertTriangle,
 };
 
 export function Alert({ type = 'info', title, children, onClose, className }) {

@@ -48,11 +48,9 @@ export function EducatorAuthProvider({ children }) {
     return data;
   }, []);
 
+  // New accounts start deactivated, so registration does not create a session.
   const register = useCallback(async (payload) => {
     const { data } = await educatorApi.register(payload);
-    setEducator(data.data.educator);
-    setStatus('authenticated');
-    setError(null);
     return data;
   }, []);
 

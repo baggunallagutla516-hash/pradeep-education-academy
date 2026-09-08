@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
+  ClipboardList,
+  FileText,
   LayoutDashboard,
   LogOut,
   MessageSquare,
   Newspaper,
   FileStack,
+  GraduationCap,
+  PenLine,
   Settings,
   Users,
 } from 'lucide-react';
@@ -20,8 +24,12 @@ const STORAGE_KEY = 'admin-sidebar-expanded';
 const links = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/students', label: 'Students', icon: Users },
+  { to: '/admin/educators', label: 'Educators', icon: GraduationCap },
   { to: '/admin/contact-queries', label: 'Contact', icon: MessageSquare },
   { to: '/admin/worksheets', label: 'Worksheets', icon: FileStack },
+  { to: '/admin/unit-tests', label: 'Unit tests', icon: PenLine },
+  { to: '/admin/dpps', label: 'D.P.P.', icon: ClipboardList },
+  { to: '/admin/slip-tests', label: 'Slip tests', icon: FileText },
   { to: '/admin/news', label: 'News', icon: Newspaper },
 ];
 

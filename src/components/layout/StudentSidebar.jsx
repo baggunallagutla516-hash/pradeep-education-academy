@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { FileStack, LayoutDashboard, LogOut, UserRound } from 'lucide-react';
+import {
+  ClipboardList,
+  FileStack,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  PenLine,
+  UserRound,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { SITE } from '../../constants/site';
 import { getErrorMessage } from '../../utils/errors';
@@ -12,6 +20,9 @@ const STORAGE_KEY = 'student-sidebar-expanded';
 const links = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/worksheets', label: 'Worksheets', icon: FileStack },
+  { to: '/unit-tests', label: 'Unit tests', icon: PenLine },
+  { to: '/dpps', label: 'D.P.P.', icon: ClipboardList },
+  { to: '/slip-tests', label: 'Slip tests', icon: FileText },
   { to: '/account', label: 'My Account', icon: UserRound },
 ];
 
