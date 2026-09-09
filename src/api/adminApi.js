@@ -34,8 +34,17 @@ export const adminApi = {
   educators(params) {
     return api.get('/admin/educators', { params });
   },
+  educator(id) {
+    return api.get(`/admin/educators/${id}`);
+  },
+  updateEducator(id, payload) {
+    return api.patch(`/admin/educators/${id}`, payload);
+  },
   setEducatorActive(id, isActive) {
     return api.patch(`/admin/educators/${id}/active`, { isActive });
+  },
+  deleteEducator(id) {
+    return api.delete(`/admin/educators/${id}`);
   },
   parents(params) {
     return api.get('/admin/parents', { params });

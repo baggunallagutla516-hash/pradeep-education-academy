@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Pencil, Search, Trash2 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { getErrorMessage } from '../../utils/errors';
 import { PageShell } from '../../components/layout/PageShell';
@@ -62,12 +63,36 @@ export function AdminEducatorsPage() {
     }
   }
 
+  async function handleDelete(educator) {
+    if (
+      !window.confirm(
+        `Delete ${educator.fullName}? They will be removed from the list and cannot log in.`
+      )
+    ) {
+      return;
+    }
+    setActionError('');
+    setBusyId(educator.id);
+    try {
+      await adminApi.deleteEducator(educator.id);
+      setEducators((prev) => prev.filter((e) => e.id !== educator.id));
+      setPagination((prev) => ({
+        ...prev,
+        total: Math.max(0, (prev.total || 1) - 1),
+      }));
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not delete educator.'));
+    } finally {
+      setBusyId('');
+    }
+  }
+
   return (
     <PageShell
       embedded
       eyebrow="Admin"
       title="Educators"
-      description="Newly registered educators stay inactive until you activate them here."
+      description="Search registered educators, activate or deactivate accounts, or remove an educator."
     >
       <Card className="mb-4">
         <form
@@ -138,6 +163,17 @@ export function AdminEducatorsPage() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
+                <Link to={`/admin/educators/${educator.id}`}>
+                  <Button variant="secondary" size="sm">
+                    View
+                  </Button>
+                </Link>
+                <Link to={`/admin/educators/${educator.id}/edit`}>
+                  <Button variant="secondary" size="sm">
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit
+                  </Button>
+                </Link>
                 <Button
                   size="sm"
                   variant={educator.isActive ? 'danger' : 'primary'}
@@ -145,6 +181,15 @@ export function AdminEducatorsPage() {
                   onClick={() => toggleActive(educator)}
                 >
                   {educator.isActive ? 'Deactivate' : 'Activate'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  loading={busyId === educator.id}
+                  onClick={() => handleDelete(educator)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
                 </Button>
               </div>
             </Card>

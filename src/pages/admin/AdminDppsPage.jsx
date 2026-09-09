@@ -13,6 +13,7 @@ import { Select } from '../../components/ui/Select';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
 
 export function AdminDppsPage() {
@@ -149,7 +150,7 @@ export function AdminDppsPage() {
                 <p className="mt-0.5 text-sm font-medium text-lagoon-700">{item.subject}</p>
               ) : null}
               {item.description ? (
-                <p className="mt-1 line-clamp-2 text-sm text-ink-900/60">{item.description}</p>
+                <ExpandableText text={item.description} lines={2} />
               ) : null}
 
               <p className="mt-3 text-xs text-ink-900/55">

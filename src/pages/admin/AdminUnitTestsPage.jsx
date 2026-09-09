@@ -15,6 +15,7 @@ import { Select } from '../../components/ui/Select';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
 
 export function AdminUnitTestsPage() {
@@ -161,9 +162,11 @@ export function AdminUnitTestsPage() {
                   <Badge tone="ember">{unitLabel(item)}</Badge>
                 </div>
                 <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
-                <p className="mt-1 line-clamp-2 text-sm text-ink-900/60">
-                  {item.description || item.fileName}
-                </p>
+                {item.description ? (
+                  <ExpandableText text={item.description} lines={2} />
+                ) : (
+                  <p className="mt-1 text-sm text-ink-900/60">{item.fileName}</p>
+                )}
                 {item.fileName ? (
                   <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-900/50">
                     <Download className="h-3.5 w-3.5" />

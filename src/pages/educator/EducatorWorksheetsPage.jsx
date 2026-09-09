@@ -13,6 +13,7 @@ import { Select } from '../../components/ui/Select';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { ExpandableText } from '../../components/ui/ExpandableText';
 
 export function EducatorWorksheetsPage() {
   const [worksheets, setWorksheets] = useState([]);
@@ -98,11 +99,7 @@ export function EducatorWorksheetsPage() {
               </div>
               <div className="p-4">
                 <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
-                {item.description ? (
-                  <p className="mt-1 line-clamp-3 text-sm leading-relaxed text-ink-900/60">
-                    {item.description}
-                  </p>
-                ) : null}
+                {item.description ? <ExpandableText text={item.description} /> : null}
                 <p className="mt-3 text-xs text-ink-900/50">
                   {item.fileName || 'Download'}
                   {item.fileSize ? ` · ${formatBytes(item.fileSize)}` : ''}

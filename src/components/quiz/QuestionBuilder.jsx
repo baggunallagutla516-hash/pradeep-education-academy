@@ -9,11 +9,25 @@ import { cn } from '../../utils/cn';
 
 export const MIN_OPTIONS = 2;
 export const MAX_OPTIONS = 6;
+export const MIN_BLANK_ANSWERS = 1;
+export const MAX_BLANK_ANSWERS = 6;
 
 let keyCounter = 0;
 function nextKey() {
   keyCounter += 1;
   return `q-${Date.now()}-${keyCounter}`;
+}
+
+function typeLabel(type) {
+  if (type === 'multiple') return 'Multi-select';
+  if (type === 'blank') return 'Fill in the blanks';
+  return 'Single choice';
+}
+
+function typeTone(type) {
+  if (type === 'multiple') return 'ember';
+  if (type === 'blank') return 'ink';
+  return 'lagoon';
 }
 
 export function makeEmptyQuestion() {
@@ -23,6 +37,7 @@ export function makeEmptyQuestion() {
     type: 'single',
     options: [{ text: '' }, { text: '' }, { text: '' }, { text: '' }],
     correctOptions: [],
+    correctAnswers: [''],
     marks: '1',
     explanation: '',
   };
@@ -30,12 +45,22 @@ export function makeEmptyQuestion() {
 
 /** Turns a saved question from the API into editable form state. */
 export function toEditableQuestion(question) {
+  const type = question.type || 'single';
   return {
     key: nextKey(),
     text: question.text || '',
-    type: question.type || 'single',
-    options: (question.options || []).map((option) => ({ text: option.text || '' })),
+    type,
+    options:
+      type === 'blank'
+        ? [{ text: '' }, { text: '' }, { text: '' }, { text: '' }]
+        : (question.options || []).map((option) => ({ text: option.text || '' })),
     correctOptions: [...(question.correctOptions || [])],
+    correctAnswers:
+      type === 'blank'
+        ? (question.correctAnswers || []).length > 0
+          ? question.correctAnswers.map((answer) => answer || '')
+          : ['']
+        : [''],
     marks: String(question.marks ?? '1'),
     explanation: question.explanation || '',
   };
@@ -43,14 +68,29 @@ export function toEditableQuestion(question) {
 
 /** Strips the local `key` and converts marks back to a number for the API. */
 export function toApiQuestions(questions) {
-  return questions.map((question) => ({
-    text: question.text,
-    type: question.type,
-    options: question.options.map((option) => ({ text: option.text })),
-    correctOptions: question.correctOptions,
-    marks: Number(question.marks),
-    explanation: question.explanation,
-  }));
+  return questions.map((question) => {
+    if (question.type === 'blank') {
+      return {
+        text: question.text,
+        type: 'blank',
+        options: [],
+        correctOptions: [],
+        correctAnswers: question.correctAnswers,
+        marks: Number(question.marks),
+        explanation: question.explanation,
+      };
+    }
+
+    return {
+      text: question.text,
+      type: question.type,
+      options: question.options.map((option) => ({ text: option.text })),
+      correctOptions: question.correctOptions,
+      correctAnswers: [],
+      marks: Number(question.marks),
+      explanation: question.explanation,
+    };
+  });
 }
 
 function QuestionCard({ question, index, total, onChange, onRemove, onMove }) {
@@ -59,10 +99,26 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove }) {
   }
 
   function changeType(nextType) {
-    // Going single-answer keeps at most one correct option so the state stays valid.
+    if (nextType === 'blank') {
+      update({
+        type: 'blank',
+        options: [{ text: '' }, { text: '' }, { text: '' }, { text: '' }],
+        correctOptions: [],
+        correctAnswers: question.correctAnswers?.length ? question.correctAnswers : [''],
+      });
+      return;
+    }
+
     const correctOptions =
       nextType === 'single' ? question.correctOptions.slice(0, 1) : question.correctOptions;
-    update({ type: nextType, correctOptions });
+    update({
+      type: nextType,
+      correctOptions,
+      options:
+        question.options?.length >= MIN_OPTIONS
+          ? question.options
+          : [{ text: '' }, { text: '' }, { text: '' }, { text: '' }],
+    });
   }
 
   function toggleCorrect(optionIndex) {
@@ -100,17 +156,38 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove }) {
     });
   }
 
+  function changeAcceptedAnswer(answerIndex, text) {
+    update({
+      correctAnswers: question.correctAnswers.map((answer, i) =>
+        i === answerIndex ? text : answer
+      ),
+    });
+  }
+
+  function addAcceptedAnswer() {
+    if (question.correctAnswers.length >= MAX_BLANK_ANSWERS) return;
+    update({ correctAnswers: [...question.correctAnswers, ''] });
+  }
+
+  function removeAcceptedAnswer(answerIndex) {
+    if (question.correctAnswers.length <= MIN_BLANK_ANSWERS) return;
+    update({
+      correctAnswers: question.correctAnswers.filter((_, i) => i !== answerIndex),
+    });
+  }
+
   const marksValue = Number(question.marks);
-  const noCorrectPicked = question.correctOptions.length === 0;
+  const isBlank = question.type === 'blank';
+  const noCorrectPicked = isBlank
+    ? !question.correctAnswers.some((answer) => answer.trim())
+    : question.correctOptions.length === 0;
 
   return (
     <div className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Badge tone="ink">Q{index + 1}</Badge>
-          <Badge tone={question.type === 'multiple' ? 'ember' : 'lagoon'}>
-            {question.type === 'multiple' ? 'Multi-select' : 'Single choice'}
-          </Badge>
+          <Badge tone={typeTone(question.type)}>{typeLabel(question.type)}</Badge>
           {Number.isFinite(marksValue) && marksValue > 0 ? (
             <span className="text-xs text-ink-900/50">
               {marksValue} mark{marksValue === 1 ? '' : 's'}
@@ -153,7 +230,11 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove }) {
         required
         value={question.text}
         onChange={(event) => update({ text: event.target.value })}
-        placeholder="Type the question here"
+        placeholder={
+          isBlank
+            ? 'e.g. The chemical symbol for water is ____'
+            : 'Type the question here'
+        }
       />
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -164,6 +245,7 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove }) {
         >
           <option value="single">Single choice (one answer)</option>
           <option value="multiple">Multi-select (more than one)</option>
+          <option value="blank">Fill in the Blanks</option>
         </Select>
         <Input
           label="Marks"
@@ -175,74 +257,131 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove }) {
         />
       </div>
 
-      <div className="mt-4">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-sm font-semibold text-ink-800">
-            Options
-            <span className="ml-2 font-normal text-ink-900/50">
-              {question.type === 'multiple'
-                ? 'Tick every correct option'
-                : 'Select the one correct option'}
+      {isBlank ? (
+        <div className="mt-4">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-sm font-semibold text-ink-800">
+              Accepted answers
+              <span className="ml-2 font-normal text-ink-900/50">
+                Matching is case-insensitive
+              </span>
             </span>
-          </span>
-          {question.options.length < MAX_OPTIONS ? (
-            <Button type="button" variant="ghost" size="sm" onClick={addOption}>
-              <Plus className="h-4 w-4" />
-              Add option
-            </Button>
-          ) : null}
-        </div>
+            {question.correctAnswers.length < MAX_BLANK_ANSWERS ? (
+              <Button type="button" variant="ghost" size="sm" onClick={addAcceptedAnswer}>
+                <Plus className="h-4 w-4" />
+                Add alternate
+              </Button>
+            ) : null}
+          </div>
 
-        <div className="space-y-2">
-          {question.options.map((option, optionIndex) => {
-            const isCorrect = question.correctOptions.includes(optionIndex);
-            return (
+          <div className="space-y-2">
+            {question.correctAnswers.map((answer, answerIndex) => (
               <div
-                key={optionIndex}
-                className={cn(
-                  'flex items-center gap-2 rounded-xl border px-3 py-2 transition',
-                  isCorrect ? 'border-lagoon-400 bg-lagoon-50' : 'border-ink-900/10 bg-white'
-                )}
+                key={answerIndex}
+                className="flex items-center gap-2 rounded-xl border border-lagoon-400 bg-lagoon-50 px-3 py-2"
               >
-                <input
-                  type={question.type === 'multiple' ? 'checkbox' : 'radio'}
-                  name={`correct-${question.key}`}
-                  checked={isCorrect}
-                  onChange={() => toggleCorrect(optionIndex)}
-                  aria-label={`Mark option ${optionLabel(optionIndex)} correct`}
-                  className="h-4 w-4 shrink-0 accent-lagoon-600"
-                />
                 <span className="w-5 shrink-0 text-sm font-bold text-ink-900/45">
-                  {optionLabel(optionIndex)}
+                  {answerIndex + 1}
                 </span>
                 <input
                   type="text"
-                  value={option.text}
-                  onChange={(event) => changeOptionText(optionIndex, event.target.value)}
-                  placeholder={`Option ${optionLabel(optionIndex)}`}
+                  value={answer}
+                  onChange={(event) => changeAcceptedAnswer(answerIndex, event.target.value)}
+                  placeholder={
+                    answerIndex === 0 ? 'Correct answer' : `Alternate ${answerIndex + 1}`
+                  }
                   className="h-9 w-full rounded-lg border border-ink-900/10 bg-white px-3 text-sm text-ink-900 transition placeholder:text-ink-900/35 focus:border-lagoon-500"
                 />
-                {question.options.length > MIN_OPTIONS ? (
+                {question.correctAnswers.length > MIN_BLANK_ANSWERS ? (
                   <button
                     type="button"
-                    aria-label={`Remove option ${optionLabel(optionIndex)}`}
-                    onClick={() => removeOption(optionIndex)}
+                    aria-label={`Remove accepted answer ${answerIndex + 1}`}
+                    onClick={() => removeAcceptedAnswer(answerIndex)}
                     className="shrink-0 rounded-lg p-1.5 text-ink-900/40 transition hover:bg-red-50 hover:text-red-500"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 ) : null}
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
 
-        {noCorrectPicked ? (
-          <p className="mt-2 text-xs font-medium text-ember-700">
-            Mark at least one option as correct.
-          </p>
-        ) : null}
-      </div>
+          {noCorrectPicked ? (
+            <p className="mt-2 text-xs font-medium text-ember-700">
+              Add at least one accepted answer.
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <div className="mt-4">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-sm font-semibold text-ink-800">
+              Options
+              <span className="ml-2 font-normal text-ink-900/50">
+                {question.type === 'multiple'
+                  ? 'Tick every correct option'
+                  : 'Select the one correct option'}
+              </span>
+            </span>
+            {question.options.length < MAX_OPTIONS ? (
+              <Button type="button" variant="ghost" size="sm" onClick={addOption}>
+                <Plus className="h-4 w-4" />
+                Add option
+              </Button>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            {question.options.map((option, optionIndex) => {
+              const isCorrect = question.correctOptions.includes(optionIndex);
+              return (
+                <div
+                  key={optionIndex}
+                  className={cn(
+                    'flex items-center gap-2 rounded-xl border px-3 py-2 transition',
+                    isCorrect ? 'border-lagoon-400 bg-lagoon-50' : 'border-ink-900/10 bg-white'
+                  )}
+                >
+                  <input
+                    type={question.type === 'multiple' ? 'checkbox' : 'radio'}
+                    name={`correct-${question.key}`}
+                    checked={isCorrect}
+                    onChange={() => toggleCorrect(optionIndex)}
+                    aria-label={`Mark option ${optionLabel(optionIndex)} correct`}
+                    className="h-4 w-4 shrink-0 accent-lagoon-600"
+                  />
+                  <span className="w-5 shrink-0 text-sm font-bold text-ink-900/45">
+                    {optionLabel(optionIndex)}
+                  </span>
+                  <input
+                    type="text"
+                    value={option.text}
+                    onChange={(event) => changeOptionText(optionIndex, event.target.value)}
+                    placeholder={`Option ${optionLabel(optionIndex)}`}
+                    className="h-9 w-full rounded-lg border border-ink-900/10 bg-white px-3 text-sm text-ink-900 transition placeholder:text-ink-900/35 focus:border-lagoon-500"
+                  />
+                  {question.options.length > MIN_OPTIONS ? (
+                    <button
+                      type="button"
+                      aria-label={`Remove option ${optionLabel(optionIndex)}`}
+                      onClick={() => removeOption(optionIndex)}
+                      className="shrink-0 rounded-lg p-1.5 text-ink-900/40 transition hover:bg-red-50 hover:text-red-500"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+
+          {noCorrectPicked ? (
+            <p className="mt-2 text-xs font-medium text-ember-700">
+              Mark at least one option as correct.
+            </p>
+          ) : null}
+        </div>
+      )}
 
       <div className="mt-3">
         <Textarea

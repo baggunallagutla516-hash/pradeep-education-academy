@@ -25,6 +25,7 @@ function Stat({ label, value, className }) {
 function ReviewQuestion({ item }) {
   const outcome = OUTCOMES[item.outcome] || OUTCOMES.unanswered;
   const OutcomeIcon = outcome.icon;
+  const isBlank = item.type === 'blank';
 
   return (
     <div className="rounded-2xl border border-ink-900/10 bg-white p-5 shadow-sm">
@@ -48,46 +49,74 @@ function ReviewQuestion({ item }) {
         {item.text}
       </p>
 
-      <div className="mt-3 space-y-2">
-        {item.options.map((option) => {
-          const isCorrect = item.correctOptions.includes(option.index);
-          const isPicked = item.selectedOptions.includes(option.index);
+      {isBlank ? (
+        <div className="mt-3 space-y-2">
+          <div
+            className={cn(
+              'rounded-xl border px-4 py-2.5 text-sm',
+              item.outcome === 'correct' && 'border-lagoon-400 bg-lagoon-50',
+              item.outcome === 'wrong' && 'border-red-300 bg-red-50',
+              item.outcome === 'unanswered' && 'border-ink-900/10 bg-white'
+            )}
+          >
+            <p className="text-[11px] font-bold uppercase tracking-wide text-ink-900/45">
+              Your answer
+            </p>
+            <p className="mt-1 font-medium text-ink-900">
+              {item.textAnswer?.trim() ? item.textAnswer : '—'}
+            </p>
+          </div>
+          <div className="rounded-xl border border-lagoon-400 bg-lagoon-50 px-4 py-2.5 text-sm">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-lagoon-800">
+              Accepted answer{(item.correctAnswers || []).length === 1 ? '' : 's'}
+            </p>
+            <p className="mt-1 font-medium text-ink-900">
+              {(item.correctAnswers || []).join(' · ') || '—'}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 space-y-2">
+          {item.options.map((option) => {
+            const isCorrect = item.correctOptions.includes(option.index);
+            const isPicked = item.selectedOptions.includes(option.index);
 
-          return (
-            <div
-              key={option.index}
-              className={cn(
-                'flex items-start gap-3 rounded-xl border px-4 py-2.5 text-sm',
-                isCorrect && 'border-lagoon-400 bg-lagoon-50',
-                !isCorrect && isPicked && 'border-red-300 bg-red-50',
-                !isCorrect && !isPicked && 'border-ink-900/10 bg-white'
-              )}
-            >
-              <span className="w-5 shrink-0 pt-0.5 text-sm font-bold text-ink-900/45">
-                {optionLabel(option.index)}
-              </span>
-              <span className="flex-1 leading-relaxed text-ink-900">{option.text}</span>
-              <span className="flex shrink-0 flex-wrap justify-end gap-1">
-                {isPicked ? (
-                  <span
-                    className={cn(
-                      'rounded-md px-1.5 py-0.5 text-[11px] font-bold',
-                      isCorrect ? 'bg-lagoon-200 text-lagoon-800' : 'bg-red-200 text-red-800'
-                    )}
-                  >
-                    Your answer
-                  </span>
-                ) : null}
-                {isCorrect ? (
-                  <span className="rounded-md bg-lagoon-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
-                    Correct
-                  </span>
-                ) : null}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+            return (
+              <div
+                key={option.index}
+                className={cn(
+                  'flex items-start gap-3 rounded-xl border px-4 py-2.5 text-sm',
+                  isCorrect && 'border-lagoon-400 bg-lagoon-50',
+                  !isCorrect && isPicked && 'border-red-300 bg-red-50',
+                  !isCorrect && !isPicked && 'border-ink-900/10 bg-white'
+                )}
+              >
+                <span className="w-5 shrink-0 pt-0.5 text-sm font-bold text-ink-900/45">
+                  {optionLabel(option.index)}
+                </span>
+                <span className="flex-1 leading-relaxed text-ink-900">{option.text}</span>
+                <span className="flex shrink-0 flex-wrap justify-end gap-1">
+                  {isPicked ? (
+                    <span
+                      className={cn(
+                        'rounded-md px-1.5 py-0.5 text-[11px] font-bold',
+                        isCorrect ? 'bg-lagoon-200 text-lagoon-800' : 'bg-red-200 text-red-800'
+                      )}
+                    >
+                      Your answer
+                    </span>
+                  ) : null}
+                  {isCorrect ? (
+                    <span className="rounded-md bg-lagoon-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
+                      Correct
+                    </span>
+                  ) : null}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {item.explanation ? (
         <div className="mt-3 rounded-xl border border-lagoon-200 bg-lagoon-50/60 px-4 py-3">
@@ -172,7 +201,7 @@ export function ResultCard({ result }) {
         <section className="mt-8">
           <h3 className="mb-1 font-display text-xl font-bold text-ink-900">Answer review</h3>
           <p className="mb-4 text-sm text-ink-900/60">
-            Go through the ones you missed — the correct option is highlighted in green.
+            Go through the ones you missed — correct answers are highlighted in green.
           </p>
           <div className="space-y-4">
             {result.review.map((item) => (

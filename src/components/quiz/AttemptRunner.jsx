@@ -6,26 +6,46 @@ import { Alert } from '../ui/Alert';
 import { formatClock, optionLabel } from '../../utils/quizFormat';
 import { cn } from '../../utils/cn';
 
-function readStoredSelections(storageKey) {
-  if (!storageKey) return {};
+function readStoredAnswers(storageKey) {
+  if (!storageKey) return { selections: {}, textAnswers: {} };
   try {
     const raw = localStorage.getItem(storageKey);
-    return raw ? JSON.parse(raw) : {};
+    if (!raw) return { selections: {}, textAnswers: {} };
+    const parsed = JSON.parse(raw);
+
+    // Legacy format stored only option indexes per question id.
+    if (!parsed || Array.isArray(parsed) || (!parsed.selections && !parsed.textAnswers)) {
+      return { selections: parsed || {}, textAnswers: {} };
+    }
+
+    return {
+      selections: parsed.selections || {},
+      textAnswers: parsed.textAnswers || {},
+    };
   } catch {
-    return {};
+    return { selections: {}, textAnswers: {} };
   }
 }
 
-function QuestionBlock({ question, selected, onToggle }) {
-  const isMulti = question.type === 'multiple';
+function typeBadge(question) {
+  if (question.type === 'multiple') {
+    return { tone: 'ember', label: 'Select all that apply' };
+  }
+  if (question.type === 'blank') {
+    return { tone: 'ink', label: 'Fill in the blank' };
+  }
+  return { tone: 'lagoon', label: 'Select one' };
+}
+
+function QuestionBlock({ question, selected, textAnswer, onToggle, onTextChange }) {
+  const badge = typeBadge(question);
+  const isBlank = question.type === 'blank';
 
   return (
     <div id={`question-${question.number}`} className="rounded-2xl border border-ink-900/10 bg-white p-5 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Badge tone="ink">Q{question.number}</Badge>
-        <Badge tone={isMulti ? 'ember' : 'lagoon'}>
-          {isMulti ? 'Select all that apply' : 'Select one'}
-        </Badge>
+        <Badge tone={badge.tone}>{badge.label}</Badge>
         <span className="text-xs text-ink-900/50">
           {question.marks} mark{question.marks === 1 ? '' : 's'}
         </span>
@@ -35,34 +55,51 @@ function QuestionBlock({ question, selected, onToggle }) {
         {question.text}
       </p>
 
-      <div className="mt-4 space-y-2">
-        {question.options.map((option) => {
-          const isSelected = selected.includes(option.index);
-          return (
-            <label
-              key={option.index}
-              className={cn(
-                'flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition',
-                isSelected
-                  ? 'border-lagoon-500 bg-lagoon-50 shadow-sm'
-                  : 'border-ink-900/10 bg-white hover:border-lagoon-300 hover:bg-lagoon-50/40'
-              )}
-            >
-              <input
-                type={isMulti ? 'checkbox' : 'radio'}
-                name={`question-${question.id}`}
-                checked={isSelected}
-                onChange={() => onToggle(question, option.index)}
-                className="h-4 w-4 shrink-0 accent-lagoon-600"
-              />
-              <span className="w-5 shrink-0 text-sm font-bold text-ink-900/45">
-                {optionLabel(option.index)}
-              </span>
-              <span className="text-sm leading-relaxed text-ink-900">{option.text}</span>
-            </label>
-          );
-        })}
-      </div>
+      {isBlank ? (
+        <div className="mt-4">
+          <label className="mb-1.5 block text-sm font-semibold text-ink-800" htmlFor={`blank-${question.id}`}>
+            Your answer
+          </label>
+          <input
+            id={`blank-${question.id}`}
+            type="text"
+            value={textAnswer}
+            onChange={(event) => onTextChange(question, event.target.value)}
+            placeholder="Type your answer"
+            autoComplete="off"
+            className="h-11 w-full rounded-xl border border-ink-900/10 bg-white px-4 text-sm text-ink-900 transition placeholder:text-ink-900/35 focus:border-lagoon-500 focus:outline-none focus:ring-2 focus:ring-lagoon-500/20"
+          />
+        </div>
+      ) : (
+        <div className="mt-4 space-y-2">
+          {question.options.map((option) => {
+            const isSelected = selected.includes(option.index);
+            return (
+              <label
+                key={option.index}
+                className={cn(
+                  'flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition',
+                  isSelected
+                    ? 'border-lagoon-500 bg-lagoon-50 shadow-sm'
+                    : 'border-ink-900/10 bg-white hover:border-lagoon-300 hover:bg-lagoon-50/40'
+                )}
+              >
+                <input
+                  type={question.type === 'multiple' ? 'checkbox' : 'radio'}
+                  name={`question-${question.id}`}
+                  checked={isSelected}
+                  onChange={() => onToggle(question, option.index)}
+                  className="h-4 w-4 shrink-0 accent-lagoon-600"
+                />
+                <span className="w-5 shrink-0 text-sm font-bold text-ink-900/45">
+                  {optionLabel(option.index)}
+                </span>
+                <span className="text-sm leading-relaxed text-ink-900">{option.text}</span>
+              </label>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -78,13 +115,20 @@ export function AttemptRunner({
   onDismissError,
   onSubmit,
 }) {
-  const [selections, setSelections] = useState(() => readStoredSelections(storageKey));
+  const [selections, setSelections] = useState(() => readStoredAnswers(storageKey).selections);
+  const [textAnswers, setTextAnswers] = useState(() => readStoredAnswers(storageKey).textAnswers);
   const [remaining, setRemaining] = useState(initialRemainingSeconds);
   const submittedRef = useRef(false);
 
   const answeredCount = useMemo(
-    () => questions.filter((question) => (selections[question.id] || []).length > 0).length,
-    [questions, selections]
+    () =>
+      questions.filter((question) => {
+        if (question.type === 'blank') {
+          return Boolean((textAnswers[question.id] || '').trim());
+        }
+        return (selections[question.id] || []).length > 0;
+      }).length,
+    [questions, selections, textAnswers]
   );
 
   const handleSubmit = useCallback(
@@ -94,7 +138,8 @@ export function AttemptRunner({
 
       const answers = questions.map((question) => ({
         questionId: question.id,
-        selectedOptions: selections[question.id] || [],
+        selectedOptions: question.type === 'blank' ? [] : selections[question.id] || [],
+        textAnswer: question.type === 'blank' ? textAnswers[question.id] || '' : '',
       }));
 
       Promise.resolve(onSubmit(answers, autoSubmitted)).catch(() => {
@@ -102,7 +147,7 @@ export function AttemptRunner({
         submittedRef.current = false;
       });
     },
-    [onSubmit, questions, selections]
+    [onSubmit, questions, selections, textAnswers]
   );
 
   useEffect(() => {
@@ -120,11 +165,14 @@ export function AttemptRunner({
   useEffect(() => {
     if (!storageKey) return;
     try {
-      localStorage.setItem(storageKey, JSON.stringify(selections));
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({ selections, textAnswers })
+      );
     } catch {
       /* a full or blocked storage should not break the test */
     }
-  }, [selections, storageKey]);
+  }, [selections, textAnswers, storageKey]);
 
   function toggleOption(question, optionIndex) {
     setSelections((prev) => {
@@ -137,6 +185,10 @@ export function AttemptRunner({
         : [...current, optionIndex].sort((a, b) => a - b);
       return { ...prev, [question.id]: next };
     });
+  }
+
+  function changeTextAnswer(question, value) {
+    setTextAnswers((prev) => ({ ...prev, [question.id]: value }));
   }
 
   function confirmSubmit() {
@@ -207,7 +259,9 @@ export function AttemptRunner({
             key={question.id}
             question={question}
             selected={selections[question.id] || []}
+            textAnswer={textAnswers[question.id] || ''}
             onToggle={toggleOption}
+            onTextChange={changeTextAnswer}
           />
         ))}
       </div>

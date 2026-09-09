@@ -13,6 +13,7 @@ import { Badge } from '../components/ui/Badge';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { EmptyState } from '../components/ui/EmptyState';
+import { ExpandableText } from '../components/ui/ExpandableText';
 
 function scoreTone(percentage) {
   if (percentage >= 75) return 'text-lagoon-700';
@@ -83,9 +84,7 @@ export function DppsPage() {
                   <p className="mt-0.5 text-sm font-medium text-lagoon-700">{item.subject}</p>
                 ) : null}
                 {item.description ? (
-                  <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-ink-900/60">
-                    {item.description}
-                  </p>
+                  <ExpandableText text={item.description} lines={2} />
                 ) : null}
 
                 <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-900/55">
