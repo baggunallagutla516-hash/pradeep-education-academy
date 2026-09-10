@@ -7,12 +7,9 @@ import {
   ClipboardList,
   FileStack,
   FileText,
-  Laptop,
-  MonitorOff,
   PenLine,
   ScrollText,
   Sparkles,
-  Trophy,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { contentApi } from '../api/adminApi';
@@ -76,24 +73,6 @@ const readyFeatures = [
     description: 'Chapter and topic tests. Attempt them online and see your score instantly.',
     icon: FileText,
     to: '/slip-tests',
-  },
-];
-
-const upcomingFeatures = [
-  {
-    title: 'Online exams',
-    description: 'Attempt timed exams online and view auto-graded scores.',
-    icon: Laptop,
-  },
-  {
-    title: 'Offline exams',
-    description: 'Schedules and materials for centre-based offline exams.',
-    icon: MonitorOff,
-  },
-  {
-    title: 'Results',
-    description: 'Exam results, ranks, and performance summaries.',
-    icon: Trophy,
   },
 ];
 
@@ -313,27 +292,6 @@ export function HomePage() {
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
-              </Card>
-            ))}
-          </div>
-
-          <div className="mb-4">
-            <h2 className="font-display text-xl font-bold text-ink-900">Coming in later stages</h2>
-            <p className="mt-2 text-sm text-ink-900/60">
-              These areas are planned next. They are listed for clarity — not clickable until ready.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {upcomingFeatures.map((item) => (
-              <Card key={item.title} className="border-dashed bg-white/70">
-                <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-ink-900/5 text-ink-800">
-                  <item.icon className="h-5 w-5" />
-                </span>
-                <div className="mb-2">
-                  <Badge tone="ink">Upcoming</Badge>
-                </div>
-                <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink-900/60">{item.description}</p>
               </Card>
             ))}
           </div>

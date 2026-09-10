@@ -5,11 +5,8 @@ import {
   ClipboardList,
   FileStack,
   FileText,
-  Laptop,
-  MonitorOff,
   PenLine,
   ScrollText,
-  Trophy,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { classLabel } from '../utils/classLabel';
@@ -56,24 +53,6 @@ const ready = [
   },
 ];
 
-const upcoming = [
-  {
-    title: 'Online exams',
-    description: 'Attempt timed exams online and view auto-graded scores.',
-    icon: Laptop,
-  },
-  {
-    title: 'Offline exams',
-    description: 'Schedules and materials for centre-based offline exams.',
-    icon: MonitorOff,
-  },
-  {
-    title: 'Results',
-    description: 'Exam results, ranks, and performance summaries.',
-    icon: Trophy,
-  },
-];
-
 export function DashboardPage() {
   const { student } = useAuth();
 
@@ -85,7 +64,7 @@ export function DashboardPage() {
       description="You are logged in. Open work sheets for your class, or check back as more tools unlock."
       actions={<Badge>{classLabel(student) || 'Student'}</Badge>}
     >
-      <section className="mb-10">
+      <section>
         <h2 className="mb-2 font-display text-xl font-bold text-ink-900">Available now</h2>
         <p className="mb-4 text-sm text-ink-900/60">
           Resources shared by your teacher for {classLabel(student) || 'your class'}.
@@ -108,27 +87,6 @@ export function DashboardPage() {
                 </span>
               </Card>
             </Link>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="mb-2 font-display text-xl font-bold text-ink-900">Coming in later stages</h2>
-        <p className="mb-4 text-sm text-ink-900/60">
-          These areas are planned next. They are listed for clarity — not clickable until ready.
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {upcoming.map((item) => (
-            <Card key={item.title} className="border-dashed bg-white/55">
-              <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-ink-900/5 text-ink-800">
-                <item.icon className="h-5 w-5" />
-              </span>
-              <div className="mb-2">
-                <Badge tone="ink">Upcoming</Badge>
-              </div>
-              <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-900/60">{item.description}</p>
-            </Card>
           ))}
         </div>
       </section>
