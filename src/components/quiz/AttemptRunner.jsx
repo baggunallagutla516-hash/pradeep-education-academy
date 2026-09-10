@@ -72,7 +72,7 @@ function QuestionBlock({ question, selected, textAnswer, onToggle, onTextChange 
         </div>
       ) : (
         <div className="mt-4 space-y-2">
-          {question.options.map((option) => {
+          {question.options.map((option, displayIndex) => {
             const isSelected = selected.includes(option.index);
             return (
               <label
@@ -92,7 +92,7 @@ function QuestionBlock({ question, selected, textAnswer, onToggle, onTextChange 
                   className="h-4 w-4 shrink-0 accent-lagoon-600"
                 />
                 <span className="w-5 shrink-0 text-sm font-bold text-ink-900/45">
-                  {optionLabel(option.index)}
+                  {optionLabel(displayIndex)}
                 </span>
                 <span className="text-sm leading-relaxed text-ink-900">{option.text}</span>
               </label>

@@ -19,4 +19,7 @@ export const parentApi = {
   child(studentId) {
     return api.get(`/parent/children/${studentId}`);
   },
+  childResults(studentId) {
+    return api.get(`/parent/children/${studentId}/results`);
+  },
 };

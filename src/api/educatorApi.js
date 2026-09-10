@@ -28,4 +28,10 @@ export const educatorApi = {
   unitTest(id) {
     return api.get(`/educator/unit-tests/${id}`);
   },
+  cets(params) {
+    return api.get('/educator/cets', { params });
+  },
+  cet(id) {
+    return api.get(`/educator/cets/${id}`);
+  },
 };

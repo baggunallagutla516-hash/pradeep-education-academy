@@ -77,7 +77,7 @@ function ReviewQuestion({ item }) {
         </div>
       ) : (
         <div className="mt-3 space-y-2">
-          {item.options.map((option) => {
+          {item.options.map((option, displayIndex) => {
             const isCorrect = item.correctOptions.includes(option.index);
             const isPicked = item.selectedOptions.includes(option.index);
 
@@ -92,7 +92,7 @@ function ReviewQuestion({ item }) {
                 )}
               >
                 <span className="w-5 shrink-0 pt-0.5 text-sm font-bold text-ink-900/45">
-                  {optionLabel(option.index)}
+                  {optionLabel(displayIndex)}
                 </span>
                 <span className="flex-1 leading-relaxed text-ink-900">{option.text}</span>
                 <span className="flex shrink-0 flex-wrap justify-end gap-1">

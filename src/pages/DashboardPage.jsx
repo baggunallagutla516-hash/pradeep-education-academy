@@ -5,10 +5,10 @@ import {
   ClipboardList,
   FileStack,
   FileText,
-  GraduationCap,
   Laptop,
   MonitorOff,
   PenLine,
+  ScrollText,
   Trophy,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -31,6 +31,18 @@ const ready = [
     to: '/unit-tests',
   },
   {
+    title: 'C.E.T.',
+    description: 'Download Chapter End Test question papers for your class.',
+    icon: ScrollText,
+    to: '/cets',
+  },
+  {
+    title: 'Online Assessments',
+    description: 'Timed fullscreen online tests with single and multi-select questions.',
+    icon: ClipboardCheck,
+    to: '/assessments',
+  },
+  {
     title: 'D.P.P.',
     description: 'Daily practice problems. Attempt them online and see your score instantly.',
     icon: ClipboardList,
@@ -45,16 +57,6 @@ const ready = [
 ];
 
 const upcoming = [
-  {
-    title: 'Assessments',
-    description: 'Periodic assessments to track subject-wise progress.',
-    icon: ClipboardCheck,
-  },
-  {
-    title: 'C.E.T',
-    description: 'Common entrance test style papers and practice sets.',
-    icon: GraduationCap,
-  },
   {
     title: 'Online exams',
     description: 'Attempt timed exams online and view auto-graded scores.',

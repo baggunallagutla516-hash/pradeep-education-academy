@@ -7,6 +7,8 @@ import {
   LayoutDashboard,
   LogOut,
   PenLine,
+  ScrollText,
+  ClipboardCheck,
   UserRound,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -21,6 +23,8 @@ const links = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/worksheets', label: 'Worksheets', icon: FileStack },
   { to: '/unit-tests', label: 'Unit tests', icon: PenLine },
+  { to: '/cets', label: 'C.E.T.', icon: ScrollText },
+  { to: '/assessments', label: 'Online Assessments', icon: ClipboardCheck },
   { to: '/dpps', label: 'D.P.P.', icon: ClipboardList },
   { to: '/slip-tests', label: 'Slip tests', icon: FileText },
   { to: '/account', label: 'My Account', icon: UserRound },

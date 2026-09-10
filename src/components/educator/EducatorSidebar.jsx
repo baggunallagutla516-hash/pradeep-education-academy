@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   LogOut,
   PenLine,
+  ScrollText,
   UserRound,
 } from 'lucide-react';
 import { useEducatorAuth } from '../../context/EducatorAuthContext';
@@ -20,6 +21,7 @@ const links = [
   { to: '/educator/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/educator/worksheets', label: 'Worksheets', icon: FileStack },
   { to: '/educator/unit-tests', label: 'Unit tests', icon: PenLine },
+  { to: '/educator/cets', label: 'C.E.T.', icon: ScrollText },
   { to: '/educator/account', label: 'My account', icon: UserRound },
 ];
 

@@ -81,7 +81,7 @@ export function ParentDashboardPage() {
               <div className="mt-4">
                 <Link to={`/parent/children/${child.id}`}>
                   <Button variant="secondary" size="sm" fullWidth>
-                    View details
+                    View details & results
                   </Button>
                 </Link>
               </div>

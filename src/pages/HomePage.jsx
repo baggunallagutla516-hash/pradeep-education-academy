@@ -7,10 +7,10 @@ import {
   ClipboardList,
   FileStack,
   FileText,
-  GraduationCap,
   Laptop,
   MonitorOff,
   PenLine,
+  ScrollText,
   Sparkles,
   Trophy,
 } from 'lucide-react';
@@ -31,7 +31,7 @@ const whatYouGet = [
   {
     icon: BookOpenCheck,
     title: 'Practice & exams',
-    body: 'Unit test papers, plus daily practice problems and slip tests you attempt online.',
+    body: 'Unit tests, chapter end tests, daily practice problems, and slip tests.',
   },
   {
     icon: Sparkles,
@@ -54,6 +54,18 @@ const readyFeatures = [
     to: '/unit-tests',
   },
   {
+    title: 'C.E.T.',
+    description: 'Download Chapter End Test question papers for your class.',
+    icon: ScrollText,
+    to: '/cets',
+  },
+  {
+    title: 'Online Assessments',
+    description: 'Timed fullscreen online tests with single and multi-select questions.',
+    icon: ClipboardCheck,
+    to: '/assessments',
+  },
+  {
     title: 'D.P.P.',
     description: 'Daily practice problems. Attempt them online and see your score instantly.',
     icon: ClipboardList,
@@ -68,16 +80,6 @@ const readyFeatures = [
 ];
 
 const upcomingFeatures = [
-  {
-    title: 'Assessments',
-    description: 'Periodic assessments to track subject-wise progress.',
-    icon: ClipboardCheck,
-  },
-  {
-    title: 'C.E.T',
-    description: 'Common entrance test style papers and practice sets.',
-    icon: GraduationCap,
-  },
   {
     title: 'Online exams',
     description: 'Attempt timed exams online and view auto-graded scores.',

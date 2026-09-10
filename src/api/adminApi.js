@@ -114,6 +114,46 @@ export const adminApi = {
   deleteUnitTest(id) {
     return api.delete(`/admin/unit-tests/${id}`);
   },
+  cets() {
+    return api.get('/admin/cets');
+  },
+  cet(id) {
+    return api.get(`/admin/cets/${id}`);
+  },
+  createCet(formData) {
+    return api.post('/admin/cets', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  updateCet(id, formData) {
+    return api.patch(`/admin/cets/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  deleteCet(id) {
+    return api.delete(`/admin/cets/${id}`);
+  },
+  assessments() {
+    return api.get('/admin/assessments');
+  },
+  assessment(id) {
+    return api.get(`/admin/assessments/${id}`);
+  },
+  assessmentResults(id) {
+    return api.get(`/admin/assessments/${id}/results`);
+  },
+  releaseAssessmentResults(id) {
+    return api.post(`/admin/assessments/${id}/release-results`);
+  },
+  createAssessment(payload) {
+    return api.post('/admin/assessments', payload);
+  },
+  updateAssessment(id, payload) {
+    return api.patch(`/admin/assessments/${id}`, payload);
+  },
+  deleteAssessment(id) {
+    return api.delete(`/admin/assessments/${id}`);
+  },
   dpps() {
     return api.get('/admin/dpps');
   },
@@ -214,6 +254,36 @@ export const unitTestApi = {
   },
   get(id) {
     return api.get(`/unit-tests/${id}`);
+  },
+};
+
+export const cetApi = {
+  list() {
+    return api.get('/cets');
+  },
+  get(id) {
+    return api.get(`/cets/${id}`);
+  },
+};
+
+export const assessmentApi = {
+  list() {
+    return api.get('/assessments');
+  },
+  get(id) {
+    return api.get(`/assessments/${id}`);
+  },
+  start(id) {
+    return api.post(`/assessments/${id}/start`);
+  },
+  fullscreenExit(id) {
+    return api.post(`/assessments/${id}/fullscreen-exit`);
+  },
+  submit(id, payload) {
+    return api.post(`/assessments/${id}/submit`, payload);
+  },
+  result(id) {
+    return api.get(`/assessments/${id}/result`);
   },
 };
 

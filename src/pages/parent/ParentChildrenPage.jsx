@@ -70,7 +70,7 @@ export function ParentChildrenPage() {
               </div>
               <Link to={`/parent/children/${child.id}`}>
                 <Button variant="secondary" size="sm">
-                  View
+                  View details & results
                 </Button>
               </Link>
             </Card>

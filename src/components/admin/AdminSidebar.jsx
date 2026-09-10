@@ -10,6 +10,8 @@ import {
   FileStack,
   GraduationCap,
   PenLine,
+  ScrollText,
+  ClipboardCheck,
   Settings,
   Users,
 } from 'lucide-react';
@@ -28,6 +30,8 @@ const links = [
   { to: '/admin/contact-queries', label: 'Contact', icon: MessageSquare },
   { to: '/admin/worksheets', label: 'Worksheets', icon: FileStack },
   { to: '/admin/unit-tests', label: 'Unit tests', icon: PenLine },
+  { to: '/admin/cets', label: 'C.E.T.', icon: ScrollText },
+  { to: '/admin/assessments', label: 'Online Assessments', icon: ClipboardCheck },
   { to: '/admin/dpps', label: 'D.P.P.', icon: ClipboardList },
   { to: '/admin/slip-tests', label: 'Slip tests', icon: FileText },
   { to: '/admin/news', label: 'News', icon: Newspaper },

@@ -44,6 +44,11 @@ import { AdminWorksheetsPage } from './pages/admin/AdminWorksheetsPage';
 import { AdminWorksheetFormPage } from './pages/admin/AdminWorksheetFormPage';
 import { AdminUnitTestsPage } from './pages/admin/AdminUnitTestsPage';
 import { AdminUnitTestFormPage } from './pages/admin/AdminUnitTestFormPage';
+import { AdminCetsPage } from './pages/admin/AdminCetsPage';
+import { AdminCetFormPage } from './pages/admin/AdminCetFormPage';
+import { AdminAssessmentsPage } from './pages/admin/AdminAssessmentsPage';
+import { AdminAssessmentFormPage } from './pages/admin/AdminAssessmentFormPage';
+import { AdminAssessmentResultsPage } from './pages/admin/AdminAssessmentResultsPage';
 import { AdminDppsPage } from './pages/admin/AdminDppsPage';
 import { AdminDppFormPage } from './pages/admin/AdminDppFormPage';
 import { AdminDppResultsPage } from './pages/admin/AdminDppResultsPage';
@@ -54,6 +59,10 @@ import { AdminContactQueriesPage } from './pages/admin/AdminContactQueriesPage';
 import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
 import { WorksheetsPage } from './pages/WorksheetsPage';
 import { UnitTestsPage } from './pages/UnitTestsPage';
+import { CetsPage } from './pages/CetsPage';
+import { AssessmentsPage } from './pages/AssessmentsPage';
+import { AssessmentAttemptPage } from './pages/AssessmentAttemptPage';
+import { AssessmentResultPage } from './pages/AssessmentResultPage';
 import { DppsPage } from './pages/DppsPage';
 import { DppAttemptPage } from './pages/DppAttemptPage';
 import { DppResultPage } from './pages/DppResultPage';
@@ -70,6 +79,7 @@ import { EducatorRegisterPage } from './pages/educator/EducatorRegisterPage';
 import { EducatorDashboardPage } from './pages/educator/EducatorDashboardPage';
 import { EducatorWorksheetsPage } from './pages/educator/EducatorWorksheetsPage';
 import { EducatorUnitTestsPage } from './pages/educator/EducatorUnitTestsPage';
+import { EducatorCetsPage } from './pages/educator/EducatorCetsPage';
 import { EducatorAccountPage } from './pages/educator/EducatorAccountPage';
 
 export default function App() {
@@ -152,6 +162,10 @@ export default function App() {
                   <Route path="dashboard" element={<DashboardPage />} />
                   <Route path="worksheets" element={<WorksheetsPage />} />
                   <Route path="unit-tests" element={<UnitTestsPage />} />
+                  <Route path="cets" element={<CetsPage />} />
+                  <Route path="assessments" element={<AssessmentsPage />} />
+                  <Route path="assessments/:id/attempt" element={<AssessmentAttemptPage />} />
+                  <Route path="assessments/:id/result" element={<AssessmentResultPage />} />
                   <Route path="dpps" element={<DppsPage />} />
                   <Route path="dpps/:id/attempt" element={<DppAttemptPage />} />
                   <Route path="dpps/:id/result" element={<DppResultPage />} />
@@ -185,6 +199,7 @@ export default function App() {
                   <Route path="educator/dashboard" element={<EducatorDashboardPage />} />
                   <Route path="educator/worksheets" element={<EducatorWorksheetsPage />} />
                   <Route path="educator/unit-tests" element={<EducatorUnitTestsPage />} />
+                  <Route path="educator/cets" element={<EducatorCetsPage />} />
                   <Route path="educator/account" element={<EducatorAccountPage />} />
                 </Route>
 
@@ -218,6 +233,13 @@ export default function App() {
                   <Route path="unit-tests" element={<AdminUnitTestsPage />} />
                   <Route path="unit-tests/new" element={<AdminUnitTestFormPage />} />
                   <Route path="unit-tests/:id/edit" element={<AdminUnitTestFormPage />} />
+                  <Route path="cets" element={<AdminCetsPage />} />
+                  <Route path="cets/new" element={<AdminCetFormPage />} />
+                  <Route path="cets/:id/edit" element={<AdminCetFormPage />} />
+                  <Route path="assessments" element={<AdminAssessmentsPage />} />
+                  <Route path="assessments/new" element={<AdminAssessmentFormPage />} />
+                  <Route path="assessments/:id/edit" element={<AdminAssessmentFormPage />} />
+                  <Route path="assessments/:id/results" element={<AdminAssessmentResultsPage />} />
                   <Route path="dpps" element={<AdminDppsPage />} />
                   <Route path="dpps/new" element={<AdminDppFormPage />} />
                   <Route path="dpps/:id/edit" element={<AdminDppFormPage />} />

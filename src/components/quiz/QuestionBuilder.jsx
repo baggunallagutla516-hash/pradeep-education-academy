@@ -30,7 +30,7 @@ function typeTone(type) {
   return 'lagoon';
 }
 
-export function makeEmptyQuestion() {
+export function makeEmptyQuestion(defaults = {}) {
   return {
     key: nextKey(),
     text: '',
@@ -40,6 +40,7 @@ export function makeEmptyQuestion() {
     correctAnswers: [''],
     marks: '1',
     explanation: '',
+    section: defaults.section || '',
   };
 }
 
@@ -63,6 +64,7 @@ export function toEditableQuestion(question) {
         : [''],
     marks: String(question.marks ?? '1'),
     explanation: question.explanation || '',
+    section: question.section || '',
   };
 }
 
@@ -78,6 +80,7 @@ export function toApiQuestions(questions) {
         correctAnswers: question.correctAnswers,
         marks: Number(question.marks),
         explanation: question.explanation,
+        section: question.section || undefined,
       };
     }
 
@@ -89,11 +92,12 @@ export function toApiQuestions(questions) {
       correctAnswers: [],
       marks: Number(question.marks),
       explanation: question.explanation,
+      section: question.section || undefined,
     };
   });
 }
 
-function QuestionCard({ question, index, total, onChange, onRemove, onMove }) {
+function QuestionCard({ question, index, total, onChange, onRemove, onMove, allowedTypes, sections }) {
   function update(patch) {
     onChange({ ...question, ...patch });
   }
@@ -243,9 +247,15 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove }) {
           value={question.type}
           onChange={(event) => changeType(event.target.value)}
         >
-          <option value="single">Single choice (one answer)</option>
-          <option value="multiple">Multi-select (more than one)</option>
-          <option value="blank">Fill in the Blanks</option>
+          {(!allowedTypes || allowedTypes.includes('single')) ? (
+            <option value="single">Single choice (one answer)</option>
+          ) : null}
+          {(!allowedTypes || allowedTypes.includes('multiple')) ? (
+            <option value="multiple">Multi-select (more than one)</option>
+          ) : null}
+          {(!allowedTypes || allowedTypes.includes('blank')) ? (
+            <option value="blank">Fill in the Blanks</option>
+          ) : null}
         </Select>
         <Input
           label="Marks"
@@ -256,6 +266,22 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove }) {
           onChange={(event) => update({ marks: event.target.value })}
         />
       </div>
+
+      {Array.isArray(sections) && sections.length > 0 ? (
+        <div className="mt-3">
+          <Select
+            label="Section"
+            value={question.section || sections[0]}
+            onChange={(event) => update({ section: event.target.value })}
+          >
+            {sections.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </Select>
+        </div>
+      ) : null}
 
       {isBlank ? (
         <div className="mt-4">
@@ -396,7 +422,9 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove }) {
   );
 }
 
-export function QuestionBuilder({ questions, onChange }) {
+export function QuestionBuilder({ questions, onChange, allowedTypes, sections }) {
+  const defaultSection = Array.isArray(sections) && sections.length > 0 ? sections[0] : '';
+
   function updateAt(index, question) {
     onChange(questions.map((item, i) => (i === index ? question : item)));
   }
@@ -413,6 +441,10 @@ export function QuestionBuilder({ questions, onChange }) {
     onChange(next);
   }
 
+  function addQuestion() {
+    onChange([...questions, makeEmptyQuestion({ section: defaultSection })]);
+  }
+
   const totalMarks = questions.reduce((sum, question) => {
     const marks = Number(question.marks);
     return sum + (Number.isFinite(marks) ? marks : 0);
@@ -427,7 +459,7 @@ export function QuestionBuilder({ questions, onChange }) {
             {questions.length} question{questions.length === 1 ? '' : 's'} · {totalMarks} total marks
           </p>
         </div>
-        <Button type="button" variant="secondary" size="sm" onClick={() => onChange([...questions, makeEmptyQuestion()])}>
+        <Button type="button" variant="secondary" size="sm" onClick={addQuestion}>
           <Plus className="h-4 w-4" />
           Add question
         </Button>
@@ -438,12 +470,7 @@ export function QuestionBuilder({ questions, onChange }) {
           <p className="text-sm text-ink-900/60">
             No questions yet. Add your first question to build this test.
           </p>
-          <Button
-            type="button"
-            size="sm"
-            className="mt-4"
-            onClick={() => onChange([makeEmptyQuestion()])}
-          >
+          <Button type="button" size="sm" className="mt-4" onClick={addQuestion}>
             <Plus className="h-4 w-4" />
             Add question
           </Button>
@@ -459,18 +486,15 @@ export function QuestionBuilder({ questions, onChange }) {
               onChange={(next) => updateAt(index, next)}
               onRemove={removeAt}
               onMove={moveBy}
+              allowedTypes={allowedTypes}
+              sections={sections}
             />
           ))}
         </div>
       )}
 
       {questions.length > 0 ? (
-        <Button
-          type="button"
-          variant="secondary"
-          className="mt-4"
-          onClick={() => onChange([...questions, makeEmptyQuestion()])}
-        >
+        <Button type="button" variant="secondary" className="mt-4" onClick={addQuestion}>
           <Plus className="h-4 w-4" />
           Add question
         </Button>
