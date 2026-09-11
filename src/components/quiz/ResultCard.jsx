@@ -3,6 +3,7 @@ import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { formatDuration, formatMarks, optionLabel } from '../../utils/quizFormat';
 import { cn } from '../../utils/cn';
+import { MathText } from './MathText';
 
 const OUTCOMES = {
   correct: { label: 'Correct', tone: 'text-lagoon-700', chip: 'bg-lagoon-100 text-lagoon-800', icon: Check },
@@ -26,6 +27,7 @@ function ReviewQuestion({ item }) {
   const outcome = OUTCOMES[item.outcome] || OUTCOMES.unanswered;
   const OutcomeIcon = outcome.icon;
   const isBlank = item.type === 'blank';
+  const isMatrix = item.type === 'matrix';
 
   return (
     <div className="rounded-2xl border border-ink-900/10 bg-white p-5 shadow-sm">
@@ -45,9 +47,11 @@ function ReviewQuestion({ item }) {
         </span>
       </div>
 
-      <p className="whitespace-pre-wrap text-base font-semibold leading-relaxed text-ink-900">
-        {item.text}
-      </p>
+      <MathText
+        as="p"
+        text={item.text}
+        className="text-base font-semibold leading-relaxed text-ink-900"
+      />
 
       {isBlank ? (
         <div className="mt-3 space-y-2">
@@ -62,18 +66,66 @@ function ReviewQuestion({ item }) {
             <p className="text-[11px] font-bold uppercase tracking-wide text-ink-900/45">
               Your answer
             </p>
-            <p className="mt-1 font-medium text-ink-900">
-              {item.textAnswer?.trim() ? item.textAnswer : '—'}
-            </p>
+            <MathText
+              text={item.textAnswer?.trim() ? item.textAnswer : '—'}
+              className="mt-1 block font-medium text-ink-900"
+            />
           </div>
           <div className="rounded-xl border border-lagoon-400 bg-lagoon-50 px-4 py-2.5 text-sm">
             <p className="text-[11px] font-bold uppercase tracking-wide text-lagoon-800">
               Accepted answer{(item.correctAnswers || []).length === 1 ? '' : 's'}
             </p>
-            <p className="mt-1 font-medium text-ink-900">
-              {(item.correctAnswers || []).join(' · ') || '—'}
-            </p>
+            <MathText
+              text={(item.correctAnswers || []).join(' · ') || '—'}
+              className="mt-1 block font-medium text-ink-900"
+            />
           </div>
+        </div>
+      ) : isMatrix ? (
+        <div className="mt-3 overflow-x-auto">
+          <table className="min-w-full border-collapse text-sm">
+            <thead>
+              <tr>
+                <th className="border border-ink-900/10 bg-sand-50 px-3 py-2 text-left">Row</th>
+                <th className="border border-ink-900/10 bg-sand-50 px-3 py-2 text-left">Your pick</th>
+                <th className="border border-ink-900/10 bg-sand-50 px-3 py-2 text-left">Correct</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(item.rows || []).map((row) => {
+                const picked = Number(item.matrixAnswers?.[row.index]);
+                const correct = Number(item.correctMatrix?.[row.index]);
+                const pickLabel =
+                  Number.isInteger(picked) && picked >= 0
+                    ? item.options?.find((option) => option.index === picked)?.text || optionLabel(picked)
+                    : '—';
+                const correctLabel =
+                  Number.isInteger(correct) && correct >= 0
+                    ? item.options?.find((option) => option.index === correct)?.text ||
+                      optionLabel(correct)
+                    : '—';
+                const rowOk = picked === correct && picked >= 0;
+                return (
+                  <tr key={row.index}>
+                    <td className="border border-ink-900/10 px-3 py-2 font-medium text-ink-900">
+                      <MathText text={row.text} />
+                    </td>
+                    <td
+                      className={cn(
+                        'border border-ink-900/10 px-3 py-2',
+                        rowOk ? 'bg-lagoon-50 text-lagoon-800' : 'bg-red-50 text-red-700'
+                      )}
+                    >
+                      <MathText text={pickLabel} />
+                    </td>
+                    <td className="border border-ink-900/10 bg-lagoon-50 px-3 py-2 text-lagoon-800">
+                      <MathText text={correctLabel} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div className="mt-3 space-y-2">
@@ -94,7 +146,7 @@ function ReviewQuestion({ item }) {
                 <span className="w-5 shrink-0 pt-0.5 text-sm font-bold text-ink-900/45">
                   {optionLabel(displayIndex)}
                 </span>
-                <span className="flex-1 leading-relaxed text-ink-900">{option.text}</span>
+                <MathText text={option.text} className="flex-1 leading-relaxed text-ink-900" />
                 <span className="flex shrink-0 flex-wrap justify-end gap-1">
                   {isPicked ? (
                     <span
@@ -121,9 +173,10 @@ function ReviewQuestion({ item }) {
       {item.explanation ? (
         <div className="mt-3 rounded-xl border border-lagoon-200 bg-lagoon-50/60 px-4 py-3">
           <p className="text-xs font-bold uppercase tracking-wide text-lagoon-800">Explanation</p>
-          <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink-900/75">
-            {item.explanation}
-          </p>
+          <MathText
+            text={item.explanation}
+            className="mt-1 block text-sm leading-relaxed text-ink-900/75"
+          />
         </div>
       ) : null}
     </div>

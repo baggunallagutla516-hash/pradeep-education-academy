@@ -445,7 +445,7 @@ export function AdminAssessmentFormPage() {
           <QuestionBuilder
             questions={questions}
             onChange={setQuestions}
-            allowedTypes={['single', 'multiple']}
+            allowedTypes={['single', 'multiple', 'matrix']}
             sections={sections}
           />
         </Card>

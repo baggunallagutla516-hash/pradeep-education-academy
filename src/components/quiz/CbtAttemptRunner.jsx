@@ -2,24 +2,40 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Maximize2 } from 'lucide-react';
 import { formatClock, optionLabel } from '../../utils/quizFormat';
 import { cn } from '../../utils/cn';
+import { MathText } from './MathText';
 
 function readStoredState(storageKey) {
   if (!storageKey) {
-    return { selections: {}, marked: {}, visited: {}, currentIndex: 0 };
+    return { selections: {}, matrixAnswers: {}, marked: {}, visited: {}, currentIndex: 0 };
   }
   try {
     const raw = localStorage.getItem(storageKey);
-    if (!raw) return { selections: {}, marked: {}, visited: {}, currentIndex: 0 };
+    if (!raw) return { selections: {}, matrixAnswers: {}, marked: {}, visited: {}, currentIndex: 0 };
     const parsed = JSON.parse(raw);
     return {
       selections: parsed.selections || {},
+      matrixAnswers: parsed.matrixAnswers || {},
       marked: parsed.marked || {},
       visited: parsed.visited || {},
       currentIndex: Number.isInteger(parsed.currentIndex) ? parsed.currentIndex : 0,
     };
   } catch {
-    return { selections: {}, marked: {}, visited: {}, currentIndex: 0 };
+    return { selections: {}, matrixAnswers: {}, marked: {}, visited: {}, currentIndex: 0 };
   }
+}
+
+function isQuestionAnswered(question, selections, matrixAnswers) {
+  if (!question) return false;
+  if (question.type === 'matrix') {
+    const rows = question.rows || [];
+    if (rows.length === 0) return false;
+    const picks = matrixAnswers[question.id] || [];
+    return rows.every((_, index) => {
+      const value = Number(picks[index]);
+      return Number.isInteger(value) && value >= 0;
+    });
+  }
+  return (selections[question.id] || []).length > 0;
 }
 
 function paletteTone({ answered, marked, visited }) {
@@ -96,6 +112,7 @@ export function CbtAttemptRunner({
   }, [sectionsProp, questions]);
 
   const [selections, setSelections] = useState(stored.selections);
+  const [matrixAnswers, setMatrixAnswers] = useState(stored.matrixAnswers);
   const [marked, setMarked] = useState(stored.marked);
   const [visited, setVisited] = useState(() => {
     const next = { ...stored.visited };
@@ -146,10 +163,17 @@ export function CbtAttemptRunner({
     () =>
       questions.map((item) => ({
         questionId: item.id,
-        selectedOptions: selections[item.id] || [],
+        selectedOptions: item.type === 'matrix' ? [] : selections[item.id] || [],
         textAnswer: '',
+        matrixAnswers:
+          item.type === 'matrix'
+            ? (item.rows || []).map((_, index) => {
+                const value = Number(matrixAnswers[item.id]?.[index]);
+                return Number.isInteger(value) && value >= 0 ? value : -1;
+              })
+            : [],
       })),
-    [questions, selections]
+    [questions, selections, matrixAnswers]
   );
 
   const handleSubmit = useCallback(
@@ -221,15 +245,15 @@ export function CbtAttemptRunner({
     try {
       localStorage.setItem(
         storageKey,
-        JSON.stringify({ selections, marked, visited, currentIndex })
+        JSON.stringify({ selections, matrixAnswers, marked, visited, currentIndex })
       );
     } catch {
       /* ignore */
     }
-  }, [selections, marked, visited, currentIndex, storageKey]);
+  }, [selections, matrixAnswers, marked, visited, currentIndex, storageKey]);
 
   function toggleOption(optionIndex) {
-    if (!question) return;
+    if (!question || question.type === 'matrix') return;
     setSelections((prev) => {
       const current = prev[question.id] || [];
       if (question.type === 'single') {
@@ -242,9 +266,23 @@ export function CbtAttemptRunner({
     });
   }
 
+  function pickMatrixCell(rowIndex, columnIndex) {
+    if (!question || question.type !== 'matrix') return;
+    setMatrixAnswers((prev) => {
+      const rowCount = question.rows?.length || 0;
+      const current = Array.from({ length: rowCount }, (_, index) => {
+        const value = Number(prev[question.id]?.[index]);
+        return Number.isInteger(value) && value >= 0 ? value : -1;
+      });
+      current[rowIndex] = columnIndex;
+      return { ...prev, [question.id]: current };
+    });
+  }
+
   function clearResponse() {
     if (!question) return;
     setSelections((prev) => ({ ...prev, [question.id]: [] }));
+    setMatrixAnswers((prev) => ({ ...prev, [question.id]: [] }));
   }
 
   const totalSeconds = Math.max(
@@ -286,7 +324,9 @@ export function CbtAttemptRunner({
 
   function confirmSubmit() {
     if (!canSubmit) return;
-    const unanswered = questions.filter((item) => !(selections[item.id] || []).length).length;
+    const unanswered = questions.filter(
+      (item) => !isQuestionAnswered(item, selections, matrixAnswers)
+    ).length;
     if (unanswered > 0) {
       const message =
         `You have not answered ${unanswered} question${unanswered === 1 ? '' : 's'}. ` +
@@ -297,7 +337,9 @@ export function CbtAttemptRunner({
   }
 
   const lowTime = remaining <= 60;
-  const answeredCount = questions.filter((item) => (selections[item.id] || []).length > 0).length;
+  const answeredCount = questions.filter((item) =>
+    isQuestionAnswered(item, selections, matrixAnswers)
+  ).length;
 
   return (
     <div
@@ -406,48 +448,107 @@ export function CbtAttemptRunner({
             ) : null}
             <span className="mx-2 text-slate-400">|</span>
             <span className="font-semibold">
-              {question?.type === 'multiple' ? 'MCQ Multiple' : 'MCQ Single'}
+              {question?.type === 'multiple'
+                ? 'MCQ Multiple'
+                : question?.type === 'matrix'
+                  ? 'Matrix'
+                  : 'MCQ Single'}
             </span>
             <span className="mx-2 text-slate-400">|</span>
             <span>
               Marks : {question?.marks}
-              {question?.type === 'multiple' ? ' (select all that apply)' : ''}
+              {question?.type === 'multiple'
+                ? ' (select all that apply)'
+                : question?.type === 'matrix'
+                  ? ' (one answer per row)'
+                  : ''}
             </span>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
-            <p className="whitespace-pre-wrap text-base font-semibold leading-relaxed text-ink-900">
-              {question?.text}
-            </p>
+            <MathText
+              as="p"
+              text={question?.text}
+              className="text-base font-semibold leading-relaxed text-ink-900"
+            />
 
-            <div className="mt-5 space-y-2.5">
-              {(question?.options || []).map((option, displayIndex) => {
-                const isSelected = selected.includes(option.index);
-                return (
-                  <label
-                    key={option.index}
-                    className={cn(
-                      'flex cursor-pointer items-center gap-3 rounded-md border px-4 py-3 transition',
-                      isSelected
-                        ? 'border-[#1e3a5f] bg-[#e8eef6]'
-                        : 'border-slate-300 bg-slate-100 hover:border-slate-400'
-                    )}
-                  >
-                    <input
-                      type={question.type === 'multiple' ? 'checkbox' : 'radio'}
-                      name={`question-${question.id}`}
-                      checked={isSelected}
-                      onChange={() => toggleOption(option.index)}
-                      className="h-4 w-4 shrink-0 accent-[#1e3a5f]"
-                    />
-                    <span className="w-5 shrink-0 text-sm font-bold text-slate-500">
-                      {optionLabel(displayIndex)}
-                    </span>
-                    <span className="text-sm leading-relaxed">{option.text}</span>
-                  </label>
-                );
-              })}
-            </div>
+            {question?.type === 'matrix' ? (
+              <div className="mt-5 overflow-x-auto">
+                <table className="min-w-full border-collapse text-sm">
+                  <thead>
+                    <tr>
+                      <th className="border border-slate-300 bg-slate-100 px-3 py-2 text-left font-semibold">
+                        Statement
+                      </th>
+                      {(question.options || []).map((option) => (
+                        <th
+                          key={option.index}
+                          className="border border-slate-300 bg-slate-100 px-3 py-2 text-center font-semibold"
+                        >
+                          <MathText text={option.text} />
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(question.rows || []).map((row) => (
+                      <tr key={row.index}>
+                        <td className="border border-slate-300 px-3 py-2 font-medium">
+                          <MathText text={row.text} />
+                        </td>
+                        {(question.options || []).map((option) => {
+                          const checked =
+                            Number(matrixAnswers[question.id]?.[row.index]) === option.index;
+                          return (
+                            <td
+                              key={option.index}
+                              className="border border-slate-300 px-3 py-2 text-center"
+                            >
+                              <input
+                                type="radio"
+                                name={`cbt-matrix-${question.id}-${row.index}`}
+                                checked={checked}
+                                onChange={() => pickMatrixCell(row.index, option.index)}
+                                className="h-4 w-4 accent-[#1e3a5f]"
+                              />
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="mt-5 space-y-2.5">
+                {(question?.options || []).map((option, displayIndex) => {
+                  const isSelected = selected.includes(option.index);
+                  return (
+                    <label
+                      key={option.index}
+                      className={cn(
+                        'flex cursor-pointer items-center gap-3 rounded-md border px-4 py-3 transition',
+                        isSelected
+                          ? 'border-[#1e3a5f] bg-[#e8eef6]'
+                          : 'border-slate-300 bg-slate-100 hover:border-slate-400'
+                      )}
+                    >
+                      <input
+                        type={question.type === 'multiple' ? 'checkbox' : 'radio'}
+                        name={`question-${question.id}`}
+                        checked={isSelected}
+                        onChange={() => toggleOption(option.index)}
+                        className="h-4 w-4 shrink-0 accent-[#1e3a5f]"
+                      />
+                      <span className="w-5 shrink-0 text-sm font-bold text-slate-500">
+                        {optionLabel(displayIndex)}
+                      </span>
+                      <MathText text={option.text} className="text-sm leading-relaxed" />
+                    </label>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2 border-t border-slate-300 bg-white px-4 py-3">
@@ -545,7 +646,7 @@ export function CbtAttemptRunner({
                       </p>
                       <div className="grid grid-cols-5 gap-2">
                         {items.map(({ item, index }, localIndex) => {
-                          const answered = (selections[item.id] || []).length > 0;
+                          const answered = isQuestionAnswered(item, selections, matrixAnswers);
                           const isMarked = Boolean(marked[item.id]);
                           const wasVisited = Boolean(visited[item.id]);
                           const isCurrent = index === currentIndex;

@@ -5,25 +5,27 @@ import { Badge } from '../ui/Badge';
 import { Alert } from '../ui/Alert';
 import { formatClock, optionLabel } from '../../utils/quizFormat';
 import { cn } from '../../utils/cn';
+import { MathText } from './MathText';
 
 function readStoredAnswers(storageKey) {
-  if (!storageKey) return { selections: {}, textAnswers: {} };
+  if (!storageKey) return { selections: {}, textAnswers: {}, matrixAnswers: {} };
   try {
     const raw = localStorage.getItem(storageKey);
-    if (!raw) return { selections: {}, textAnswers: {} };
+    if (!raw) return { selections: {}, textAnswers: {}, matrixAnswers: {} };
     const parsed = JSON.parse(raw);
 
     // Legacy format stored only option indexes per question id.
-    if (!parsed || Array.isArray(parsed) || (!parsed.selections && !parsed.textAnswers)) {
-      return { selections: parsed || {}, textAnswers: {} };
+    if (!parsed || Array.isArray(parsed) || (!parsed.selections && !parsed.textAnswers && !parsed.matrixAnswers)) {
+      return { selections: parsed || {}, textAnswers: {}, matrixAnswers: {} };
     }
 
     return {
       selections: parsed.selections || {},
       textAnswers: parsed.textAnswers || {},
+      matrixAnswers: parsed.matrixAnswers || {},
     };
   } catch {
-    return { selections: {}, textAnswers: {} };
+    return { selections: {}, textAnswers: {}, matrixAnswers: {} };
   }
 }
 
@@ -34,12 +36,26 @@ function typeBadge(question) {
   if (question.type === 'blank') {
     return { tone: 'ink', label: 'Fill in the blank' };
   }
+  if (question.type === 'matrix') {
+    return { tone: 'ember', label: 'Matrix — one per row' };
+  }
   return { tone: 'lagoon', label: 'Select one' };
 }
 
-function QuestionBlock({ question, selected, textAnswer, onToggle, onTextChange }) {
+function isMatrixAnswered(matrixAnswers, question) {
+  const rows = question.rows || [];
+  if (rows.length === 0) return false;
+  const picks = matrixAnswers || [];
+  return rows.every((_, index) => {
+    const value = Number(picks[index]);
+    return Number.isInteger(value) && value >= 0;
+  });
+}
+
+function QuestionBlock({ question, selected, textAnswer, matrixAnswers, onToggle, onTextChange, onMatrixPick }) {
   const badge = typeBadge(question);
   const isBlank = question.type === 'blank';
+  const isMatrix = question.type === 'matrix';
 
   return (
     <div id={`question-${question.number}`} className="rounded-2xl border border-ink-900/10 bg-white p-5 shadow-sm">
@@ -51,9 +67,11 @@ function QuestionBlock({ question, selected, textAnswer, onToggle, onTextChange 
         </span>
       </div>
 
-      <p className="whitespace-pre-wrap text-base font-semibold leading-relaxed text-ink-900">
-        {question.text}
-      </p>
+      <MathText
+        as="p"
+        text={question.text}
+        className="text-base font-semibold leading-relaxed text-ink-900"
+      />
 
       {isBlank ? (
         <div className="mt-4">
@@ -69,6 +87,50 @@ function QuestionBlock({ question, selected, textAnswer, onToggle, onTextChange 
             autoComplete="off"
             className="h-11 w-full rounded-xl border border-ink-900/10 bg-white px-4 text-sm text-ink-900 transition placeholder:text-ink-900/35 focus:border-lagoon-500 focus:outline-none focus:ring-2 focus:ring-lagoon-500/20"
           />
+        </div>
+      ) : isMatrix ? (
+        <div className="mt-4 overflow-x-auto">
+          <table className="min-w-full border-collapse text-sm">
+            <thead>
+              <tr>
+                <th className="border border-ink-900/10 bg-sand-50 px-3 py-2 text-left font-semibold text-ink-900/70">
+                  Statement
+                </th>
+                {(question.options || []).map((option) => (
+                  <th
+                    key={option.index}
+                    className="border border-ink-900/10 bg-sand-50 px-3 py-2 text-center font-semibold text-ink-900"
+                  >
+                    <MathText text={option.text} />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {(question.rows || []).map((row) => (
+                <tr key={row.index}>
+                  <td className="border border-ink-900/10 px-3 py-2 font-medium text-ink-900">
+                    <MathText text={row.text} />
+                  </td>
+                  {(question.options || []).map((option) => {
+                    const checked = Number(matrixAnswers?.[row.index]) === option.index;
+                    return (
+                      <td key={option.index} className="border border-ink-900/10 px-3 py-2 text-center">
+                        <input
+                          type="radio"
+                          name={`matrix-${question.id}-${row.index}`}
+                          checked={checked}
+                          onChange={() => onMatrixPick(question, row.index, option.index)}
+                          className="h-4 w-4 accent-lagoon-600"
+                          aria-label={`${row.text}: ${option.text}`}
+                        />
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div className="mt-4 space-y-2">
@@ -94,7 +156,7 @@ function QuestionBlock({ question, selected, textAnswer, onToggle, onTextChange 
                 <span className="w-5 shrink-0 text-sm font-bold text-ink-900/45">
                   {optionLabel(displayIndex)}
                 </span>
-                <span className="text-sm leading-relaxed text-ink-900">{option.text}</span>
+                <MathText text={option.text} className="text-sm leading-relaxed text-ink-900" />
               </label>
             );
           })}
@@ -117,6 +179,9 @@ export function AttemptRunner({
 }) {
   const [selections, setSelections] = useState(() => readStoredAnswers(storageKey).selections);
   const [textAnswers, setTextAnswers] = useState(() => readStoredAnswers(storageKey).textAnswers);
+  const [matrixAnswers, setMatrixAnswers] = useState(
+    () => readStoredAnswers(storageKey).matrixAnswers
+  );
   const [remaining, setRemaining] = useState(initialRemainingSeconds);
   const submittedRef = useRef(false);
 
@@ -126,9 +191,12 @@ export function AttemptRunner({
         if (question.type === 'blank') {
           return Boolean((textAnswers[question.id] || '').trim());
         }
+        if (question.type === 'matrix') {
+          return isMatrixAnswered(matrixAnswers[question.id], question);
+        }
         return (selections[question.id] || []).length > 0;
       }).length,
-    [questions, selections, textAnswers]
+    [questions, selections, textAnswers, matrixAnswers]
   );
 
   const handleSubmit = useCallback(
@@ -138,8 +206,18 @@ export function AttemptRunner({
 
       const answers = questions.map((question) => ({
         questionId: question.id,
-        selectedOptions: question.type === 'blank' ? [] : selections[question.id] || [],
+        selectedOptions:
+          question.type === 'blank' || question.type === 'matrix'
+            ? []
+            : selections[question.id] || [],
         textAnswer: question.type === 'blank' ? textAnswers[question.id] || '' : '',
+        matrixAnswers:
+          question.type === 'matrix'
+            ? (question.rows || []).map((_, index) => {
+                const value = Number(matrixAnswers[question.id]?.[index]);
+                return Number.isInteger(value) && value >= 0 ? value : -1;
+              })
+            : [],
       }));
 
       Promise.resolve(onSubmit(answers, autoSubmitted)).catch(() => {
@@ -147,7 +225,7 @@ export function AttemptRunner({
         submittedRef.current = false;
       });
     },
-    [onSubmit, questions, selections, textAnswers]
+    [onSubmit, questions, selections, textAnswers, matrixAnswers]
   );
 
   useEffect(() => {
@@ -167,12 +245,12 @@ export function AttemptRunner({
     try {
       localStorage.setItem(
         storageKey,
-        JSON.stringify({ selections, textAnswers })
+        JSON.stringify({ selections, textAnswers, matrixAnswers })
       );
     } catch {
       /* a full or blocked storage should not break the test */
     }
-  }, [selections, textAnswers, storageKey]);
+  }, [selections, textAnswers, matrixAnswers, storageKey]);
 
   function toggleOption(question, optionIndex) {
     setSelections((prev) => {
@@ -189,6 +267,18 @@ export function AttemptRunner({
 
   function changeTextAnswer(question, value) {
     setTextAnswers((prev) => ({ ...prev, [question.id]: value }));
+  }
+
+  function changeMatrixPick(question, rowIndex, columnIndex) {
+    setMatrixAnswers((prev) => {
+      const rowCount = question.rows?.length || 0;
+      const current = Array.from({ length: rowCount }, (_, index) => {
+        const value = Number(prev[question.id]?.[index]);
+        return Number.isInteger(value) && value >= 0 ? value : -1;
+      });
+      current[rowIndex] = columnIndex;
+      return { ...prev, [question.id]: current };
+    });
   }
 
   function confirmSubmit() {
@@ -260,8 +350,10 @@ export function AttemptRunner({
             question={question}
             selected={selections[question.id] || []}
             textAnswer={textAnswers[question.id] || ''}
+            matrixAnswers={matrixAnswers[question.id] || []}
             onToggle={toggleOption}
             onTextChange={changeTextAnswer}
+            onMatrixPick={changeMatrixPick}
           />
         ))}
       </div>
