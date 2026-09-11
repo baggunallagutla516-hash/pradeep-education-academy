@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useEducatorAuth } from '../context/EducatorAuthContext';
 import { contentApi } from '../api/adminApi';
 import { SITE } from '../constants/site';
 import { Badge } from '../components/ui/Badge';
@@ -33,18 +34,21 @@ const readyFeatures = [
     description: 'Download question papers, slides, and study resources for your class.',
     emoji: '📚',
     to: '/worksheets',
+    educatorTo: '/educator/worksheets',
   },
   {
     title: 'Unit test',
     description: 'Download the question paper for each unit of your class.',
     emoji: '✏️',
     to: '/unit-tests',
+    educatorTo: '/educator/unit-tests',
   },
   {
     title: 'C.E.T.',
     description: 'Download Chapter End Test question papers for your class.',
     emoji: '📖',
     to: '/cets',
+    educatorTo: '/educator/cets',
   },
   {
     title: 'Online Assessments',
@@ -111,7 +115,19 @@ function NewsUpdates({ items }) {
 
 export function HomePage() {
   const { isAuthenticated, student } = useAuth();
+  const { isAuthenticated: isEducator } = useEducatorAuth();
   const [news, setNews] = useState([]);
+
+  function featureLink(item) {
+    if (isAuthenticated) return item.to;
+    if (isEducator && item.educatorTo) return item.educatorTo;
+    return '/register';
+  }
+
+  function featureCta(item) {
+    if (isAuthenticated || (isEducator && item.educatorTo)) return 'Open';
+    return 'Register to open';
+  }
 
   useEffect(() => {
     let active = true;
@@ -318,12 +334,9 @@ export function HomePage() {
                 </div>
                 <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink-900/60">{item.description}</p>
-                <Link
-                  to={isAuthenticated ? item.to : '/register'}
-                  className="mt-4 inline-block"
-                >
+                <Link to={featureLink(item)} className="mt-4 inline-block">
                   <Button size="sm" variant="ember">
-                    {isAuthenticated ? 'Open' : 'Register to open'}
+                    {featureCta(item)}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
