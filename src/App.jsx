@@ -27,6 +27,9 @@ import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { VerifyResetOtpPage } from './pages/VerifyResetOtpPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { AccountPage } from './pages/AccountPage';
 import { PostDetailPage } from './pages/PostDetailPage';
@@ -111,6 +114,30 @@ export default function App() {
                       </GuestRoute>
                     }
                   />
+                  <Route
+                    path="forgot-password"
+                    element={
+                      <GuestRoute>
+                        <ForgotPasswordPage role="student" />
+                      </GuestRoute>
+                    }
+                  />
+                  <Route
+                    path="forgot-password/verify"
+                    element={
+                      <GuestRoute>
+                        <VerifyResetOtpPage role="student" />
+                      </GuestRoute>
+                    }
+                  />
+                  <Route
+                    path="forgot-password/reset"
+                    element={
+                      <GuestRoute>
+                        <ResetPasswordPage role="student" />
+                      </GuestRoute>
+                    }
+                  />
 
                   <Route
                     path="parent/login"
@@ -121,6 +148,30 @@ export default function App() {
                     }
                   />
                   <Route path="parent/register" element={<Navigate to="/parent/login" replace />} />
+                  <Route
+                    path="parent/forgot-password"
+                    element={
+                      <ParentGuestRoute>
+                        <ForgotPasswordPage role="parent" />
+                      </ParentGuestRoute>
+                    }
+                  />
+                  <Route
+                    path="parent/forgot-password/verify"
+                    element={
+                      <ParentGuestRoute>
+                        <VerifyResetOtpPage role="parent" />
+                      </ParentGuestRoute>
+                    }
+                  />
+                  <Route
+                    path="parent/forgot-password/reset"
+                    element={
+                      <ParentGuestRoute>
+                        <ResetPasswordPage role="parent" />
+                      </ParentGuestRoute>
+                    }
+                  />
 
                   <Route
                     path="educator/login"
@@ -135,6 +186,30 @@ export default function App() {
                     element={
                       <EducatorGuestRoute>
                         <EducatorRegisterPage />
+                      </EducatorGuestRoute>
+                    }
+                  />
+                  <Route
+                    path="educator/forgot-password"
+                    element={
+                      <EducatorGuestRoute>
+                        <ForgotPasswordPage role="educator" />
+                      </EducatorGuestRoute>
+                    }
+                  />
+                  <Route
+                    path="educator/forgot-password/verify"
+                    element={
+                      <EducatorGuestRoute>
+                        <VerifyResetOtpPage role="educator" />
+                      </EducatorGuestRoute>
+                    }
+                  />
+                  <Route
+                    path="educator/forgot-password/reset"
+                    element={
+                      <EducatorGuestRoute>
+                        <ResetPasswordPage role="educator" />
                       </EducatorGuestRoute>
                     }
                   />
@@ -208,6 +283,30 @@ export default function App() {
                   element={
                     <AdminGuestRoute>
                       <AdminLoginPage />
+                    </AdminGuestRoute>
+                  }
+                />
+                <Route
+                  path="admin/forgot-password"
+                  element={
+                    <AdminGuestRoute>
+                      <ForgotPasswordPage role="admin" />
+                    </AdminGuestRoute>
+                  }
+                />
+                <Route
+                  path="admin/forgot-password/verify"
+                  element={
+                    <AdminGuestRoute>
+                      <VerifyResetOtpPage role="admin" />
+                    </AdminGuestRoute>
+                  }
+                />
+                <Route
+                  path="admin/forgot-password/reset"
+                  element={
+                    <AdminGuestRoute>
+                      <ResetPasswordPage role="admin" />
                     </AdminGuestRoute>
                   }
                 />

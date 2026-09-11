@@ -9,6 +9,7 @@ import { Alert } from '../components/ui/Alert';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
+import { PasswordInput } from '../components/ui/PasswordInput';
 import { Select } from '../components/ui/Select';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
@@ -76,10 +77,18 @@ export function RegisterPage() {
     if (!form.studentClass) {
       next.studentClass = 'Please select your class.';
     }
+    if (!form.schoolName.trim()) {
+      next.schoolName = 'School name is required.';
+    }
+    if (!form.rollNumber.trim()) {
+      next.rollNumber = 'Roll number is required.';
+    }
     if (!form.password || form.password.length < 8) {
       next.password = 'Password must be at least 8 characters.';
     }
-    if (form.password !== form.confirmPassword) {
+    if (!form.confirmPassword) {
+      next.confirmPassword = 'Please confirm your password.';
+    } else if (form.password !== form.confirmPassword) {
       next.confirmPassword = 'Passwords do not match.';
     }
     setFieldErrors(next);
@@ -162,11 +171,24 @@ export function RegisterPage() {
 
   return (
     <PageShell
-      eyebrow="Registration"
+      eyebrow="🚀 Registration"
       title="Create your student account"
-      description="Fill in your details once. The admin will activate your account before you can log in."
+      description="Join the academy in a few steps. The admin will activate your account before you can log in."
     >
-      <Card className="mx-auto max-w-2xl">
+      <Card className="relative mx-auto max-w-2xl overflow-hidden">
+        <div
+          className="pointer-events-none absolute -right-2 -top-1 select-none text-4xl opacity-80 animate-float"
+          aria-hidden
+        >
+          🎓
+        </div>
+        <div
+          className="pointer-events-none absolute bottom-3 left-3 select-none text-2xl opacity-60 animate-float anim-delay-3"
+          aria-hidden
+        >
+          📚
+        </div>
+
         {error ? (
           <Alert type="error" title="Registration failed" onClose={() => setError('')} className="mb-4">
             {error}
@@ -178,7 +200,7 @@ export function RegisterPage() {
             Class options are empty right now. Please try again later or contact support on WhatsApp.
           </Alert>
         ) : (
-          <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+          <form className="relative space-y-4" onSubmit={handleSubmit} noValidate>
             <div className="grid gap-4 sm:grid-cols-2">
               <Input
                 label="Full name"
@@ -234,37 +256,39 @@ export function RegisterPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Input
-                label="School name (optional)"
+                label="School name"
                 name="schoolName"
                 value={form.schoolName}
                 onChange={updateField}
+                required
+                error={fieldErrors.schoolName}
                 placeholder="Your school"
               />
               <Input
-                label="Roll number (optional)"
+                label="Roll number"
                 name="rollNumber"
                 value={form.rollNumber}
                 onChange={updateField}
+                required
+                error={fieldErrors.rollNumber}
                 placeholder="School roll no."
               />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Input
+              <PasswordInput
                 label="Password"
                 name="password"
-                type="password"
                 value={form.password}
                 onChange={updateField}
                 required
                 error={fieldErrors.password}
-                hint="At least 8 characters"
+                hint="At least 8 characters — tap the eye to show/hide"
                 autoComplete="new-password"
               />
-              <Input
+              <PasswordInput
                 label="Confirm password"
                 name="confirmPassword"
-                type="password"
                 value={form.confirmPassword}
                 onChange={updateField}
                 required

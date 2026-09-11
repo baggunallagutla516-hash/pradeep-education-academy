@@ -141,6 +141,9 @@ export function AdminDppsPage() {
                 <Badge tone={item.isPublished ? 'lagoon' : 'ink'}>
                   {item.isPublished ? 'Published' : 'Draft'}
                 </Badge>
+                <Badge tone={item.resultsReleased ? 'lagoon' : 'ember'}>
+                  {item.resultsReleased ? 'Results out' : 'Results held'}
+                </Badge>
                 <Badge tone="ink">{classLabel(item)}</Badge>
                 <Badge tone="ember">{formatDate(item.practiceDate)}</Badge>
               </div>
@@ -166,12 +169,14 @@ export function AdminDppsPage() {
                     Results
                   </Button>
                 </Link>
-                <Link to={`/admin/dpps/${item.id}/edit`}>
-                  <Button variant="secondary" size="sm">
-                    <Pencil className="h-4 w-4" />
-                    Edit
-                  </Button>
-                </Link>
+                {!item.isPublished ? (
+                  <Link to={`/admin/dpps/${item.id}/edit`}>
+                    <Button variant="secondary" size="sm">
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </Button>
+                  </Link>
+                ) : null}
                 <Button
                   variant="danger"
                   size="sm"

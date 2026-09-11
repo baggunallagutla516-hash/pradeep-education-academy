@@ -54,6 +54,23 @@ export function AdminWorksheetsPage() {
     }
   }
 
+  async function handleTogglePublish(item) {
+    setBusyId(item.id);
+    setActionError('');
+    try {
+      const formData = new FormData();
+      formData.append('isPublished', item.isPublished ? 'false' : 'true');
+      const { data } = await adminApi.updateWorksheet(item.id, formData);
+      setWorksheets((prev) =>
+        prev.map((w) => (w.id === item.id ? data.data.worksheet : w))
+      );
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not update publish status.'));
+    } finally {
+      setBusyId('');
+    }
+  }
+
   return (
     <PageShell
       embedded
@@ -118,7 +135,15 @@ export function AdminWorksheetsPage() {
                     {item.fileSize ? ` · ${formatBytes(item.fileSize)}` : ''}
                   </p>
                 ) : null}
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    loading={busyId === item.id}
+                    onClick={() => handleTogglePublish(item)}
+                  >
+                    {item.isPublished ? 'Unpublish' : 'Publish'}
+                  </Button>
                   <Link to={`/admin/worksheets/${item.id}/edit`}>
                     <Button variant="secondary" size="sm">
                       <Pencil className="h-4 w-4" />

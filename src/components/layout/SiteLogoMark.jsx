@@ -16,7 +16,9 @@ const DefaultMark = ({ className }) => (
   </svg>
 );
 
-/** Shared site mark: uploaded logo when set, otherwise the default icon. */
+const DEFAULT_LOGO = '/logo.png';
+
+/** Shared site mark: uploaded logo when set, otherwise the academy seal. */
 export function SiteLogoMark({
   className,
   boxClassName,
@@ -24,29 +26,43 @@ export function SiteLogoMark({
   fallbackTone = 'lagoon',
 }) {
   const [logoUrl, setLogoUrl] = useState('');
+  const [imgFailed, setImgFailed] = useState(false);
 
   useEffect(() => {
     let active = true;
     getSiteLogoUrl().then((url) => {
-      if (active) setLogoUrl(url || '');
+      if (active) {
+        setLogoUrl(url || '');
+        setImgFailed(false);
+      }
     });
     return subscribeSiteLogo((url) => {
-      if (active) setLogoUrl(url || '');
+      if (active) {
+        setLogoUrl(url || '');
+        setImgFailed(false);
+      }
     });
   }, []);
 
   const sizeClass = boxClassName || 'h-11 w-11';
+  const resolvedSrc = logoUrl ? mediaUrl(logoUrl) : DEFAULT_LOGO;
 
-  if (logoUrl) {
+  if (!imgFailed) {
     return (
       <span
         className={cn(
-          'flex items-center justify-center overflow-hidden rounded-2xl bg-white shadow-lift ring-1 ring-ink-900/8',
+          'flex items-center justify-center overflow-hidden rounded-full p-0.5 shadow-lift ring-1 ring-[#c9a227]/40',
+          'bg-[radial-gradient(circle_at_50%_42%,#fffaf0_0%,#f6ebcf_52%,#ead7a8_100%)]',
           sizeClass,
           className
         )}
       >
-        <img src={mediaUrl(logoUrl)} alt="" className="h-full w-full object-contain p-0.5" />
+        <img
+          src={resolvedSrc}
+          alt=""
+          className="h-full w-full object-contain"
+          onError={() => setImgFailed(true)}
+        />
       </span>
     );
   }

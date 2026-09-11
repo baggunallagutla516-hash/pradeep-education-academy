@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, BarChart3 } from 'lucide-react';
+import { ArrowLeft, BarChart3, Megaphone } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
-import { formatMarks } from '../../utils/quizFormat';
+import { formatDate, formatMarks } from '../../utils/quizFormat';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -19,6 +20,9 @@ export function AdminSlipTestResultsPage() {
   const [data, setData] = useState(null);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [actionInfo, setActionInfo] = useState('');
+  const [releasing, setReleasing] = useState(false);
 
   async function load() {
     setStatus('loading');
@@ -38,6 +42,45 @@ export function AdminSlipTestResultsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  async function handleRelease() {
+    const released = data?.slipTest?.resultsReleased;
+    const confirmMessage = released
+      ? 'Results are already released. Send the notification email again to all students who submitted?'
+      : 'Release results to students? They will be able to view scores on the site, and each submitted student will get an email (no scores in the email).';
+    if (!window.confirm(confirmMessage)) return;
+
+    setReleasing(true);
+    setActionError('');
+    setActionInfo('');
+    try {
+      const res = await adminApi.releaseSlipTestResults(id);
+      const notify = res.data.data.notify || {};
+      setData((prev) =>
+        prev
+          ? {
+              ...prev,
+              slipTest: res.data.data.slipTest || {
+                ...prev.slipTest,
+                resultsReleased: true,
+              },
+            }
+          : prev
+      );
+      setActionInfo(
+        `${res.data.message} Emails sent: ${notify.emailed || 0}` +
+          (notify.failed ? `, failed: ${notify.failed}` : '') +
+          (notify.skipped ? `, skipped: ${notify.skipped}` : '') +
+          '.'
+      );
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not release results.'));
+    } finally {
+      setReleasing(false);
+    }
+  }
+
+  const released = Boolean(data?.slipTest?.resultsReleased);
+
   return (
     <PageShell
       embedded
@@ -56,19 +99,53 @@ export function AdminSlipTestResultsPage() {
               Back
             </Button>
           </Link>
-          <Link to={`/admin/slip-tests/${id}/edit`}>
-            <Button variant="secondary" size="sm">
-              Edit slip test
+          {status === 'ready' && !data?.slipTest?.isPublished ? (
+            <Link to={`/admin/slip-tests/${id}/edit`}>
+              <Button variant="secondary" size="sm">
+                Edit slip test
+              </Button>
+            </Link>
+          ) : null}
+          {status === 'ready' ? (
+            <Button size="sm" loading={releasing} onClick={handleRelease}>
+              <Megaphone className="h-4 w-4" />
+              {released ? 'Resend release email' : 'Release results'}
             </Button>
-          </Link>
+          ) : null}
         </div>
       }
     >
+      {actionError ? (
+        <Alert type="error" title="Action failed" onClose={() => setActionError('')} className="mb-4">
+          {actionError}
+        </Alert>
+      ) : null}
+      {actionInfo ? (
+        <Alert type="success" title="Done" onClose={() => setActionInfo('')} className="mb-4">
+          {actionInfo}
+        </Alert>
+      ) : null}
+
       {status === 'loading' ? <LoadingState label="Loading results…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
 
       {status === 'ready' ? (
         <>
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <Badge tone={released ? 'lagoon' : 'ember'}>
+              {released ? 'Results released to students' : 'Results on hold'}
+            </Badge>
+            {released && data.slipTest.resultsReleasedAt ? (
+              <span className="text-xs text-ink-900/50">
+                Released {formatDate(data.slipTest.resultsReleasedAt)}
+              </span>
+            ) : (
+              <span className="text-xs text-ink-900/50">
+                Students cannot see scores until you release results.
+              </span>
+            )}
+          </div>
+
           <div className="mb-6 grid gap-4 sm:grid-cols-3">
             <Card className="text-center">
               <p className="font-display text-3xl font-extrabold text-ink-900">

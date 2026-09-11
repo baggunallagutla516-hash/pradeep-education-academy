@@ -13,6 +13,15 @@ export const parentApi = {
   updateMe(payload) {
     return api.patch('/parent/me', payload);
   },
+  forgotPassword(payload) {
+    return api.post('/parent/forgot-password', payload);
+  },
+  verifyResetOtp(payload) {
+    return api.post('/parent/verify-reset-otp', payload);
+  },
+  resetPassword(payload) {
+    return api.post('/parent/reset-password', payload);
+  },
   children() {
     return api.get('/parent/children');
   },

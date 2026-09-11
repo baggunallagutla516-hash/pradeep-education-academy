@@ -69,6 +69,10 @@ export function AdminDppFormPage() {
           if (!active) return;
 
           const item = data.data.dpp;
+          if (item.isPublished) {
+            navigate('/admin/dpps', { replace: true });
+            return;
+          }
           setForm({
             title: item.title,
             description: item.description || '',

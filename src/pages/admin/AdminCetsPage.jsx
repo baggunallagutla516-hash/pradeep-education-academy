@@ -71,6 +71,21 @@ export function AdminCetsPage() {
     }
   }
 
+  async function handleTogglePublish(item) {
+    setBusyId(item.id);
+    setActionError('');
+    try {
+      const formData = new FormData();
+      formData.append('isPublished', item.isPublished ? 'false' : 'true');
+      const { data } = await adminApi.updateCet(item.id, formData);
+      setCets((prev) => prev.map((c) => (c.id === item.id ? data.data.cet : c)));
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not update publish status.'));
+    } finally {
+      setBusyId('');
+    }
+  }
+
   return (
     <PageShell
       embedded
@@ -174,7 +189,15 @@ export function AdminCetsPage() {
                     {item.fileSize ? ` · ${formatBytes(item.fileSize)}` : ''}
                   </p>
                 ) : null}
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    loading={busyId === item.id}
+                    onClick={() => handleTogglePublish(item)}
+                  >
+                    {item.isPublished ? 'Unpublish' : 'Publish'}
+                  </Button>
                   <Link to={`/admin/cets/${item.id}/edit`}>
                     <Button variant="secondary" size="sm">
                       <Pencil className="h-4 w-4" />

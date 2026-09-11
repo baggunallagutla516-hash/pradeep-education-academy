@@ -8,6 +8,7 @@ import { Alert } from '../../components/ui/Alert';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
+import { PasswordInput } from '../../components/ui/PasswordInput';
 
 export function EducatorLoginPage() {
   const { login } = useEducatorAuth();
@@ -79,10 +80,9 @@ export function EducatorLoginPage() {
               placeholder="teacher@email.com"
               autoComplete="email"
             />
-            <Input
+            <PasswordInput
               label="Password"
               name="password"
-              type="password"
               value={form.password}
               onChange={updateField}
               required
@@ -90,6 +90,14 @@ export function EducatorLoginPage() {
               placeholder="Your password"
               autoComplete="current-password"
             />
+            <div className="-mt-1 text-right">
+              <Link
+                to="/educator/forgot-password"
+                className="text-sm font-semibold text-lagoon-700 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <Button type="submit" loading={submitting} fullWidth>
               <LogIn className="h-4 w-4" />
               Log in

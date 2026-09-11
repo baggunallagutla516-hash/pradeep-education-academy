@@ -1,16 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  ArrowRight,
-  BookOpenCheck,
-  ClipboardCheck,
-  ClipboardList,
-  FileStack,
-  FileText,
-  PenLine,
-  ScrollText,
-  Sparkles,
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { contentApi } from '../api/adminApi';
 import { SITE } from '../constants/site';
@@ -21,17 +11,17 @@ import { Card } from '../components/ui/Card';
 
 const whatYouGet = [
   {
-    icon: FileStack,
+    emoji: '📄',
     title: 'Work sheets ready',
     body: 'Question papers, slides, and study resources for your class.',
   },
   {
-    icon: BookOpenCheck,
+    emoji: '🧠',
     title: 'Practice & exams',
     body: 'Unit tests, chapter end tests, daily practice problems, and slip tests.',
   },
   {
-    icon: Sparkles,
+    emoji: '✨',
     title: 'Your own space',
     body: 'Account details, progress, and certificates stay with you.',
   },
@@ -41,44 +31,48 @@ const readyFeatures = [
   {
     title: 'Work sheets',
     description: 'Download question papers, slides, and study resources for your class.',
-    icon: FileStack,
+    emoji: '📚',
     to: '/worksheets',
   },
   {
     title: 'Unit test',
     description: 'Download the question paper for each unit of your class.',
-    icon: PenLine,
+    emoji: '✏️',
     to: '/unit-tests',
   },
   {
     title: 'C.E.T.',
     description: 'Download Chapter End Test question papers for your class.',
-    icon: ScrollText,
+    emoji: '📖',
     to: '/cets',
   },
   {
     title: 'Online Assessments',
     description: 'Timed fullscreen online tests with single and multi-select questions.',
-    icon: ClipboardCheck,
+    emoji: '⏱️',
     to: '/assessments',
   },
   {
     title: 'D.P.P.',
     description: 'Daily practice problems. Attempt them online and see your score instantly.',
-    icon: ClipboardList,
+    emoji: '🎯',
     to: '/dpps',
   },
   {
     title: 'Slip test',
     description: 'Chapter and topic tests. Attempt them online and see your score instantly.',
-    icon: FileText,
+    emoji: '📝',
     to: '/slip-tests',
   },
 ];
 
 function NewsUpdates({ items }) {
   const entries = (items || [])
-    .map((n) => ({ id: n.id, text: String(n.text || '').trim() }))
+    .map((n) => ({
+      id: n.id,
+      text: String(n.text || '').trim(),
+      link: String(n.link || '').trim(),
+    }))
     .filter((n) => n.text);
 
   if (!entries.length) return null;
@@ -90,14 +84,23 @@ function NewsUpdates({ items }) {
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ember-600">News</p>
           <h2 className="mt-2 font-display text-3xl font-bold text-ink-900">Latest from the academy</h2>
           <p className="mt-3 text-base leading-relaxed text-ink-900/65">
-            Notices and updates for students and parents.
+            Notices and updates for students and parents. Click an item to open its page.
           </p>
         </div>
 
         <ul className="mt-8 max-w-3xl space-y-4 border-l-2 border-ember-500/35 pl-5">
           {entries.map((item) => (
             <li key={item.id} className="text-base leading-relaxed text-ink-800">
-              {item.text}
+              {item.link ? (
+                <Link
+                  to={item.link}
+                  className="font-medium text-lagoon-800 underline-offset-2 transition hover:text-lagoon-600 hover:underline"
+                >
+                  {item.text}
+                </Link>
+              ) : (
+                item.text
+              )}
             </li>
           ))}
         </ul>
@@ -130,21 +133,28 @@ export function HomePage() {
   return (
     <div>
       <section className="relative min-h-[min(88vh,52rem)] overflow-hidden border-b border-ink-900/8">
-        <div className="absolute inset-0 bg-[linear-gradient(120deg,#eef6f3_0%,#f7f3ee_48%,#f3ebe3_100%)]" />
-        <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_18%_22%,rgba(20,115,97,0.18),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(232,133,47,0.16),transparent_32%),radial-gradient(circle_at_70%_78%,rgba(20,115,97,0.1),transparent_36%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(120deg,#e8f6f1_0%,#f7f3ee_42%,#fff4e8_72%,#eef7fb_100%)]" />
+        <div className="pointer-events-none absolute inset-0 opacity-45 [background-image:radial-gradient(circle_at_18%_22%,rgba(20,115,97,0.2),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(232,133,47,0.18),transparent_32%),radial-gradient(circle_at_70%_78%,rgba(56,140,200,0.12),transparent_36%)]" />
         <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-lagoon-400/25 blur-3xl animate-glow-pulse" />
         <div className="pointer-events-none absolute -right-16 bottom-8 h-80 w-80 rounded-full bg-ember-500/20 blur-3xl animate-glow-pulse anim-delay-3" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] lg:block">
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(247,243,238,0)_0%,rgba(20,115,97,0.06)_40%,rgba(232,133,47,0.1)_100%)]" />
-          <div className="absolute right-[12%] top-[18%] h-40 w-40 rounded-[2rem] border border-lagoon-600/15 bg-white/40 shadow-soft backdrop-blur-sm animate-float" />
-          <div className="absolute right-[28%] top-[42%] h-28 w-28 rounded-full border border-ember-500/20 bg-ember-500/10 animate-float anim-delay-3" />
-          <div className="absolute bottom-[16%] right-[18%] h-36 w-52 rounded-[1.75rem] border border-ink-900/8 bg-white/50 shadow-lift backdrop-blur-sm animate-soft-rise anim-delay-4" />
-        </div>
 
-        <div className="relative mx-auto flex min-h-[min(88vh,52rem)] max-w-6xl flex-col justify-center px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+        <span
+          className="pointer-events-none absolute left-[8%] top-[18%] select-none text-3xl opacity-70 animate-float sm:text-4xl"
+          aria-hidden
+        >
+          🌟
+        </span>
+        <span
+          className="pointer-events-none absolute right-[12%] top-[22%] select-none text-3xl opacity-70 animate-float anim-delay-2 sm:text-4xl"
+          aria-hidden
+        >
+          🚀
+        </span>
+
+        <div className="relative mx-auto grid min-h-[min(88vh,52rem)] max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12 lg:px-8 lg:py-24">
           <div className="max-w-2xl">
             <p className="animate-soft-rise text-xs font-semibold uppercase tracking-[0.2em] text-ember-600">
-              Guided learning
+              🎓 Student learning hub
             </p>
             <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
               <span className="inline-block animate-soft-rise anim-delay-2">
@@ -152,10 +162,11 @@ export function HomePage() {
               </span>
             </h1>
             <p className="mt-5 max-w-xl animate-soft-rise anim-delay-3 text-lg leading-relaxed text-ink-900/70">
-              {SITE.tagline} Register once, then learn from one calm student space.
+              {SITE.tagline} Register once, then learn from one friendly student space — worksheets,
+              practice, and tests in one place.
             </p>
 
-            <div className="mt-8 animate-soft-rise anim-delay-4">
+            <div className="relative mt-8 animate-soft-rise anim-delay-4">
               {isAuthenticated ? (
                 <div className="flex flex-wrap gap-3">
                   <Link to="/dashboard">
@@ -189,6 +200,7 @@ export function HomePage() {
                       </Button>
                     </Link>
                   </div>
+
                   <div>
                     <Link to="/register">
                       <Button size="lg" variant="ember">
@@ -218,6 +230,18 @@ export function HomePage() {
               </p>
             ) : null}
           </div>
+
+          <div className="relative flex justify-center lg:justify-end">
+            <div className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center">
+              <div className="h-[82%] w-[82%] rounded-full bg-[radial-gradient(circle,#fff8eb_0%,#f0e0b8_42%,rgba(212,175,55,0.28)_68%,transparent_78%)] blur-[2px]" />
+              <div className="absolute h-[70%] w-[70%] rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.28)_0%,transparent_70%)] blur-2xl" />
+            </div>
+            <img
+              src="/logo.png"
+              alt={SITE.name}
+              className="relative w-full max-w-[22rem] animate-soft-rise anim-delay-3 rounded-full object-contain drop-shadow-[0_28px_48px_rgba(15,40,55,0.22)] sm:max-w-[26rem] lg:max-w-[30rem]"
+            />
+          </div>
         </div>
       </section>
 
@@ -230,7 +254,7 @@ export function HomePage() {
               What you get
             </p>
             <h2 className="mt-2 font-display text-3xl font-bold text-ink-900">
-              Built for calm, steady progress
+              Built for curious, confident students
             </h2>
             <p className="mt-3 text-base leading-relaxed text-ink-900/65">
               Start with worksheets today. Practice, exams, and results unlock as the academy grows.
@@ -241,12 +265,15 @@ export function HomePage() {
             {whatYouGet.map((item, index) => (
               <div
                 key={item.title}
-                className={`animate-soft-rise ${
+                className={`group animate-soft-rise rounded-3xl border border-ink-900/6 bg-white/70 p-5 shadow-sm transition hover:-translate-y-1 hover:border-lagoon-200 hover:shadow-lift ${
                   index === 0 ? 'anim-delay-2' : index === 1 ? 'anim-delay-3' : 'anim-delay-4'
                 }`}
               >
-                <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-lagoon-100 text-lagoon-700">
-                  <item.icon className="h-5 w-5" />
+                <span
+                  className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-lagoon-100 text-3xl transition group-hover:scale-110"
+                  aria-hidden
+                >
+                  {item.emoji}
                 </span>
                 <h3 className="font-display text-xl font-bold text-ink-900">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink-900/60">{item.body}</p>
@@ -266,7 +293,9 @@ export function HomePage() {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-lagoon-700">
               Learning areas
             </p>
-            <h2 className="mt-1 font-display text-2xl font-bold text-ink-900">Available now</h2>
+            <h2 className="mt-1 font-display text-2xl font-bold text-ink-900">
+              Available now 🎒
+            </h2>
             <p className="mt-2 max-w-2xl text-sm text-ink-900/60">
               Start with work sheets after you register. More tools unlock in later stages.
             </p>
@@ -274,9 +303,15 @@ export function HomePage() {
 
           <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {readyFeatures.map((item) => (
-              <Card key={item.title} className="h-full bg-white/90">
-                <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-lagoon-100 text-lagoon-700">
-                  <item.icon className="h-5 w-5" />
+              <Card
+                key={item.title}
+                className="group h-full bg-white/90 transition hover:-translate-y-1 hover:border-lagoon-300 hover:shadow-lift"
+              >
+                <span
+                  className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-lagoon-100 to-ember-400/20 text-2xl transition group-hover:scale-110"
+                  aria-hidden
+                >
+                  {item.emoji}
                 </span>
                 <div className="mb-2">
                   <Badge tone="lagoon">Ready</Badge>

@@ -16,6 +16,15 @@ export const educatorApi = {
   updateMe(payload) {
     return api.patch('/educator/me', payload);
   },
+  forgotPassword(payload) {
+    return api.post('/educator/forgot-password', payload);
+  },
+  verifyResetOtp(payload) {
+    return api.post('/educator/verify-reset-otp', payload);
+  },
+  resetPassword(payload) {
+    return api.post('/educator/reset-password', payload);
+  },
   worksheets(params) {
     return api.get('/educator/worksheets', { params });
   },

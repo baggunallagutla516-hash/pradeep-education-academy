@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Shield } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { getErrorMessage } from '../../utils/errors';
@@ -8,6 +8,7 @@ import { Alert } from '../../components/ui/Alert';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
+import { PasswordInput } from '../../components/ui/PasswordInput';
 
 export function AdminLoginPage() {
   const { login } = useAdminAuth();
@@ -78,16 +79,23 @@ export function AdminLoginPage() {
               error={fieldErrors.email}
               autoComplete="username"
             />
-            <Input
+            <PasswordInput
               label="Password"
               name="password"
-              type="password"
               value={form.password}
               onChange={updateField}
               required
               error={fieldErrors.password}
               autoComplete="current-password"
             />
+            <div className="-mt-1 text-right">
+              <Link
+                to="/admin/forgot-password"
+                className="text-sm font-semibold text-lagoon-700 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <Button type="submit" loading={submitting} fullWidth>
               <Shield className="h-4 w-4" />
               Sign in as admin

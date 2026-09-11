@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Clock3 } from 'lucide-react';
+import { ArrowLeft, Camera, Clock3 } from 'lucide-react';
 import { assessmentApi } from '../api/adminApi';
+import { useAuth } from '../context/AuthContext';
 import { getErrorMessage } from '../utils/errors';
 import { formatDate } from '../utils/quizFormat';
 import { PageShell } from '../components/layout/PageShell';
@@ -10,15 +11,18 @@ import { Card } from '../components/ui/Card';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { ResultCard } from '../components/quiz/ResultCard';
+import { ResultCertificateModal } from '../components/quiz/ResultCertificateModal';
 
 export function AssessmentResultPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { student } = useAuth();
 
   const [result, setResult] = useState(null);
   const [held, setHeld] = useState(null);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -66,12 +70,20 @@ export function AssessmentResultPage() {
       title={title}
       description={description}
       actions={
-        <Link to="/assessments">
-          <Button variant="secondary" size="sm">
-            <ArrowLeft className="h-4 w-4" />
-            All online assessments
-          </Button>
-        </Link>
+        <>
+          {status === 'ready' && result ? (
+            <Button variant="secondary" size="sm" onClick={() => setShareOpen(true)}>
+              <Camera className="h-4 w-4" />
+              Screenshot result
+            </Button>
+          ) : null}
+          <Link to="/assessments">
+            <Button variant="secondary" size="sm">
+              <ArrowLeft className="h-4 w-4" />
+              All online assessments
+            </Button>
+          </Link>
+        </>
       }
     >
       {status === 'loading' ? <LoadingState label="Loading your result…" /> : null}
@@ -107,6 +119,15 @@ export function AssessmentResultPage() {
             </p>
           ) : null}
           <ResultCard result={result} />
+          <ResultCertificateModal
+            open={shareOpen}
+            onClose={() => setShareOpen(false)}
+            result={result}
+            student={student}
+            kindLabel="Online assessment result"
+            activityLabel="Assessment"
+            dateValue={result.assessmentDate}
+          />
         </>
       ) : null}
     </PageShell>

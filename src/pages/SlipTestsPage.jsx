@@ -49,7 +49,7 @@ export function SlipTestsPage() {
       embedded
       eyebrow="Practice"
       title="Slip tests"
-      description="Short chapter and topic tests for your class. Attempt them online and get your score straight away."
+      description="Short chapter and topic tests for your class. Submit online; scores appear after the academy releases results."
       actions={<Badge>{classLabel(student) || 'Student'}</Badge>}
     >
       {status === 'loading' ? <LoadingState label="Loading slip tests…" /> : null}
@@ -73,7 +73,9 @@ export function SlipTestsPage() {
                 <div className="mb-2 flex flex-wrap gap-2">
                   <Badge tone="ember">{item.chapter}</Badge>
                   {done ? (
-                    <Badge tone="lagoon">Completed</Badge>
+                    <Badge tone={item.resultsReleased ? 'lagoon' : 'ember'}>
+                      {item.resultsReleased ? 'Completed' : 'Awaiting release'}
+                    </Badge>
                   ) : inProgress ? (
                     <Badge tone="ink">In progress</Badge>
                   ) : null}
@@ -102,7 +104,7 @@ export function SlipTestsPage() {
                   </span>
                 </p>
 
-                {done ? (
+                {done && item.resultsReleased ? (
                   <p className="mt-3 flex items-baseline gap-2">
                     <span className={`font-display text-2xl font-extrabold ${scoreTone(item.percentage)}`}>
                       {formatMarks(item.scoredMarks)}
@@ -113,12 +115,18 @@ export function SlipTestsPage() {
                   </p>
                 ) : null}
 
+                {done && !item.resultsReleased ? (
+                  <p className="mt-3 text-sm text-ink-900/55">
+                    Submitted. Scores will show here after results are released.
+                  </p>
+                ) : null}
+
                 <div className="mt-auto pt-4">
                   {done ? (
                     <Link to={`/slip-tests/${item.id}/result`}>
                       <Button variant="secondary" size="sm">
                         <CheckCircle2 className="h-4 w-4" />
-                        View result
+                        {item.resultsReleased ? 'View result' : 'Submission status'}
                       </Button>
                     </Link>
                   ) : (

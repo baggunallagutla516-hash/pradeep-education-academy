@@ -10,6 +10,15 @@ export const adminApi = {
   me() {
     return api.get('/admin/me');
   },
+  forgotPassword(payload) {
+    return api.post('/admin/forgot-password', payload);
+  },
+  verifyResetOtp(payload) {
+    return api.post('/admin/verify-reset-otp', payload);
+  },
+  resetPassword(payload) {
+    return api.post('/admin/reset-password', payload);
+  },
   dashboard() {
     return api.get('/admin/dashboard');
   },
@@ -163,6 +172,9 @@ export const adminApi = {
   dppResults(id) {
     return api.get(`/admin/dpps/${id}/results`);
   },
+  releaseDppResults(id) {
+    return api.post(`/admin/dpps/${id}/release-results`);
+  },
   createDpp(payload) {
     return api.post('/admin/dpps', payload);
   },
@@ -180,6 +192,9 @@ export const adminApi = {
   },
   slipTestResults(id) {
     return api.get(`/admin/slip-tests/${id}/results`);
+  },
+  releaseSlipTestResults(id) {
+    return api.post(`/admin/slip-tests/${id}/release-results`);
   },
   createSlipTest(payload) {
     return api.post('/admin/slip-tests', payload);

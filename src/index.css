@@ -9,7 +9,11 @@
 
   body {
     @apply min-h-screen bg-sand-50 font-sans text-ink-900 antialiased;
-    background-image: theme('backgroundImage.mesh');
+    background-image:
+      radial-gradient(at 8% 12%, rgba(63, 174, 150, 0.2) 0px, transparent 42%),
+      radial-gradient(at 92% 6%, rgba(232, 133, 47, 0.16) 0px, transparent 38%),
+      radial-gradient(at 78% 88%, rgba(56, 140, 200, 0.1) 0px, transparent 42%),
+      radial-gradient(at 18% 86%, rgba(20, 115, 97, 0.1) 0px, transparent 40%);
     background-attachment: fixed;
   }
 
@@ -60,6 +64,20 @@
     background-clip: text;
     color: transparent;
   }
+
+  .news-marquee-strip {
+    animation: news-marquee-scroll 36s linear infinite;
+    will-change: transform;
+  }
+}
+
+@keyframes news-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -69,5 +87,48 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .animate-marquee,
+  .news-marquee-strip {
+    animation: news-marquee-scroll 36s linear infinite !important;
+    animation-duration: 36s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body.printing-result-certificate * {
+    visibility: hidden !important;
+  }
+
+  body.printing-result-certificate .result-certificate-print,
+  body.printing-result-certificate .result-certificate-print * {
+    visibility: visible !important;
+  }
+
+  body.printing-result-certificate .result-certificate-modal {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    background: transparent !important;
+    padding: 0 !important;
+    backdrop-filter: none !important;
+  }
+
+  body.printing-result-certificate .result-certificate-print {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
   }
 }

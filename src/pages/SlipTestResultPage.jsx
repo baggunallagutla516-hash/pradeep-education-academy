@@ -1,21 +1,28 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Camera, Clock3 } from 'lucide-react';
 import { slipTestApi } from '../api/adminApi';
+import { useAuth } from '../context/AuthContext';
 import { getErrorMessage } from '../utils/errors';
+import { formatDate } from '../utils/quizFormat';
 import { PageShell } from '../components/layout/PageShell';
 import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { ResultCard } from '../components/quiz/ResultCard';
+import { ResultCertificateModal } from '../components/quiz/ResultCertificateModal';
 
 export function SlipTestResultPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { student } = useAuth();
 
   const [result, setResult] = useState(null);
+  const [held, setHeld] = useState(null);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -25,7 +32,13 @@ export function SlipTestResultPage() {
       try {
         const { data } = await slipTestApi.result(id);
         if (!active) return;
-        setResult(data.data.result);
+        if (data.data.resultsHeld) {
+          setHeld(data.data);
+          setResult(null);
+        } else {
+          setResult(data.data.result);
+          setHeld(null);
+        }
         setStatus('ready');
       } catch (err) {
         if (!active) return;
@@ -40,23 +53,35 @@ export function SlipTestResultPage() {
     };
   }, [id]);
 
+  const title = result?.title || held?.slipTest?.title || 'Your result';
+  const description = result
+    ? [result.subject, result.chapter, result.topic].filter(Boolean).join(' · ')
+    : held?.slipTest
+      ? [held.slipTest.subject, held.slipTest.chapter].filter(Boolean).join(' · ') ||
+        'Submitted successfully'
+      : 'Here is how you did.';
+
   return (
     <PageShell
       embedded
       eyebrow="Slip test result"
-      title={result?.title || 'Your result'}
-      description={
-        result
-          ? [result.subject, result.chapter, result.topic].filter(Boolean).join(' · ')
-          : 'Here is how you did.'
-      }
+      title={title}
+      description={description}
       actions={
-        <Link to="/slip-tests">
-          <Button variant="secondary" size="sm">
-            <ArrowLeft className="h-4 w-4" />
-            All slip tests
-          </Button>
-        </Link>
+        <>
+          {status === 'ready' && result ? (
+            <Button variant="secondary" size="sm" onClick={() => setShareOpen(true)}>
+              <Camera className="h-4 w-4" />
+              Screenshot result
+            </Button>
+          ) : null}
+          <Link to="/slip-tests">
+            <Button variant="secondary" size="sm">
+              <ArrowLeft className="h-4 w-4" />
+              All slip tests
+            </Button>
+          </Link>
+        </>
       }
     >
       {status === 'loading' ? <LoadingState label="Loading your result…" /> : null}
@@ -67,7 +92,37 @@ export function SlipTestResultPage() {
           retryLabel="Back to slip tests"
         />
       ) : null}
-      {status === 'ready' ? <ResultCard result={result} /> : null}
+
+      {status === 'ready' && held ? (
+        <Card className="mx-auto max-w-xl text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-ember-400/15 text-ember-700">
+            <Clock3 className="h-7 w-7" />
+          </div>
+          <h2 className="font-display text-xl font-bold text-ink-900">Results on hold</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-900/60">
+            Your answers were submitted
+            {held.submittedAt ? ` on ${formatDate(held.submittedAt)}` : ''}. The academy will
+            release results soon. You will get an email when they are available — then open them
+            here on the site.
+          </p>
+          <p className="mt-4 text-xs text-ink-900/45">Scores are not shared by email.</p>
+        </Card>
+      ) : null}
+
+      {status === 'ready' && result ? (
+        <>
+          <ResultCard result={result} />
+          <ResultCertificateModal
+            open={shareOpen}
+            onClose={() => setShareOpen(false)}
+            result={result}
+            student={student}
+            kindLabel="Slip test result"
+            activityLabel="Slip test"
+            dateValue={result.submittedAt}
+          />
+        </>
+      ) : null}
     </PageShell>
   );
 }

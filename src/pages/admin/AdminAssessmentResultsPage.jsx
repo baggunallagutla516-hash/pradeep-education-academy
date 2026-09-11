@@ -99,11 +99,13 @@ export function AdminAssessmentResultsPage() {
               Back
             </Button>
           </Link>
-          <Link to={`/admin/assessments/${id}/edit`}>
-            <Button variant="secondary" size="sm">
-              Edit online assessment
-            </Button>
-          </Link>
+          {status === 'ready' && !data?.assessment?.isPublished ? (
+            <Link to={`/admin/assessments/${id}/edit`}>
+              <Button variant="secondary" size="sm">
+                Edit online assessment
+              </Button>
+            </Link>
+          ) : null}
           {status === 'ready' ? (
             <Button size="sm" loading={releasing} onClick={handleRelease}>
               <Megaphone className="h-4 w-4" />

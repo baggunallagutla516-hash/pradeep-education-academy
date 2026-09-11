@@ -83,10 +83,17 @@ function ResultsSection({ title, rows, emptyLabel }) {
                     {formatDate(row.date || row.submittedAt) || '—'}
                   </td>
                   <td className="px-4 py-3 font-semibold tabular-nums text-ink-900">
-                    {formatMarks(row.scoredMarks)} / {formatMarks(row.totalMarks)}
+                    {row.resultsReleased
+                      ? `${formatMarks(row.scoredMarks)} / ${formatMarks(row.totalMarks)}`
+                      : 'On hold'}
                   </td>
-                  <td className={cn('px-4 py-3 font-bold tabular-nums', scoreTone(row.percentage))}>
-                    {Math.round(row.percentage)}%
+                  <td
+                    className={cn(
+                      'px-4 py-3 font-bold tabular-nums',
+                      row.resultsReleased ? scoreTone(row.percentage) : 'text-ink-900/45'
+                    )}
+                  >
+                    {row.resultsReleased ? `${Math.round(row.percentage)}%` : '—'}
                   </td>
                   <td className="px-4 py-3 tabular-nums text-ink-900/60">
                     {formatDuration(row.timeTakenSeconds)}

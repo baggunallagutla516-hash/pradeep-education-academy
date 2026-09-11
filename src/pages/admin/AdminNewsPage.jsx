@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { getErrorMessage } from '../../utils/errors';
@@ -6,15 +7,30 @@ import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { Select } from '../../components/ui/Select';
 import { Badge } from '../../components/ui/Badge';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
 
+const LINK_OPTIONS = [
+  { value: '', label: 'No link (text only)' },
+  { value: '/worksheets', label: 'Worksheets' },
+  { value: '/unit-tests', label: 'Unit tests' },
+  { value: '/cets', label: 'C.E.T.' },
+  { value: '/assessments', label: 'Online Assessments' },
+  { value: '/dpps', label: 'D.P.P.' },
+  { value: '/slip-tests', label: 'Slip tests' },
+  { value: '/login', label: 'Student login' },
+  { value: '/register', label: 'Student register' },
+  { value: '/contact', label: 'Contact' },
+];
+
 export function AdminNewsPage() {
   const [news, setNews] = useState([]);
   const [text, setText] = useState('');
+  const [link, setLink] = useState('');
   const [editingId, setEditingId] = useState('');
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
@@ -42,12 +58,14 @@ export function AdminNewsPage() {
   function startEdit(item) {
     setEditingId(item.id);
     setText(item.text);
+    setLink(item.link || '');
     setFormError('');
   }
 
   function cancelEdit() {
     setEditingId('');
     setText('');
+    setLink('');
     setFormError('');
   }
 
@@ -60,11 +78,12 @@ export function AdminNewsPage() {
     setSaving(true);
     setFormError('');
     try {
+      const payload = { text: text.trim(), link: link.trim() };
       if (editingId) {
-        const { data } = await adminApi.updateNews(editingId, { text: text.trim() });
+        const { data } = await adminApi.updateNews(editingId, payload);
         setNews((prev) => prev.map((n) => (n.id === editingId ? data.data.news : n)));
       } else {
-        const { data } = await adminApi.createNews({ text: text.trim(), isActive: true });
+        const { data } = await adminApi.createNews({ ...payload, isActive: true });
         setNews((prev) => [data.data.news, ...prev]);
       }
       cancelEdit();
@@ -106,7 +125,7 @@ export function AdminNewsPage() {
       embedded
       eyebrow="Admin"
       title="News ticker"
-      description="Short announcements that scroll on the home page."
+      description="Short announcements that scroll in the top marquee. Add a link so clicks open that page (login first if needed)."
     >
       <Card className="mb-6">
         <form className="space-y-3" onSubmit={handleSubmit}>
@@ -124,6 +143,19 @@ export function AdminNewsPage() {
             maxLength={280}
             required
           />
+          <Select
+            label="Open page on click"
+            name="link"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            hint="Protected pages send guests to student login, then onward to this page."
+          >
+            {LINK_OPTIONS.map((option) => (
+              <option key={option.value || 'none'} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
           <div className="flex flex-wrap gap-2">
             <Button type="submit" loading={saving}>
               {editingId ? (
@@ -158,10 +190,11 @@ export function AdminNewsPage() {
           {news.map((item) => (
             <Card key={item.id} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <div className="mb-1">
+                <div className="mb-1 flex flex-wrap gap-2">
                   <Badge tone={item.isActive ? 'lagoon' : 'ink'}>
                     {item.isActive ? 'Active' : 'Hidden'}
                   </Badge>
+                  {item.link ? <Badge tone="ember">{item.link}</Badge> : null}
                 </div>
                 <p className="text-sm font-medium text-ink-900">{item.text}</p>
               </div>

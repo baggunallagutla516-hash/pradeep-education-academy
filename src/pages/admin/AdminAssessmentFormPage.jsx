@@ -72,6 +72,10 @@ export function AdminAssessmentFormPage() {
           if (!active) return;
 
           const item = data.data.assessment;
+          if (item.isPublished) {
+            navigate('/admin/assessments', { replace: true });
+            return;
+          }
           const nextSections =
             Array.isArray(item.sections) && item.sections.length > 0
               ? item.sections

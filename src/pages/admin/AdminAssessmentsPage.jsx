@@ -169,12 +169,14 @@ export function AdminAssessmentsPage() {
                     Results
                   </Button>
                 </Link>
-                <Link to={`/admin/assessments/${item.id}/edit`}>
-                  <Button variant="secondary" size="sm">
-                    <Pencil className="h-4 w-4" />
-                    Edit
-                  </Button>
-                </Link>
+                {!item.isPublished ? (
+                  <Link to={`/admin/assessments/${item.id}/edit`}>
+                    <Button variant="secondary" size="sm">
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </Button>
+                  </Link>
+                ) : null}
                 <Button
                   variant="danger"
                   size="sm"

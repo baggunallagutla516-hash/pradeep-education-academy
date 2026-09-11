@@ -69,6 +69,10 @@ export function AdminSlipTestFormPage() {
           if (!active) return;
 
           const item = data.data.slipTest;
+          if (item.isPublished) {
+            navigate('/admin/slip-tests', { replace: true });
+            return;
+          }
           setForm({
             title: item.title,
             description: item.description || '',

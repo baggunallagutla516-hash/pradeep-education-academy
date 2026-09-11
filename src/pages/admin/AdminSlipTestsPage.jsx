@@ -143,6 +143,9 @@ export function AdminSlipTestsPage() {
                 <Badge tone={item.isPublished ? 'lagoon' : 'ink'}>
                   {item.isPublished ? 'Published' : 'Draft'}
                 </Badge>
+                <Badge tone={item.resultsReleased ? 'lagoon' : 'ember'}>
+                  {item.resultsReleased ? 'Results out' : 'Results held'}
+                </Badge>
                 <Badge tone="ink">{classLabel(item)}</Badge>
                 <Badge tone="ember">{item.chapter}</Badge>
               </div>
@@ -168,12 +171,14 @@ export function AdminSlipTestsPage() {
                     Results
                   </Button>
                 </Link>
-                <Link to={`/admin/slip-tests/${item.id}/edit`}>
-                  <Button variant="secondary" size="sm">
-                    <Pencil className="h-4 w-4" />
-                    Edit
-                  </Button>
-                </Link>
+                {!item.isPublished ? (
+                  <Link to={`/admin/slip-tests/${item.id}/edit`}>
+                    <Button variant="secondary" size="sm">
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </Button>
+                  </Link>
+                ) : null}
                 <Button
                   variant="danger"
                   size="sm"
