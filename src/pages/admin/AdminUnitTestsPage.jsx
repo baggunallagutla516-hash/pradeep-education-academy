@@ -35,7 +35,7 @@ export function AdminUnitTestsPage() {
       setStatus('ready');
     } catch (err) {
       setStatus('error');
-      setError(getErrorMessage(err, 'Could not load unit tests.'));
+      setError(getErrorMessage(err, 'Could not load exams.'));
     }
   }
 
@@ -58,14 +58,14 @@ export function AdminUnitTestsPage() {
     : unitTests;
 
   async function handleDelete(id) {
-    if (!window.confirm('Delete this unit test? The file will be removed from storage.')) return;
+    if (!window.confirm('Delete this exam? The file will be removed from storage.')) return;
     setBusyId(id);
     setActionError('');
     try {
       await adminApi.deleteUnitTest(id);
       setUnitTests((prev) => prev.filter((u) => u.id !== id));
     } catch (err) {
-      setActionError(getErrorMessage(err, 'Could not delete unit test.'));
+      setActionError(getErrorMessage(err, 'Could not delete exam.'));
     } finally {
       setBusyId('');
     }
@@ -92,8 +92,8 @@ export function AdminUnitTestsPage() {
     <PageShell
       embedded
       eyebrow="Admin"
-      title="Unit tests"
-      description="Upload a question paper for each unit. Students see the units for their own class after login."
+      title="EXAMS"
+      description="Upload a question paper for each exam. Students see the exams for their own class after login."
       actions={
         <div className="flex flex-wrap items-end gap-3">
           {classes.length > 1 ? (
@@ -116,7 +116,7 @@ export function AdminUnitTestsPage() {
           <Link to="/admin/unit-tests/new">
             <Button size="sm">
               <Plus className="h-4 w-4" />
-              New unit test
+              New exam
             </Button>
           </Link>
         </div>
@@ -133,16 +133,16 @@ export function AdminUnitTestsPage() {
         </Alert>
       ) : null}
 
-      {status === 'loading' ? <LoadingState label="Loading unit tests…" /> : null}
+      {status === 'loading' ? <LoadingState label="Loading exams…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
       {status === 'ready' && unitTests.length === 0 ? (
         <EmptyState
-          title="No unit tests yet"
+          title="No exams yet"
           description="Pick a class and unit, then upload the question paper as a PDF or Word file."
           icon={PenLine}
           action={
             <Link to="/admin/unit-tests/new">
-              <Button>Upload unit test</Button>
+              <Button>Upload exam</Button>
             </Link>
           }
         />
@@ -150,7 +150,7 @@ export function AdminUnitTestsPage() {
       {status === 'ready' && unitTests.length > 0 && visible.length === 0 ? (
         <EmptyState
           title="Nothing for this class"
-          description="No unit tests have been uploaded for the selected class yet."
+          description="No exams have been uploaded for the selected class yet."
           icon={PenLine}
         />
       ) : null}

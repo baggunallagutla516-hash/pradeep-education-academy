@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { authApi } from '../../api/authApi';
 import { getErrorMessage } from '../../utils/errors';
 import { toDateInputValue } from '../../utils/quizFormat';
 import { PageShell } from '../../components/layout/PageShell';
@@ -24,28 +23,22 @@ import {
 const emptyForm = {
   title: '',
   description: '',
-  studentClass: '',
   subject: '',
-  assessmentDate: toDateInputValue(),
   endDate: toDateInputValue(),
-  durationMinutes: '60',
+  durationMinutes: '15',
   negativeMarkPerWrong: '0',
   allowPartialCredit: 'true',
   showAnswersAfterSubmit: 'true',
   isPublished: 'false',
 };
 
-const DEFAULT_SECTIONS = ['Section A'];
-
-export function AdminAssessmentFormPage() {
+export function AdminQuizFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
 
   const [form, setForm] = useState(emptyForm);
-  const [sections, setSections] = useState(DEFAULT_SECTIONS);
-  const [questions, setQuestions] = useState([makeEmptyQuestion({ section: DEFAULT_SECTIONS[0] })]);
-  const [classes, setClasses] = useState([]);
+  const [questions, setQuestions] = useState([makeEmptyQuestion()]);
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -60,50 +53,31 @@ export function AdminAssessmentFormPage() {
 
     async function load() {
       try {
-        const classesRes = await authApi.classes();
-        if (!active) return;
-        const list = classesRes.data.data.classes || [];
-        setClasses(list);
-
         if (isEdit) {
           const [{ data }, resultsRes] = await Promise.all([
-            adminApi.assessment(id),
-            adminApi.assessmentResults(id).catch(() => null),
+            adminApi.quiz(id),
+            adminApi.quizResults(id).catch(() => null),
           ]);
           if (!active) return;
 
-          const item = data.data.assessment;
+          const item = data.data.quiz;
           if (item.isPublished) {
-            navigate('/admin/assessments', { replace: true });
+            navigate('/admin/quizzes', { replace: true });
             return;
           }
-          const nextSections =
-            Array.isArray(item.sections) && item.sections.length > 0
-              ? item.sections
-              : DEFAULT_SECTIONS;
           setForm({
             title: item.title,
             description: item.description || '',
-            studentClass: item.studentClass || '',
             subject: item.subject || '',
-            assessmentDate: toDateInputValue(item.assessmentDate),
-            endDate: toDateInputValue(item.endDate || item.assessmentDate),
-            durationMinutes: String(item.durationMinutes ?? '60'),
+            endDate: toDateInputValue(item.endDate),
+            durationMinutes: String(item.durationMinutes ?? '15'),
             negativeMarkPerWrong: String(item.negativeMarkPerWrong ?? '0'),
             allowPartialCredit: item.allowPartialCredit ? 'true' : 'false',
             showAnswersAfterSubmit: item.showAnswersAfterSubmit ? 'true' : 'false',
             isPublished: item.isPublished ? 'true' : 'false',
           });
-          setSections(nextSections);
-          setQuestions(
-            (item.questions || []).map((question) => ({
-              ...toEditableQuestion(question),
-              section: question.section || nextSections[0],
-            }))
-          );
+          setQuestions((item.questions || []).map(toEditableQuestion));
           setHasAttempts(Boolean(resultsRes?.data?.data?.summary?.submitted));
-        } else {
-          setForm((prev) => ({ ...prev, studentClass: list[0]?.id || '' }));
         }
         setLoading(false);
       } catch (err) {
@@ -117,7 +91,7 @@ export function AdminAssessmentFormPage() {
     return () => {
       active = false;
     };
-  }, [id, isEdit]);
+  }, [id, isEdit, navigate]);
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -125,51 +99,10 @@ export function AdminAssessmentFormPage() {
     setFieldErrors((prev) => ({ ...prev, [name]: '' }));
   }
 
-  function updateSectionName(index, value) {
-    const previous = sections[index];
-    const next = sections.map((name, i) => (i === index ? value : name));
-    setSections(next);
-    if (previous && previous !== value) {
-      setQuestions((prev) =>
-        prev.map((question) =>
-          question.section === previous ? { ...question, section: value } : question
-        )
-      );
-    }
-  }
-
-  function addSection() {
-    const label = `Section ${String.fromCharCode(65 + Math.min(sections.length, 25))}`;
-    let name = label;
-    let n = 2;
-    while (sections.some((item) => item.toLowerCase() === name.toLowerCase())) {
-      name = `${label} ${n}`;
-      n += 1;
-    }
-    setSections((prev) => [...prev, name]);
-  }
-
-  function removeSection(index) {
-    if (sections.length <= 1) return;
-    const removed = sections[index];
-    const next = sections.filter((_, i) => i !== index);
-    setSections(next);
-    setQuestions((prev) =>
-      prev.map((question) =>
-        question.section === removed ? { ...question, section: next[0] } : question
-      )
-    );
-  }
-
   function validate() {
     const next = {};
     if (!form.title.trim()) next.title = 'Title is required.';
-    if (!form.studentClass) next.studentClass = 'Class is required.';
-    if (!form.assessmentDate) next.assessmentDate = 'Assessment date is required.';
     if (!form.endDate) next.endDate = 'End date is required.';
-    if (form.assessmentDate && form.endDate && form.endDate < form.assessmentDate) {
-      next.endDate = 'End date cannot be before the assessment date.';
-    }
 
     const duration = Number(form.durationMinutes);
     if (!Number.isFinite(duration) || duration < 1 || duration > 300) {
@@ -179,16 +112,6 @@ export function AdminAssessmentFormPage() {
     const negative = Number(form.negativeMarkPerWrong);
     if (!Number.isFinite(negative) || negative < 0 || negative > 10) {
       next.negativeMarkPerWrong = 'Enter a value between 0 and 10.';
-    }
-
-    const cleanedSections = sections.map((name) => name.trim()).filter(Boolean);
-    if (cleanedSections.length === 0) {
-      next.sections = 'Add at least one section.';
-    } else {
-      const lower = cleanedSections.map((name) => name.toLowerCase());
-      if (new Set(lower).size !== lower.length) {
-        next.sections = 'Section names must be unique.';
-      }
     }
 
     setFieldErrors(next);
@@ -206,36 +129,26 @@ export function AdminAssessmentFormPage() {
     setError('');
     if (!validate()) return;
 
-    const cleanedSections = sections.map((name) => name.trim()).filter(Boolean);
-    const fallback = cleanedSections[0];
-    const payloadQuestions = toApiQuestions(questions).map((question, index) => ({
-      ...question,
-      section: questions[index].section?.trim() || fallback,
-    }));
-
     const payload = {
       title: form.title.trim(),
       description: form.description.trim(),
-      studentClass: form.studentClass,
       subject: form.subject.trim(),
-      assessmentDate: form.assessmentDate,
       endDate: form.endDate,
       durationMinutes: Number(form.durationMinutes),
       negativeMarkPerWrong: Number(form.negativeMarkPerWrong),
       allowPartialCredit: form.allowPartialCredit === 'true',
       showAnswersAfterSubmit: form.showAnswersAfterSubmit === 'true',
       isPublished: form.isPublished === 'true',
-      sections: cleanedSections.map((name) => ({ name })),
-      questions: payloadQuestions,
+      questions: toApiQuestions(questions),
     };
 
     setSaving(true);
     try {
-      if (isEdit) await adminApi.updateAssessment(id, payload);
-      else await adminApi.createAssessment(payload);
-      navigate('/admin/assessments');
+      if (isEdit) await adminApi.updateQuiz(id, payload);
+      else await adminApi.createQuiz(payload);
+      navigate('/admin/quizzes');
     } catch (err) {
-      setError(getErrorMessage(err, 'Could not save this assessment.'));
+      setError(getErrorMessage(err, 'Could not save this quiz.'));
     } finally {
       setSaving(false);
     }
@@ -243,7 +156,7 @@ export function AdminAssessmentFormPage() {
 
   if (loading) {
     return (
-      <PageShell embedded title={isEdit ? 'Edit online assessment' : 'New online assessment'}>
+      <PageShell embedded title={isEdit ? 'Edit quiz' : 'New quiz'}>
         <LoadingState label="Loading…" />
       </PageShell>
     );
@@ -251,7 +164,7 @@ export function AdminAssessmentFormPage() {
 
   if (loadError) {
     return (
-      <PageShell embedded title={isEdit ? 'Edit online assessment' : 'New online assessment'}>
+      <PageShell embedded title={isEdit ? 'Edit quiz' : 'New quiz'}>
         <ErrorState description={loadError} onRetry={() => window.location.reload()} />
       </PageShell>
     );
@@ -260,11 +173,11 @@ export function AdminAssessmentFormPage() {
   return (
     <PageShell
       embedded
-      eyebrow="Online Assessments"
-      title={isEdit ? 'Edit online assessment' : 'New online assessment'}
-      description="Create sections (e.g. Section A / Section B), then add single and multi-select questions to each."
+      eyebrow="QUIZ"
+      title={isEdit ? 'Edit quiz' : 'New quiz'}
+      description="Available to every login: students, educators, and parents. Use single-select and multi-select questions only."
       actions={
-        <Link to="/admin/assessments">
+        <Link to="/admin/quizzes">
           <Button variant="secondary" size="sm">
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -293,44 +206,18 @@ export function AdminAssessmentFormPage() {
             onChange={updateField}
             required
             error={fieldErrors.title}
-            hint="Example: Mid-term Assessment — Physics"
+            hint="Example: Weekly General Quiz"
+          />
+
+          <Input
+            label="Subject"
+            name="subject"
+            value={form.subject}
+            onChange={updateField}
+            hint="Optional, e.g. General knowledge"
           />
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Select
-              label="Class"
-              name="studentClass"
-              value={form.studentClass}
-              onChange={updateField}
-              required
-              error={fieldErrors.studentClass}
-            >
-              <option value="">Select class</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
-            <Input
-              label="Subject"
-              name="subject"
-              value={form.subject}
-              onChange={updateField}
-              hint="Optional, e.g. Physics"
-            />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              label="Assessment date"
-              name="assessmentDate"
-              type="date"
-              value={form.assessmentDate}
-              onChange={updateField}
-              required
-              error={fieldErrors.assessmentDate}
-            />
             <Input
               label="End date"
               name="endDate"
@@ -339,22 +226,21 @@ export function AdminAssessmentFormPage() {
               onChange={updateField}
               required
               error={fieldErrors.endDate}
-              hint="After this date students can no longer start the assessment"
+              hint="After this date students can no longer start the quiz"
+            />
+            <Input
+              label="Duration (minutes)"
+              name="durationMinutes"
+              type="number"
+              min="1"
+              max="300"
+              value={form.durationMinutes}
+              onChange={updateField}
+              required
+              error={fieldErrors.durationMinutes}
+              hint="The quiz submits automatically when time runs out"
             />
           </div>
-
-          <Input
-            label="Duration (minutes)"
-            name="durationMinutes"
-            type="number"
-            min="1"
-            max="300"
-            value={form.durationMinutes}
-            onChange={updateField}
-            required
-            error={fieldErrors.durationMinutes}
-            hint="Auto-submits when time runs out. Leaving fullscreen 3 times also auto-submits."
-          />
 
           <Textarea
             label="Instructions"
@@ -364,48 +250,6 @@ export function AdminAssessmentFormPage() {
             rows={3}
             hint="Optional notes shown to students before they start"
           />
-        </Card>
-
-        <Card className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h3 className="font-display text-lg font-bold text-ink-900">Sections</h3>
-              <p className="text-sm text-ink-900/55">
-                Students switch sections with tabs during the test (like Section A / Section B).
-              </p>
-            </div>
-            <Button type="button" variant="secondary" size="sm" onClick={addSection}>
-              <Plus className="h-4 w-4" />
-              Add section
-            </Button>
-          </div>
-
-          {fieldErrors.sections ? (
-            <p className="text-xs font-medium text-red-600">{fieldErrors.sections}</p>
-          ) : null}
-
-          <div className="space-y-2">
-            {sections.map((name, index) => (
-              <div key={`section-${index}`} className="flex items-center gap-2">
-                <Input
-                  label={index === 0 ? 'Section name' : undefined}
-                  value={name}
-                  onChange={(event) => updateSectionName(index, event.target.value)}
-                  placeholder={`Section ${String.fromCharCode(65 + index)}`}
-                />
-                <Button
-                  type="button"
-                  variant="danger"
-                  size="sm"
-                  className={index === 0 ? 'mt-6' : ''}
-                  disabled={sections.length <= 1}
-                  onClick={() => removeSection(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
         </Card>
 
         <Card className="space-y-4">
@@ -451,7 +295,7 @@ export function AdminAssessmentFormPage() {
               name="isPublished"
               value={form.isPublished}
               onChange={updateField}
-              hint="Students only see published assessments"
+              hint="Every login sees published quizzes"
             >
               <option value="true">Published</option>
               <option value="false">Draft</option>
@@ -463,16 +307,15 @@ export function AdminAssessmentFormPage() {
           <QuestionBuilder
             questions={questions}
             onChange={setQuestions}
-            allowedTypes={['single', 'multiple', 'matrix']}
-            sections={sections}
+            allowedTypes={['single', 'multiple']}
           />
         </Card>
 
         <div className="flex flex-wrap gap-3">
           <Button type="submit" loading={saving}>
-            {isEdit ? 'Save changes' : 'Create online assessment'}
+            {isEdit ? 'Save changes' : 'Create quiz'}
           </Button>
-          <Link to="/admin/assessments">
+          <Link to="/admin/quizzes">
             <Button type="button" variant="secondary">
               Cancel
             </Button>

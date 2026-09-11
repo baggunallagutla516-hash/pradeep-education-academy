@@ -55,6 +55,9 @@ import { AdminAssessmentResultsPage } from './pages/admin/AdminAssessmentResults
 import { AdminDppsPage } from './pages/admin/AdminDppsPage';
 import { AdminDppFormPage } from './pages/admin/AdminDppFormPage';
 import { AdminDppResultsPage } from './pages/admin/AdminDppResultsPage';
+import { AdminQuizzesPage } from './pages/admin/AdminQuizzesPage';
+import { AdminQuizFormPage } from './pages/admin/AdminQuizFormPage';
+import { AdminQuizResultsPage } from './pages/admin/AdminQuizResultsPage';
 import { AdminSlipTestsPage } from './pages/admin/AdminSlipTestsPage';
 import { AdminSlipTestFormPage } from './pages/admin/AdminSlipTestFormPage';
 import { AdminSlipTestResultsPage } from './pages/admin/AdminSlipTestResultsPage';
@@ -69,6 +72,9 @@ import { AssessmentResultPage } from './pages/AssessmentResultPage';
 import { DppsPage } from './pages/DppsPage';
 import { DppAttemptPage } from './pages/DppAttemptPage';
 import { DppResultPage } from './pages/DppResultPage';
+import { QuizzesPage } from './pages/QuizzesPage';
+import { QuizAttemptPage } from './pages/QuizAttemptPage';
+import { QuizResultPage } from './pages/QuizResultPage';
 import { SlipTestsPage } from './pages/SlipTestsPage';
 import { SlipTestAttemptPage } from './pages/SlipTestAttemptPage';
 import { SlipTestResultPage } from './pages/SlipTestResultPage';
@@ -84,6 +90,12 @@ import { EducatorWorksheetsPage } from './pages/educator/EducatorWorksheetsPage'
 import { EducatorUnitTestsPage } from './pages/educator/EducatorUnitTestsPage';
 import { EducatorCetsPage } from './pages/educator/EducatorCetsPage';
 import { EducatorAccountPage } from './pages/educator/EducatorAccountPage';
+import { EducatorQuizzesPage } from './pages/educator/EducatorQuizzesPage';
+import { EducatorQuizAttemptPage } from './pages/educator/EducatorQuizAttemptPage';
+import { EducatorQuizResultPage } from './pages/educator/EducatorQuizResultPage';
+import { ParentQuizzesPage } from './pages/parent/ParentQuizzesPage';
+import { ParentQuizAttemptPage } from './pages/parent/ParentQuizAttemptPage';
+import { ParentQuizResultPage } from './pages/parent/ParentQuizResultPage';
 
 export default function App() {
   return (
@@ -244,6 +256,9 @@ export default function App() {
                   <Route path="dpps" element={<DppsPage />} />
                   <Route path="dpps/:id/attempt" element={<DppAttemptPage />} />
                   <Route path="dpps/:id/result" element={<DppResultPage />} />
+                  <Route path="quizzes" element={<QuizzesPage />} />
+                  <Route path="quizzes/:id/attempt" element={<QuizAttemptPage />} />
+                  <Route path="quizzes/:id/result" element={<QuizResultPage />} />
                   <Route path="slip-tests" element={<SlipTestsPage />} />
                   <Route path="slip-tests/:id/attempt" element={<SlipTestAttemptPage />} />
                   <Route path="slip-tests/:id/result" element={<SlipTestResultPage />} />
@@ -260,6 +275,9 @@ export default function App() {
                   <Route path="parent/dashboard" element={<ParentDashboardPage />} />
                   <Route path="parent/children" element={<ParentChildrenPage />} />
                   <Route path="parent/children/:studentId" element={<ParentChildDetailPage />} />
+                  <Route path="parent/quizzes" element={<ParentQuizzesPage />} />
+                  <Route path="parent/quizzes/:id/attempt" element={<ParentQuizAttemptPage />} />
+                  <Route path="parent/quizzes/:id/result" element={<ParentQuizResultPage />} />
                   <Route path="parent/link" element={<Navigate to="/parent/dashboard" replace />} />
                   <Route path="parent/account" element={<ParentAccountPage />} />
                 </Route>
@@ -275,6 +293,9 @@ export default function App() {
                   <Route path="educator/worksheets" element={<EducatorWorksheetsPage />} />
                   <Route path="educator/unit-tests" element={<EducatorUnitTestsPage />} />
                   <Route path="educator/cets" element={<EducatorCetsPage />} />
+                  <Route path="educator/quizzes" element={<EducatorQuizzesPage />} />
+                  <Route path="educator/quizzes/:id/attempt" element={<EducatorQuizAttemptPage />} />
+                  <Route path="educator/quizzes/:id/result" element={<EducatorQuizResultPage />} />
                   <Route path="educator/account" element={<EducatorAccountPage />} />
                 </Route>
 
@@ -343,6 +364,10 @@ export default function App() {
                   <Route path="dpps/new" element={<AdminDppFormPage />} />
                   <Route path="dpps/:id/edit" element={<AdminDppFormPage />} />
                   <Route path="dpps/:id/results" element={<AdminDppResultsPage />} />
+                  <Route path="quizzes" element={<AdminQuizzesPage />} />
+                  <Route path="quizzes/new" element={<AdminQuizFormPage />} />
+                  <Route path="quizzes/:id/edit" element={<AdminQuizFormPage />} />
+                  <Route path="quizzes/:id/results" element={<AdminQuizResultsPage />} />
                   <Route path="slip-tests" element={<AdminSlipTestsPage />} />
                   <Route path="slip-tests/new" element={<AdminSlipTestFormPage />} />
                   <Route path="slip-tests/:id/edit" element={<AdminSlipTestFormPage />} />

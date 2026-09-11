@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { authApi } from '../../api/authApi';
 import { getErrorMessage } from '../../utils/errors';
+import { toDateInputValue } from '../../utils/quizFormat';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -27,6 +28,7 @@ const emptyForm = {
   subject: '',
   chapter: '',
   topic: '',
+  endDate: toDateInputValue(),
   durationMinutes: '15',
   negativeMarkPerWrong: '0',
   allowPartialCredit: 'true',
@@ -80,6 +82,7 @@ export function AdminSlipTestFormPage() {
             subject: item.subject || '',
             chapter: item.chapter || '',
             topic: item.topic || '',
+            endDate: toDateInputValue(item.endDate),
             durationMinutes: String(item.durationMinutes ?? '15'),
             negativeMarkPerWrong: String(item.negativeMarkPerWrong ?? '0'),
             allowPartialCredit: item.allowPartialCredit ? 'true' : 'false',
@@ -116,6 +119,7 @@ export function AdminSlipTestFormPage() {
     if (!form.title.trim()) next.title = 'Title is required.';
     if (!form.studentClass) next.studentClass = 'Class is required.';
     if (!form.chapter.trim()) next.chapter = 'Chapter is required.';
+    if (!form.endDate) next.endDate = 'End date is required.';
 
     const duration = Number(form.durationMinutes);
     if (!Number.isFinite(duration) || duration < 1 || duration > 300) {
@@ -149,6 +153,7 @@ export function AdminSlipTestFormPage() {
       subject: form.subject.trim(),
       chapter: form.chapter.trim(),
       topic: form.topic.trim(),
+      endDate: form.endDate,
       durationMinutes: Number(form.durationMinutes),
       negativeMarkPerWrong: Number(form.negativeMarkPerWrong),
       allowPartialCredit: form.allowPartialCredit === 'true',
@@ -267,18 +272,30 @@ export function AdminSlipTestFormPage() {
             />
           </div>
 
-          <Input
-            label="Duration (minutes)"
-            name="durationMinutes"
-            type="number"
-            min="1"
-            max="300"
-            value={form.durationMinutes}
-            onChange={updateField}
-            required
-            error={fieldErrors.durationMinutes}
-            hint="The test submits automatically when time runs out"
-          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              label="End date"
+              name="endDate"
+              type="date"
+              value={form.endDate}
+              onChange={updateField}
+              required
+              error={fieldErrors.endDate}
+              hint="After this date students can no longer start the slip test"
+            />
+            <Input
+              label="Duration (minutes)"
+              name="durationMinutes"
+              type="number"
+              min="1"
+              max="300"
+              value={form.durationMinutes}
+              onChange={updateField}
+              required
+              error={fieldErrors.durationMinutes}
+              hint="The test submits automatically when time runs out"
+            />
+          </div>
 
           <Textarea
             label="Instructions"

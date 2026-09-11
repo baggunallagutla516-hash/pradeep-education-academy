@@ -60,7 +60,7 @@ export function ParentLayout() {
       <div
         className={cn(
           'min-h-screen transition-[padding] duration-200 ease-out',
-          expanded ? 'pl-56' : 'pl-14'
+          expanded ? 'pl-64' : 'pl-14'
         )}
       >
         <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">

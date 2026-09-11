@@ -146,6 +146,9 @@ export function AdminDppsPage() {
                 </Badge>
                 <Badge tone="ink">{classLabel(item)}</Badge>
                 <Badge tone="ember">{formatDate(item.practiceDate)}</Badge>
+                {item.endDate ? (
+                  <Badge tone="ink">Ends {formatDate(item.endDate)}</Badge>
+                ) : null}
               </div>
 
               <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>

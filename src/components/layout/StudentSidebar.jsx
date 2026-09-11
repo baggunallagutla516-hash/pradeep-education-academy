@@ -4,6 +4,7 @@ import {
   ClipboardList,
   FileStack,
   FileText,
+  HelpCircle,
   LayoutDashboard,
   LogOut,
   PenLine,
@@ -20,14 +21,15 @@ import { SiteLogoMark } from './SiteLogoMark';
 const STORAGE_KEY = 'student-sidebar-expanded';
 
 const links = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/worksheets', label: 'Worksheets', icon: FileStack },
-  { to: '/unit-tests', label: 'Unit tests', icon: PenLine },
+  { to: '/dashboard', label: 'DASHBOARD', icon: LayoutDashboard, end: true },
+  { to: '/worksheets', label: 'WORKSHEETS', icon: FileStack },
+  { to: '/unit-tests', label: 'EXAMS', icon: PenLine },
   { to: '/cets', label: 'C.E.T.', icon: ScrollText },
-  { to: '/assessments', label: 'Online Assessments', icon: ClipboardCheck },
+  { to: '/assessments', label: 'ONLINE ASSESSMENTS', icon: ClipboardCheck },
   { to: '/dpps', label: 'D.P.P.', icon: ClipboardList },
-  { to: '/slip-tests', label: 'Slip tests', icon: FileText },
-  { to: '/account', label: 'My Account', icon: UserRound },
+  { to: '/quizzes', label: 'QUIZ', icon: HelpCircle },
+  { to: '/slip-tests', label: 'SLIP TESTS', icon: FileText },
+  { to: '/account', label: 'MY ACCOUNT', icon: UserRound },
 ];
 
 function RailLink({ to, label, icon: Icon, end, expanded, onNavigate }) {
@@ -49,7 +51,9 @@ function RailLink({ to, label, icon: Icon, end, expanded, onNavigate }) {
       }
     >
       <Icon className="h-5 w-5 shrink-0" strokeWidth={1.85} aria-hidden />
-      {expanded ? <span className="truncate text-sm font-semibold">{label}</span> : null}
+      {expanded ? (
+        <span className="truncate text-sm font-extrabold uppercase tracking-wide">{label}</span>
+      ) : null}
     </NavLink>
   );
 }
@@ -76,7 +80,7 @@ export function StudentSidebar({ expanded, onExpandedChange }) {
     <aside
       className={cn(
         'fixed inset-y-0 left-0 z-40 flex flex-col border-r border-ink-900/8 bg-[#eef2f1] py-3 transition-[width] duration-200 ease-out',
-        expanded ? 'w-56 px-3' : 'w-14 items-center'
+        expanded ? 'w-64 px-3' : 'w-14 items-center'
       )}
     >
       <div className={cn('mb-3 flex items-center', expanded ? 'gap-2.5 px-1' : 'justify-center')}>

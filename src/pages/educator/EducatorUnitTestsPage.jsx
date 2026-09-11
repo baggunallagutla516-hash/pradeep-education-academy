@@ -36,7 +36,7 @@ export function EducatorUnitTestsPage() {
       setStatus('ready');
     } catch (err) {
       setStatus('error');
-      setError(getErrorMessage(err, 'Could not load unit tests.'));
+      setError(getErrorMessage(err, 'Could not load exams.'));
     }
   }, [classFilter]);
 
@@ -48,8 +48,8 @@ export function EducatorUnitTestsPage() {
     <PageShell
       embedded
       eyebrow="Practice"
-      title="Unit tests"
-      description="Published unit test papers for all classes. Filter by class if you want a shorter list."
+      title="EXAMS"
+      description="Published exam papers for all classes. Filter by class if you want a shorter list."
       actions={
         <div className="w-full min-w-[11rem] sm:w-48">
           <Select
@@ -68,17 +68,17 @@ export function EducatorUnitTestsPage() {
         </div>
       }
     >
-      {status === 'loading' ? <LoadingState label="Loading unit tests…" /> : null}
+      {status === 'loading' ? <LoadingState label="Loading exams…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
       {status === 'ready' && unitTests.length === 0 ? (
         <EmptyState
           title="Nothing here yet"
           description={
             classFilter
-              ? `No published unit tests for ${
+              ? `No published exams for ${
                   classes.find((c) => c.id === classFilter)?.name || 'this class'
                 } yet.`
-              : 'No published unit tests are available yet. Check back soon.'
+              : 'No published exams are available yet. Check back soon.'
           }
           icon={PenLine}
         />

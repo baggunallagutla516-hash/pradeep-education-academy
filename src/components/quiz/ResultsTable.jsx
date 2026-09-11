@@ -8,13 +8,47 @@ function scoreTone(percentage) {
   return 'text-red-600';
 }
 
+/** Sort by score (best first), then faster time for ties. */
+function sortByRank(results) {
+  return [...results].sort((a, b) => {
+    const pctDiff = Number(b.percentage || 0) - Number(a.percentage || 0);
+    if (pctDiff !== 0) return pctDiff;
+
+    const marksDiff = Number(b.scoredMarks || 0) - Number(a.scoredMarks || 0);
+    if (marksDiff !== 0) return marksDiff;
+
+    return Number(a.timeTakenSeconds || 0) - Number(b.timeTakenSeconds || 0);
+  });
+}
+
+/**
+ * Competition ranks: equal percentage shares a rank; next distinct score skips
+ * (e.g. 33%, 33%, 0% → 1, 1, 3).
+ */
+function withRanks(results) {
+  const sorted = sortByRank(results);
+  let lastPercentage = null;
+  let lastRank = 0;
+
+  return sorted.map((row, index) => {
+    const percentage = Number(row.percentage || 0);
+    if (lastPercentage === null || percentage !== lastPercentage) {
+      lastRank = index + 1;
+      lastPercentage = percentage;
+    }
+    return { ...row, rank: lastRank };
+  });
+}
+
 export function ResultsTable({ results }) {
+  const ranked = withRanks(results);
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[46rem] text-left text-sm">
         <thead className="bg-ink-900/4 text-xs uppercase tracking-wide text-ink-900/55">
           <tr>
-            <th className="px-4 py-3 font-semibold">#</th>
+            <th className="px-4 py-3 font-semibold">Rank</th>
             <th className="px-4 py-3 font-semibold">Student</th>
             <th className="px-4 py-3 font-semibold">Score</th>
             <th className="px-4 py-3 font-semibold">%</th>
@@ -25,12 +59,15 @@ export function ResultsTable({ results }) {
           </tr>
         </thead>
         <tbody className="divide-y divide-ink-900/8">
-          {results.map((row, index) => (
+          {ranked.map((row) => (
             <tr key={row.id} className="transition hover:bg-lagoon-50/50">
-              <td className="px-4 py-3 font-semibold text-ink-900/45">{index + 1}</td>
+              <td className="px-4 py-3 font-display text-base font-extrabold tabular-nums text-ink-900">
+                {row.rank}
+              </td>
               <td className="px-4 py-3">
                 <p className="font-semibold text-ink-900">{row.studentName}</p>
                 <p className="text-xs text-ink-900/50">
+                  {row.roleLabel ? `${row.roleLabel} · ` : ''}
                   {row.rollNumber ? `Roll ${row.rollNumber} · ` : ''}
                   {row.studentEmail}
                 </p>

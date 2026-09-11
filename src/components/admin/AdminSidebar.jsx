@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
   ClipboardList,
   FileText,
+  HelpCircle,
   LayoutDashboard,
   LogOut,
   MessageSquare,
@@ -24,17 +25,18 @@ import { SiteLogoMark } from '../layout/SiteLogoMark';
 const STORAGE_KEY = 'admin-sidebar-expanded';
 
 const links = [
-  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/admin/students', label: 'Students', icon: Users },
-  { to: '/admin/educators', label: 'Educators', icon: GraduationCap },
-  { to: '/admin/contact-queries', label: 'Contact', icon: MessageSquare },
-  { to: '/admin/worksheets', label: 'Worksheets', icon: FileStack },
-  { to: '/admin/unit-tests', label: 'Unit tests', icon: PenLine },
+  { to: '/admin', label: 'DASHBOARD', icon: LayoutDashboard, end: true },
+  { to: '/admin/students', label: 'STUDENTS', icon: Users },
+  { to: '/admin/educators', label: 'EDUCATORS', icon: GraduationCap },
+  { to: '/admin/contact-queries', label: 'CONTACT', icon: MessageSquare },
+  { to: '/admin/worksheets', label: 'WORKSHEETS', icon: FileStack },
+  { to: '/admin/unit-tests', label: 'EXAMS', icon: PenLine },
   { to: '/admin/cets', label: 'C.E.T.', icon: ScrollText },
-  { to: '/admin/assessments', label: 'Online Assessments', icon: ClipboardCheck },
+  { to: '/admin/assessments', label: 'ONLINE ASSESSMENTS', icon: ClipboardCheck },
   { to: '/admin/dpps', label: 'D.P.P.', icon: ClipboardList },
-  { to: '/admin/slip-tests', label: 'Slip tests', icon: FileText },
-  { to: '/admin/news', label: 'News', icon: Newspaper },
+  { to: '/admin/quizzes', label: 'QUIZ', icon: HelpCircle },
+  { to: '/admin/slip-tests', label: 'SLIP TESTS', icon: FileText },
+  { to: '/admin/news', label: 'NEWS', icon: Newspaper },
 ];
 
 function RailLink({ to, label, icon: Icon, end, expanded }) {
@@ -55,7 +57,9 @@ function RailLink({ to, label, icon: Icon, end, expanded }) {
       }
     >
       <Icon className="h-5 w-5 shrink-0" strokeWidth={1.85} aria-hidden />
-      {expanded ? <span className="truncate text-sm font-semibold">{label}</span> : null}
+      {expanded ? (
+        <span className="truncate text-sm font-extrabold uppercase tracking-wide">{label}</span>
+      ) : null}
     </NavLink>
   );
 }
@@ -82,7 +86,7 @@ export function AdminSidebar({ expanded, onExpandedChange }) {
     <aside
       className={cn(
         'fixed inset-y-0 left-0 z-40 flex flex-col border-r border-ink-900/8 bg-[#eef2f1] py-3 transition-[width] duration-200 ease-out',
-        expanded ? 'w-56 px-3' : 'w-14 items-center'
+        expanded ? 'w-64 px-3' : 'w-14 items-center'
       )}
     >
       <div className={cn('mb-3 flex items-center', expanded ? 'gap-2.5 px-1' : 'justify-center')}>
@@ -118,7 +122,7 @@ export function AdminSidebar({ expanded, onExpandedChange }) {
       </nav>
 
       <div className={cn('mt-auto flex flex-col gap-2', expanded ? '' : 'items-center')}>
-        <RailLink to="/admin/settings" label="Settings" icon={Settings} expanded={expanded} />
+        <RailLink to="/admin/settings" label="SETTINGS" icon={Settings} expanded={expanded} />
         <button
           type="button"
           title="Logout"

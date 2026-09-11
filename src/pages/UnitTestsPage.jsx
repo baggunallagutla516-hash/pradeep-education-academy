@@ -31,7 +31,7 @@ export function UnitTestsPage() {
       setStatus('ready');
     } catch (err) {
       setStatus('error');
-      setError(getErrorMessage(err, 'Could not load unit tests.'));
+      setError(getErrorMessage(err, 'Could not load exams.'));
     }
   }
 
@@ -43,16 +43,16 @@ export function UnitTestsPage() {
     <PageShell
       embedded
       eyebrow="Practice"
-      title="Unit tests"
-      description="Download the question paper for each unit of your class."
+      title="EXAMS"
+      description="Download the question paper for each exam of your class."
       actions={<Badge>{classLabel(student) || 'Student'}</Badge>}
     >
-      {status === 'loading' ? <LoadingState label="Loading unit tests…" /> : null}
+      {status === 'loading' ? <LoadingState label="Loading exams…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
       {status === 'ready' && unitTests.length === 0 ? (
         <EmptyState
           title="Nothing here yet"
-          description={`No unit tests have been uploaded for ${classLabel(student) || 'your class'} yet. Check back soon.`}
+          description={`No exams have been uploaded for ${classLabel(student) || 'your class'} yet. Check back soon.`}
           icon={PenLine}
         />
       ) : null}

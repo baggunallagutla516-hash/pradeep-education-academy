@@ -1,0 +1,201 @@
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { ArrowLeft, BarChart3, Megaphone } from 'lucide-react';
+import { adminApi } from '../../api/adminApi';
+import { getErrorMessage } from '../../utils/errors';
+import { formatDate, formatMarks } from '../../utils/quizFormat';
+import { PageShell } from '../../components/layout/PageShell';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
+import { Alert } from '../../components/ui/Alert';
+import { LoadingState } from '../../components/ui/LoadingState';
+import { ErrorState } from '../../components/ui/ErrorState';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { ResultsTable } from '../../components/quiz/ResultsTable';
+
+export function AdminQuizResultsPage() {
+  const { id } = useParams();
+  const [data, setData] = useState(null);
+  const [status, setStatus] = useState('loading');
+  const [error, setError] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [actionInfo, setActionInfo] = useState('');
+  const [releasing, setReleasing] = useState(false);
+
+  async function load() {
+    setStatus('loading');
+    setError('');
+    try {
+      const res = await adminApi.quizResults(id);
+      setData(res.data.data);
+      setStatus('ready');
+    } catch (err) {
+      setStatus('error');
+      setError(getErrorMessage(err, 'Could not load results.'));
+    }
+  }
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  async function handleRelease() {
+    const released = data?.quiz?.resultsReleased;
+    const confirmMessage = released
+      ? 'Results are already released. Send the notification email again to all students who submitted?'
+      : 'Release results to students? They will be able to view scores on the site, and each submitted student will get an email (no scores in the email).';
+    if (!window.confirm(confirmMessage)) return;
+
+    setReleasing(true);
+    setActionError('');
+    setActionInfo('');
+    try {
+      const res = await adminApi.releaseQuizResults(id);
+      const notify = res.data.data.notify || {};
+      setData((prev) =>
+        prev
+          ? {
+              ...prev,
+              quiz: res.data.data.quiz || {
+                ...prev.quiz,
+                resultsReleased: true,
+              },
+            }
+          : prev
+      );
+      setActionInfo(
+        `${res.data.message} Emails sent: ${notify.emailed || 0}` +
+          (notify.failed ? `, failed: ${notify.failed}` : '') +
+          (notify.skipped ? `, skipped: ${notify.skipped}` : '') +
+          '.'
+      );
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not release results.'));
+    } finally {
+      setReleasing(false);
+    }
+  }
+
+  const released = Boolean(data?.quiz?.resultsReleased);
+
+  return (
+    <PageShell
+      embedded
+      eyebrow="QUIZ results"
+      title={data?.quiz?.title || 'Results'}
+      description={
+        data?.quiz
+          ? `Everyone · ${formatMarks(data.quiz.totalMarks)} marks`
+          : 'Scores for every participant who has submitted.'
+      }
+      actions={
+        <div className="flex flex-wrap gap-2">
+          <Link to="/admin/quizzes">
+            <Button variant="secondary" size="sm">
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+          </Link>
+          {status === 'ready' && !data?.quiz?.isPublished ? (
+            <Link to={`/admin/quizzes/${id}/edit`}>
+              <Button variant="secondary" size="sm">
+                Edit quiz
+              </Button>
+            </Link>
+          ) : null}
+          {status === 'ready' ? (
+            <Button size="sm" loading={releasing} onClick={handleRelease}>
+              <Megaphone className="h-4 w-4" />
+              {released ? 'Resend release email' : 'Release results'}
+            </Button>
+          ) : null}
+        </div>
+      }
+    >
+      {actionError ? (
+        <Alert type="error" title="Action failed" onClose={() => setActionError('')} className="mb-4">
+          {actionError}
+        </Alert>
+      ) : null}
+      {actionInfo ? (
+        <Alert type="success" title="Done" onClose={() => setActionInfo('')} className="mb-4">
+          {actionInfo}
+        </Alert>
+      ) : null}
+
+      {status === 'loading' ? <LoadingState label="Loading results…" /> : null}
+      {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
+
+      {status === 'ready' ? (
+        <>
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <Badge tone={released ? 'lagoon' : 'ember'}>
+              {released ? 'Results released to students' : 'Results on hold'}
+            </Badge>
+            {released && data.quiz.resultsReleasedAt ? (
+              <span className="text-xs text-ink-900/50">
+                Released {formatDate(data.quiz.resultsReleasedAt)}
+              </span>
+            ) : (
+              <span className="text-xs text-ink-900/50">
+                Students cannot see scores until you release results.
+              </span>
+            )}
+          </div>
+
+          <div className="mb-6 grid gap-4 sm:grid-cols-3">
+            <Card className="text-center">
+              <p className="font-display text-3xl font-extrabold text-ink-900">
+                {data.summary.submitted}
+              </p>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-900/50">
+                Submitted
+              </p>
+            </Card>
+            <Card className="text-center">
+              <p className="font-display text-3xl font-extrabold text-lagoon-700">
+                {Math.round(data.summary.averagePercentage)}%
+              </p>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-900/50">
+                Average
+              </p>
+            </Card>
+            <Card className="text-center">
+              <p className="font-display text-3xl font-extrabold text-ember-600">
+                {Math.round(data.summary.highestPercentage)}%
+              </p>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-900/50">
+                Highest
+              </p>
+            </Card>
+          </div>
+
+          {data.results.length === 0 ? (
+            <EmptyState
+              title="No submissions yet"
+              description={
+                data.quiz.isPublished
+                  ? 'Students have not attempted this quiz yet.'
+                  : 'This quiz is still a draft, so students cannot see it.'
+              }
+              icon={BarChart3}
+              action={
+                data.quiz.isPublished ? null : (
+                  <Link to={`/admin/quizzes/${id}/edit`}>
+                    <Button>Publish it</Button>
+                  </Link>
+                )
+              }
+            />
+          ) : (
+            <Card className="overflow-hidden p-0">
+              <ResultsTable results={data.results} />
+            </Card>
+          )}
+        </>
+      ) : null}
+    </PageShell>
+  );
+}

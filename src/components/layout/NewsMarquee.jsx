@@ -7,18 +7,25 @@ function NewsItem({ item }) {
   if (!text) return null;
 
   const classNames =
-    'inline-flex shrink-0 items-center whitespace-nowrap px-5 text-sm font-semibold text-white/95' +
-    (item.link ? ' cursor-pointer transition hover:text-ember-400' : ' cursor-default');
+    'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-5 text-sm font-semibold text-amber-100' +
+    (item.link ? ' cursor-pointer transition hover:text-yellow-300' : ' cursor-default');
+
+  const content = (
+    <>
+      <span aria-hidden>👋</span>
+      {text}
+    </>
+  );
 
   if (item.link) {
     return (
       <Link to={item.link} className={classNames} title="Open related page">
-        {text}
+        {content}
       </Link>
     );
   }
 
-  return <span className={classNames}>{text}</span>;
+  return <span className={classNames}>{content}</span>;
 }
 
 export function NewsMarquee() {
@@ -64,12 +71,12 @@ export function NewsMarquee() {
 
   return (
     <div
-      className="relative z-30 flex w-full items-center justify-center border-y border-white/10 bg-black/45 py-2.5 backdrop-blur-sm"
+      className="relative z-30 flex w-full items-center justify-center border-y border-[#5D4037]/40 bg-[#0a1f44] py-2.5"
       role="region"
       aria-label="Academy news ticker"
     >
-      <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[10px] font-bold uppercase tracking-[0.16em] text-ember-400 sm:left-4 sm:text-xs">
-        News
+      <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300 sm:left-4 sm:text-xs">
+        👋 News
       </span>
 
       <div className="news-marquee-track mx-auto w-full max-w-xl overflow-hidden px-12 sm:max-w-2xl sm:px-16">
@@ -77,7 +84,7 @@ export function NewsMarquee() {
           {strip.map((item, index) => (
             <span key={`${item.id}-${index}`} className="inline-flex items-center">
               <NewsItem item={item} />
-              <span className="text-white/30" aria-hidden>
+              <span className="text-amber-200/40" aria-hidden>
                 •
               </span>
             </span>

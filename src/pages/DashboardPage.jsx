@@ -8,14 +8,14 @@ import { Badge } from '../components/ui/Badge';
 
 const ready = [
   {
-    title: 'Work sheets',
+    title: 'WORK SHEETS',
     description: 'Download question papers, slides, and study resources for your class.',
     emoji: '📚',
     to: '/worksheets',
   },
   {
-    title: 'Unit test',
-    description: 'Download the question paper for each unit of your class.',
+    title: 'EXAMS',
+    description: 'Download the question paper for each exam of your class.',
     emoji: '✏️',
     to: '/unit-tests',
   },
@@ -26,7 +26,7 @@ const ready = [
     to: '/cets',
   },
   {
-    title: 'Online Assessments',
+    title: 'ONLINE ASSESSMENTS',
     description: 'Timed fullscreen online tests with single and multi-select questions.',
     emoji: '⏱️',
     to: '/assessments',
@@ -38,7 +38,13 @@ const ready = [
     to: '/dpps',
   },
   {
-    title: 'Slip test',
+    title: 'QUIZ',
+    description: 'Open quizzes for every student. Single and multi-select questions.',
+    emoji: '❓',
+    to: '/quizzes',
+  },
+  {
+    title: 'SLIP TESTS',
     description: 'Chapter and topic tests. Attempt them online and see your score instantly.',
     emoji: '📝',
     to: '/slip-tests',
@@ -60,7 +66,9 @@ export function DashboardPage() {
       <section>
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="font-display text-xl font-bold text-ink-900">Available now 🎒</h2>
+            <h2 className="font-display text-xl font-extrabold uppercase tracking-wide text-ink-900">
+              Available now 🎒
+            </h2>
             <p className="mt-1 text-sm text-ink-900/60">
               Resources shared by your teacher for {classLabel(student) || 'your class'}.
             </p>
@@ -82,7 +90,9 @@ export function DashboardPage() {
                 <div className="mb-2">
                   <Badge tone="lagoon">Ready</Badge>
                 </div>
-                <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
+                <h3 className="font-display text-lg font-extrabold uppercase tracking-wide text-ink-900">
+                  {item.title}
+                </h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink-900/60">{item.description}</p>
                 <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-lagoon-700">
                   Open

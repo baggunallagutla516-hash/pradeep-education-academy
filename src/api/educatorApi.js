@@ -43,4 +43,21 @@ export const educatorApi = {
   cet(id) {
     return api.get(`/educator/cets/${id}`);
   },
+  quizzes: {
+    list() {
+      return api.get('/educator/quizzes');
+    },
+    get(id) {
+      return api.get(`/educator/quizzes/${id}`);
+    },
+    start(id) {
+      return api.post(`/educator/quizzes/${id}/start`);
+    },
+    submit(id, payload) {
+      return api.post(`/educator/quizzes/${id}/submit`, payload);
+    },
+    result(id) {
+      return api.get(`/educator/quizzes/${id}/result`);
+    },
+  },
 };

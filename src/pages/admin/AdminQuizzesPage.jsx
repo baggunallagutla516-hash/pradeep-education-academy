@@ -1,24 +1,21 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BarChart3, FileText, Pencil, Plus, Trash2 } from 'lucide-react';
+import { BarChart3, HelpCircle, Pencil, Plus, Trash2 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { getErrorMessage } from '../../utils/errors';
-import { classLabel } from '../../utils/classLabel';
 import { formatDate, formatMarks } from '../../utils/quizFormat';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
-import { Select } from '../../components/ui/Select';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
 
-export function AdminSlipTestsPage() {
-  const [slipTests, setSlipTests] = useState([]);
-  const [classFilter, setClassFilter] = useState('');
+export function AdminQuizzesPage() {
+  const [quizzes, setQuizzes] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
@@ -28,32 +25,18 @@ export function AdminSlipTestsPage() {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await adminApi.slipTests();
-      setSlipTests(data.data.slipTests);
+      const { data } = await adminApi.quizzes();
+      setQuizzes(data.data.quizzes);
       setStatus('ready');
     } catch (err) {
       setStatus('error');
-      setError(getErrorMessage(err, 'Could not load slip tests.'));
+      setError(getErrorMessage(err, 'Could not load quizzes.'));
     }
   }
 
   useEffect(() => {
     load();
   }, []);
-
-  const classes = useMemo(() => {
-    const seen = new Map();
-    slipTests.forEach((item) => {
-      if (item.studentClass && !seen.has(item.studentClass)) {
-        seen.set(item.studentClass, classLabel(item));
-      }
-    });
-    return [...seen].map(([id, name]) => ({ id, name }));
-  }, [slipTests]);
-
-  const visible = classFilter
-    ? slipTests.filter((item) => item.studentClass === classFilter)
-    : slipTests;
 
   async function handleDelete(item) {
     const warning = item.attemptCount
@@ -64,10 +47,10 @@ export function AdminSlipTestsPage() {
     setBusyId(item.id);
     setActionError('');
     try {
-      await adminApi.deleteSlipTest(item.id);
-      setSlipTests((prev) => prev.filter((s) => s.id !== item.id));
+      await adminApi.deleteQuiz(item.id);
+      setQuizzes((prev) => prev.filter((d) => d.id !== item.id));
     } catch (err) {
-      setActionError(getErrorMessage(err, 'Could not delete this slip test.'));
+      setActionError(getErrorMessage(err, 'Could not delete this quiz.'));
     } finally {
       setBusyId('');
     }
@@ -77,34 +60,15 @@ export function AdminSlipTestsPage() {
     <PageShell
       embedded
       eyebrow="Admin"
-      title="Slip tests"
-      description="Short chapter and topic based tests. Build the questions here and students of that class attempt them online."
+      title="QUIZ"
+      description="Open quizzes for every login — students, educators, and parents. Single and multi-select questions only."
       actions={
-        <div className="flex flex-wrap items-end gap-3">
-          {classes.length > 1 ? (
-            <div className="w-full min-w-[11rem] sm:w-48">
-              <Select
-                label="Class filter"
-                name="classFilter"
-                value={classFilter}
-                onChange={(event) => setClassFilter(event.target.value)}
-              >
-                <option value="">All classes</option>
-                {classes.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          ) : null}
-          <Link to="/admin/slip-tests/new">
-            <Button size="sm">
-              <Plus className="h-4 w-4" />
-              New slip test
-            </Button>
-          </Link>
-        </div>
+        <Link to="/admin/quizzes/new">
+          <Button size="sm">
+            <Plus className="h-4 w-4" />
+            New quiz
+          </Button>
+        </Link>
       }
     >
       {actionError ? (
@@ -113,31 +77,24 @@ export function AdminSlipTestsPage() {
         </Alert>
       ) : null}
 
-      {status === 'loading' ? <LoadingState label="Loading slip tests…" /> : null}
+      {status === 'loading' ? <LoadingState label="Loading quizzes…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
-      {status === 'ready' && slipTests.length === 0 ? (
+      {status === 'ready' && quizzes.length === 0 ? (
         <EmptyState
-          title="No slip tests yet"
-          description="Create a chapter or topic based test, add MCQ questions, and publish it to a class."
-          icon={FileText}
+          title="No quizzes yet"
+          description="Create a quiz with single and multi-select questions. Students, educators, and parents can attempt it after you publish."
+          icon={HelpCircle}
           action={
-            <Link to="/admin/slip-tests/new">
-              <Button>Create slip test</Button>
+            <Link to="/admin/quizzes/new">
+              <Button>Create quiz</Button>
             </Link>
           }
         />
       ) : null}
-      {status === 'ready' && slipTests.length > 0 && visible.length === 0 ? (
-        <EmptyState
-          title="Nothing for this class"
-          description="No slip tests have been created for the selected class yet."
-          icon={FileText}
-        />
-      ) : null}
 
-      {status === 'ready' && visible.length > 0 ? (
+      {status === 'ready' && quizzes.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          {visible.map((item) => (
+          {quizzes.map((item) => (
             <Card key={item.id}>
               <div className="mb-2 flex flex-wrap gap-2">
                 <Badge tone={item.isPublished ? 'lagoon' : 'ink'}>
@@ -146,17 +103,16 @@ export function AdminSlipTestsPage() {
                 <Badge tone={item.resultsReleased ? 'lagoon' : 'ember'}>
                   {item.resultsReleased ? 'Results out' : 'Results held'}
                 </Badge>
-                <Badge tone="ink">{classLabel(item)}</Badge>
-                <Badge tone="ember">{item.chapter}</Badge>
+                <Badge tone="ink">Everyone</Badge>
                 {item.endDate ? (
                   <Badge tone="ink">Ends {formatDate(item.endDate)}</Badge>
                 ) : null}
               </div>
 
               <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
-              <p className="mt-0.5 text-sm font-medium text-lagoon-700">
-                {[item.subject, item.topic].filter(Boolean).join(' · ')}
-              </p>
+              {item.subject ? (
+                <p className="mt-0.5 text-sm font-medium text-lagoon-700">{item.subject}</p>
+              ) : null}
               {item.description ? (
                 <ExpandableText text={item.description} lines={2} />
               ) : null}
@@ -168,14 +124,14 @@ export function AdminSlipTestsPage() {
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <Link to={`/admin/slip-tests/${item.id}/results`}>
+                <Link to={`/admin/quizzes/${item.id}/results`}>
                   <Button variant="secondary" size="sm">
                     <BarChart3 className="h-4 w-4" />
                     Results
                   </Button>
                 </Link>
                 {!item.isPublished ? (
-                  <Link to={`/admin/slip-tests/${item.id}/edit`}>
+                  <Link to={`/admin/quizzes/${item.id}/edit`}>
                     <Button variant="secondary" size="sm">
                       <Pencil className="h-4 w-4" />
                       Edit

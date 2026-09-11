@@ -31,4 +31,21 @@ export const parentApi = {
   childResults(studentId) {
     return api.get(`/parent/children/${studentId}/results`);
   },
+  quizzes: {
+    list() {
+      return api.get('/parent/quizzes');
+    },
+    get(id) {
+      return api.get(`/parent/quizzes/${id}`);
+    },
+    start(id) {
+      return api.post(`/parent/quizzes/${id}/start`);
+    },
+    submit(id, payload) {
+      return api.post(`/parent/quizzes/${id}/submit`, payload);
+    },
+    result(id) {
+      return api.get(`/parent/quizzes/${id}/result`);
+    },
+  },
 };

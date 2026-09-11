@@ -17,10 +17,11 @@ import { EmptyState } from '../../components/ui/EmptyState';
 const LINK_OPTIONS = [
   { value: '', label: 'No link (text only)' },
   { value: '/worksheets', label: 'Worksheets' },
-  { value: '/unit-tests', label: 'Unit tests' },
+  { value: '/unit-tests', label: 'EXAMS' },
   { value: '/cets', label: 'C.E.T.' },
   { value: '/assessments', label: 'Online Assessments' },
   { value: '/dpps', label: 'D.P.P.' },
+  { value: '/quizzes', label: 'QUIZ' },
   { value: '/slip-tests', label: 'Slip tests' },
   { value: '/login', label: 'Student login' },
   { value: '/register', label: 'Student register' },

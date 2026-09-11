@@ -67,17 +67,23 @@ export function AssessmentsPage() {
           {assessments.map((item) => {
             const done = item.attemptStatus === 'submitted';
             const inProgress = item.attemptStatus === 'in_progress';
+            const closed = item.isClosed && !done && !inProgress;
 
             return (
               <Card key={item.id} className="flex h-full flex-col">
                 <div className="mb-2 flex flex-wrap gap-2">
                   <Badge tone="ember">{formatDate(item.assessmentDate)}</Badge>
+                  {item.endDate ? (
+                    <Badge tone="ink">Ends {formatDate(item.endDate)}</Badge>
+                  ) : null}
                   {done ? (
                     <Badge tone={item.resultsReleased ? 'lagoon' : 'ember'}>
                       {item.resultsReleased ? 'Completed' : 'Awaiting release'}
                     </Badge>
                   ) : inProgress ? (
                     <Badge tone="ink">In progress</Badge>
+                  ) : closed ? (
+                    <Badge tone="ink">Closed</Badge>
                   ) : null}
                 </div>
 
@@ -119,6 +125,12 @@ export function AssessmentsPage() {
                   </p>
                 ) : null}
 
+                {closed ? (
+                  <p className="mt-3 text-sm text-ink-900/55">
+                    This assessment closed on {formatDate(item.endDate)}.
+                  </p>
+                ) : null}
+
                 <div className="mt-auto pt-4">
                   {done ? (
                     <Link to={`/assessments/${item.id}/result`}>
@@ -127,6 +139,10 @@ export function AssessmentsPage() {
                         {item.resultsReleased ? 'View result' : 'Submission status'}
                       </Button>
                     </Link>
+                  ) : closed ? (
+                    <Button size="sm" disabled>
+                      Closed
+                    </Button>
                   ) : (
                     <Link to={`/assessments/${item.id}/attempt`}>
                       <Button size="sm">

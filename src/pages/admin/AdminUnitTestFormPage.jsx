@@ -158,7 +158,7 @@ export function AdminUnitTestFormPage() {
       }
       navigate('/admin/unit-tests');
     } catch (err) {
-      setError(getErrorMessage(err, 'Could not save unit test.'));
+      setError(getErrorMessage(err, 'Could not save exam.'));
     } finally {
       setSaving(false);
     }
@@ -166,7 +166,7 @@ export function AdminUnitTestFormPage() {
 
   if (loading) {
     return (
-      <PageShell embedded title={isEdit ? 'Edit unit test' : 'New unit test'}>
+      <PageShell embedded title={isEdit ? 'Edit exam' : 'New exam'}>
         <LoadingState label="Loading…" />
       </PageShell>
     );
@@ -174,7 +174,7 @@ export function AdminUnitTestFormPage() {
 
   if (loadError) {
     return (
-      <PageShell embedded title={isEdit ? 'Edit unit test' : 'New unit test'}>
+      <PageShell embedded title={isEdit ? 'Edit exam' : 'New exam'}>
         <ErrorState description={loadError} onRetry={() => window.location.reload()} />
       </PageShell>
     );
@@ -183,8 +183,8 @@ export function AdminUnitTestFormPage() {
   return (
     <PageShell
       embedded
-      eyebrow="Unit tests"
-      title={isEdit ? 'Edit unit test' : 'New unit test'}
+      eyebrow="EXAMS"
+      title={isEdit ? 'Edit exam' : 'New exam'}
       description="Pick the class and unit, then upload the question paper as a PDF or Word file. Students in that class can download it."
       actions={
         <Link to="/admin/unit-tests">
@@ -277,7 +277,7 @@ export function AdminUnitTestFormPage() {
               />
             </label>
             <p className="mt-1 text-xs text-ink-900/50">
-              Optional. Cards show a unit test icon when no image is uploaded.
+              Optional. Cards show an exam icon when no image is uploaded.
             </p>
             {fieldErrors.coverImage ? (
               <p className="mt-1 text-xs font-medium text-red-600">{fieldErrors.coverImage}</p>
@@ -320,7 +320,7 @@ export function AdminUnitTestFormPage() {
           </div>
 
           <Button type="submit" loading={saving}>
-            {isEdit ? 'Save changes' : 'Create unit test'}
+            {isEdit ? 'Save changes' : 'Create exam'}
           </Button>
         </form>
       </Card>

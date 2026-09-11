@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, Clock, FileText } from 'lucide-react';
-import { slipTestApi } from '../api/adminApi';
-import { useAuth } from '../context/AuthContext';
+import { ArrowRight, CheckCircle2, Clock, HelpCircle } from 'lucide-react';
+import { quizApi } from '../api/adminApi';
 import { getErrorMessage } from '../utils/errors';
-import { classLabel } from '../utils/classLabel';
 import { formatDate, formatMarks } from '../utils/quizFormat';
 import { PageShell } from '../components/layout/PageShell';
 import { Card } from '../components/ui/Card';
@@ -21,9 +19,12 @@ function scoreTone(percentage) {
   return 'text-red-600';
 }
 
-export function SlipTestsPage() {
-  const { student } = useAuth();
-  const [slipTests, setSlipTests] = useState([]);
+export function QuizzesPage({
+  api = quizApi,
+  basePath = '/quizzes',
+  badgeLabel = 'Everyone',
+} = {}) {
+  const [quizzes, setQuizzes] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
 
@@ -31,40 +32,40 @@ export function SlipTestsPage() {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await slipTestApi.list();
-      setSlipTests(data.data.slipTests);
+      const { data } = await api.list();
+      setQuizzes(data.data.quizzes);
       setStatus('ready');
     } catch (err) {
       setStatus('error');
-      setError(getErrorMessage(err, 'Could not load your slip tests.'));
+      setError(getErrorMessage(err, 'Could not load quizzes.'));
     }
   }
 
   useEffect(() => {
     load();
-  }, []);
+  }, [api]);
 
   return (
     <PageShell
       embedded
       eyebrow="Practice"
-      title="Slip tests"
-      description="Short chapter and topic tests for your class. Submit online; scores appear after the academy releases results."
-      actions={<Badge>{classLabel(student) || 'Student'}</Badge>}
+      title="QUIZ"
+      description="Open quizzes for every login — students, educators, and parents. Scores appear after the academy releases results."
+      actions={<Badge>{badgeLabel}</Badge>}
     >
-      {status === 'loading' ? <LoadingState label="Loading slip tests…" /> : null}
+      {status === 'loading' ? <LoadingState label="Loading quizzes…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
-      {status === 'ready' && slipTests.length === 0 ? (
+      {status === 'ready' && quizzes.length === 0 ? (
         <EmptyState
           title="Nothing here yet"
-          description={`No slip tests have been published for ${classLabel(student) || 'your class'} yet. Check back soon.`}
-          icon={FileText}
+          description="No quizzes have been published yet. Check back soon."
+          icon={HelpCircle}
         />
       ) : null}
 
-      {status === 'ready' && slipTests.length > 0 ? (
+      {status === 'ready' && quizzes.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {slipTests.map((item) => {
+          {quizzes.map((item) => {
             const done = item.attemptStatus === 'submitted';
             const inProgress = item.attemptStatus === 'in_progress';
             const closed = item.isClosed && !done && !inProgress;
@@ -72,7 +73,6 @@ export function SlipTestsPage() {
             return (
               <Card key={item.id} className="flex h-full flex-col">
                 <div className="mb-2 flex flex-wrap gap-2">
-                  <Badge tone="ember">{item.chapter}</Badge>
                   {item.endDate ? (
                     <Badge tone="ink">Ends {formatDate(item.endDate)}</Badge>
                   ) : null}
@@ -88,10 +88,8 @@ export function SlipTestsPage() {
                 </div>
 
                 <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
-                {item.subject || item.topic ? (
-                  <p className="mt-0.5 text-sm font-medium text-lagoon-700">
-                    {[item.subject, item.topic].filter(Boolean).join(' · ')}
-                  </p>
+                {item.subject ? (
+                  <p className="mt-0.5 text-sm font-medium text-lagoon-700">{item.subject}</p>
                 ) : null}
                 {item.description ? (
                   <ExpandableText text={item.description} lines={2} />
@@ -129,13 +127,13 @@ export function SlipTestsPage() {
 
                 {closed ? (
                   <p className="mt-3 text-sm text-ink-900/55">
-                    This slip test closed on {formatDate(item.endDate)}.
+                    This quiz closed on {formatDate(item.endDate)}.
                   </p>
                 ) : null}
 
                 <div className="mt-auto pt-4">
                   {done ? (
-                    <Link to={`/slip-tests/${item.id}/result`}>
+                    <Link to={`${basePath}/${item.id}/result`}>
                       <Button variant="secondary" size="sm">
                         <CheckCircle2 className="h-4 w-4" />
                         {item.resultsReleased ? 'View result' : 'Submission status'}
@@ -146,7 +144,7 @@ export function SlipTestsPage() {
                       Closed
                     </Button>
                   ) : (
-                    <Link to={`/slip-tests/${item.id}/attempt`}>
+                    <Link to={`${basePath}/${item.id}/attempt`}>
                       <Button size="sm">
                         {inProgress ? 'Resume' : 'Start'}
                         <ArrowRight className="h-4 w-4" />

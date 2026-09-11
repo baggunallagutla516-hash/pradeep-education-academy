@@ -27,6 +27,7 @@ const emptyForm = {
   studentClass: '',
   subject: '',
   practiceDate: toDateInputValue(),
+  endDate: toDateInputValue(),
   durationMinutes: '15',
   negativeMarkPerWrong: '0',
   allowPartialCredit: 'true',
@@ -79,6 +80,7 @@ export function AdminDppFormPage() {
             studentClass: item.studentClass || '',
             subject: item.subject || '',
             practiceDate: toDateInputValue(item.practiceDate),
+            endDate: toDateInputValue(item.endDate || item.practiceDate),
             durationMinutes: String(item.durationMinutes ?? '15'),
             negativeMarkPerWrong: String(item.negativeMarkPerWrong ?? '0'),
             allowPartialCredit: item.allowPartialCredit ? 'true' : 'false',
@@ -115,6 +117,10 @@ export function AdminDppFormPage() {
     if (!form.title.trim()) next.title = 'Title is required.';
     if (!form.studentClass) next.studentClass = 'Class is required.';
     if (!form.practiceDate) next.practiceDate = 'Practice date is required.';
+    if (!form.endDate) next.endDate = 'End date is required.';
+    if (form.practiceDate && form.endDate && form.endDate < form.practiceDate) {
+      next.endDate = 'End date cannot be before the practice date.';
+    }
 
     const duration = Number(form.durationMinutes);
     if (!Number.isFinite(duration) || duration < 1 || duration > 300) {
@@ -147,6 +153,7 @@ export function AdminDppFormPage() {
       studentClass: form.studentClass,
       subject: form.subject.trim(),
       practiceDate: form.practiceDate,
+      endDate: form.endDate,
       durationMinutes: Number(form.durationMinutes),
       negativeMarkPerWrong: Number(form.negativeMarkPerWrong),
       allowPartialCredit: form.allowPartialCredit === 'true',
@@ -259,18 +266,29 @@ export function AdminDppFormPage() {
               hint="The class day this practice set belongs to"
             />
             <Input
-              label="Duration (minutes)"
-              name="durationMinutes"
-              type="number"
-              min="1"
-              max="300"
-              value={form.durationMinutes}
+              label="End date"
+              name="endDate"
+              type="date"
+              value={form.endDate}
               onChange={updateField}
               required
-              error={fieldErrors.durationMinutes}
-              hint="The test submits automatically when time runs out"
+              error={fieldErrors.endDate}
+              hint="After this date students can no longer start the DPP"
             />
           </div>
+
+          <Input
+            label="Duration (minutes)"
+            name="durationMinutes"
+            type="number"
+            min="1"
+            max="300"
+            value={form.durationMinutes}
+            onChange={updateField}
+            required
+            error={fieldErrors.durationMinutes}
+            hint="The test submits automatically when time runs out"
+          />
 
           <Textarea
             label="Instructions"

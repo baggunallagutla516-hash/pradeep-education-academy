@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
   FileStack,
+  HelpCircle,
   LayoutDashboard,
   LogOut,
   PenLine,
@@ -18,11 +19,12 @@ import { SiteLogoMark } from '../layout/SiteLogoMark';
 const STORAGE_KEY = 'educator-sidebar-expanded';
 
 const links = [
-  { to: '/educator/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/educator/worksheets', label: 'Worksheets', icon: FileStack },
-  { to: '/educator/unit-tests', label: 'Unit tests', icon: PenLine },
+  { to: '/educator/dashboard', label: 'DASHBOARD', icon: LayoutDashboard, end: true },
+  { to: '/educator/worksheets', label: 'WORKSHEETS', icon: FileStack },
+  { to: '/educator/unit-tests', label: 'EXAMS', icon: PenLine },
   { to: '/educator/cets', label: 'C.E.T.', icon: ScrollText },
-  { to: '/educator/account', label: 'My account', icon: UserRound },
+  { to: '/educator/quizzes', label: 'QUIZ', icon: HelpCircle },
+  { to: '/educator/account', label: 'MY ACCOUNT', icon: UserRound },
 ];
 
 function RailLink({ to, label, icon: Icon, end, expanded }) {
@@ -43,7 +45,9 @@ function RailLink({ to, label, icon: Icon, end, expanded }) {
       }
     >
       <Icon className="h-5 w-5 shrink-0" strokeWidth={1.85} aria-hidden />
-      {expanded ? <span className="truncate text-sm font-semibold">{label}</span> : null}
+      {expanded ? (
+        <span className="truncate text-sm font-extrabold uppercase tracking-wide">{label}</span>
+      ) : null}
     </NavLink>
   );
 }
@@ -70,7 +74,7 @@ export function EducatorSidebar({ expanded, onExpandedChange }) {
     <aside
       className={cn(
         'fixed inset-y-0 left-0 z-40 flex flex-col border-r border-ink-900/8 bg-[#eef2f1] py-3 transition-[width] duration-200 ease-out',
-        expanded ? 'w-56 px-3' : 'w-14 items-center'
+        expanded ? 'w-64 px-3' : 'w-14 items-center'
       )}
     >
       <div className={cn('mb-3 flex items-center', expanded ? 'gap-2.5 px-1' : 'justify-center')}>

@@ -184,6 +184,27 @@ export const adminApi = {
   deleteDpp(id) {
     return api.delete(`/admin/dpps/${id}`);
   },
+  quizzes() {
+    return api.get('/admin/quizzes');
+  },
+  quiz(id) {
+    return api.get(`/admin/quizzes/${id}`);
+  },
+  quizResults(id) {
+    return api.get(`/admin/quizzes/${id}/results`);
+  },
+  releaseQuizResults(id) {
+    return api.post(`/admin/quizzes/${id}/release-results`);
+  },
+  createQuiz(payload) {
+    return api.post('/admin/quizzes', payload);
+  },
+  updateQuiz(id, payload) {
+    return api.patch(`/admin/quizzes/${id}`, payload);
+  },
+  deleteQuiz(id) {
+    return api.delete(`/admin/quizzes/${id}`);
+  },
   slipTests() {
     return api.get('/admin/slip-tests');
   },
@@ -317,6 +338,24 @@ export const dppApi = {
   },
   result(id) {
     return api.get(`/dpps/${id}/result`);
+  },
+};
+
+export const quizApi = {
+  list() {
+    return api.get('/quizzes');
+  },
+  get(id) {
+    return api.get(`/quizzes/${id}`);
+  },
+  start(id) {
+    return api.post(`/quizzes/${id}/start`);
+  },
+  submit(id, payload) {
+    return api.post(`/quizzes/${id}/submit`, payload);
+  },
+  result(id) {
+    return api.get(`/quizzes/${id}/result`);
   },
 };
 

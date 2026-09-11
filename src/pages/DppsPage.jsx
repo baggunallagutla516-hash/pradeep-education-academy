@@ -67,17 +67,23 @@ export function DppsPage() {
           {dpps.map((item) => {
             const done = item.attemptStatus === 'submitted';
             const inProgress = item.attemptStatus === 'in_progress';
+            const closed = item.isClosed && !done && !inProgress;
 
             return (
               <Card key={item.id} className="flex h-full flex-col">
                 <div className="mb-2 flex flex-wrap gap-2">
                   <Badge tone="ember">{formatDate(item.practiceDate)}</Badge>
+                  {item.endDate ? (
+                    <Badge tone="ink">Ends {formatDate(item.endDate)}</Badge>
+                  ) : null}
                   {done ? (
                     <Badge tone={item.resultsReleased ? 'lagoon' : 'ember'}>
                       {item.resultsReleased ? 'Completed' : 'Awaiting release'}
                     </Badge>
                   ) : inProgress ? (
                     <Badge tone="ink">In progress</Badge>
+                  ) : closed ? (
+                    <Badge tone="ink">Closed</Badge>
                   ) : null}
                 </div>
 
@@ -119,6 +125,12 @@ export function DppsPage() {
                   </p>
                 ) : null}
 
+                {closed ? (
+                  <p className="mt-3 text-sm text-ink-900/55">
+                    This DPP closed on {formatDate(item.endDate)}.
+                  </p>
+                ) : null}
+
                 <div className="mt-auto pt-4">
                   {done ? (
                     <Link to={`/dpps/${item.id}/result`}>
@@ -127,6 +139,10 @@ export function DppsPage() {
                         {item.resultsReleased ? 'View result' : 'Submission status'}
                       </Button>
                     </Link>
+                  ) : closed ? (
+                    <Button size="sm" disabled>
+                      Closed
+                    </Button>
                   ) : (
                     <Link to={`/dpps/${item.id}/attempt`}>
                       <Button size="sm">

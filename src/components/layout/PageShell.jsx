@@ -25,7 +25,7 @@ export function PageShell({
               {eyebrow}
             </p>
           ) : null}
-          <h1 className="font-display text-3xl font-extrabold tracking-tight text-ink-900 sm:text-4xl">
+          <h1 className="font-display text-3xl font-extrabold uppercase tracking-wide text-ink-900 sm:text-4xl">
             {title}
           </h1>
           {description ? (

@@ -13,32 +13,32 @@ import { Card } from '../components/ui/Card';
 const whatYouGet = [
   {
     emoji: '📄',
-    title: 'Work sheets ready',
+    title: 'WORK SHEETS READY',
     body: 'Question papers, slides, and study resources for your class.',
   },
   {
     emoji: '🧠',
-    title: 'Practice & exams',
-    body: 'Unit tests, chapter end tests, daily practice problems, and slip tests.',
+    title: 'PRACTICE & EXAMS',
+    body: 'Exams, chapter end tests, daily practice problems, and slip tests.',
   },
   {
     emoji: '✨',
-    title: 'Your own space',
+    title: 'YOUR OWN SPACE',
     body: 'Account details, progress, and certificates stay with you.',
   },
 ];
 
 const readyFeatures = [
   {
-    title: 'Work sheets',
+    title: 'WORK SHEETS',
     description: 'Download question papers, slides, and study resources for your class.',
     emoji: '📚',
     to: '/worksheets',
     educatorTo: '/educator/worksheets',
   },
   {
-    title: 'Unit test',
-    description: 'Download the question paper for each unit of your class.',
+    title: 'EXAMS',
+    description: 'Download the question paper for each exam of your class.',
     emoji: '✏️',
     to: '/unit-tests',
     educatorTo: '/educator/unit-tests',
@@ -51,7 +51,7 @@ const readyFeatures = [
     educatorTo: '/educator/cets',
   },
   {
-    title: 'Online Assessments',
+    title: 'ONLINE ASSESSMENTS',
     description: 'Timed fullscreen online tests with single and multi-select questions.',
     emoji: '⏱️',
     to: '/assessments',
@@ -63,7 +63,13 @@ const readyFeatures = [
     to: '/dpps',
   },
   {
-    title: 'Slip test',
+    title: 'QUIZ',
+    description: 'Open quizzes for every student. Single and multi-select questions.',
+    emoji: '❓',
+    to: '/quizzes',
+  },
+  {
+    title: 'SLIP TESTS',
     description: 'Chapter and topic tests. Attempt them online and see your score instantly.',
     emoji: '📝',
     to: '/slip-tests',
@@ -291,7 +297,9 @@ export function HomePage() {
                 >
                   {item.emoji}
                 </span>
-                <h3 className="font-display text-xl font-bold text-ink-900">{item.title}</h3>
+                <h3 className="font-display text-xl font-extrabold uppercase tracking-wide text-ink-900">
+                  {item.title}
+                </h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink-900/60">{item.body}</p>
               </div>
             ))}
@@ -332,7 +340,9 @@ export function HomePage() {
                 <div className="mb-2">
                   <Badge tone="lagoon">Ready</Badge>
                 </div>
-                <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
+                <h3 className="font-display text-lg font-extrabold uppercase tracking-wide text-ink-900">
+                  {item.title}
+                </h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink-900/60">{item.description}</p>
                 <Link to={featureLink(item)} className="mt-4 inline-block">
                   <Button size="sm" variant="ember">
