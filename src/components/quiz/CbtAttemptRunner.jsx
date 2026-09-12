@@ -303,6 +303,13 @@ export function CbtAttemptRunner({
     return !(sectionPos >= 0 && sectionPos < sections.length - 1);
   })();
 
+  const isFirstQuestion = (() => {
+    const position = sectionQuestions.findIndex(({ index }) => index === currentIndex);
+    if (position > 0) return false;
+    const sectionPos = sections.indexOf(activeSection);
+    return !(sectionPos > 0);
+  })();
+
   function saveAndNext() {
     if (isLastQuestion) return;
     const position = sectionQuestions.findIndex(({ index }) => index === currentIndex);
@@ -313,6 +320,24 @@ export function CbtAttemptRunner({
     const sectionPos = sections.indexOf(activeSection);
     if (sectionPos >= 0 && sectionPos < sections.length - 1) {
       switchSection(sections[sectionPos + 1]);
+    }
+  }
+
+  function goPrevious() {
+    if (isFirstQuestion) return;
+    const position = sectionQuestions.findIndex(({ index }) => index === currentIndex);
+    if (position > 0) {
+      goTo(sectionQuestions[position - 1].index);
+      return;
+    }
+    const sectionPos = sections.indexOf(activeSection);
+    if (sectionPos > 0) {
+      const prevSection = sections[sectionPos - 1];
+      const prevSectionQuestions = questions
+        .map((item, index) => ({ item, index }))
+        .filter(({ item }) => (item.section || sections[0]) === prevSection);
+      const last = prevSectionQuestions[prevSectionQuestions.length - 1];
+      if (last) goTo(last.index);
     }
   }
 
@@ -552,6 +577,14 @@ export function CbtAttemptRunner({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 border-t border-slate-300 bg-white px-4 py-3">
+            <button
+              type="button"
+              onClick={goPrevious}
+              disabled={isFirstQuestion}
+              className="rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+            >
+              Previous
+            </button>
             <button
               type="button"
               onClick={markForReviewAndNext}

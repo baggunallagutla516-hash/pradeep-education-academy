@@ -112,13 +112,21 @@ export function SlipTestsPage({
           {slipTests.map((item) => {
             const done = item.attemptStatus === 'submitted';
             const inProgress = item.attemptStatus === 'in_progress';
+            const notYetOpen = item.isNotYetOpen && !done && !inProgress;
             const closed = item.isClosed && !done && !inProgress;
+            const classBadge =
+              !enableClassFilter && student
+                ? classLabel(student)
+                : item.studentClassName;
 
             return (
               <Card key={item.id} className="flex h-full flex-col">
                 <div className="mb-2 flex flex-wrap gap-2">
                   <Badge tone="ember">{item.chapter}</Badge>
-                  {item.studentClassName ? <Badge tone="ink">{item.studentClassName}</Badge> : null}
+                  {classBadge ? <Badge tone="ink">{classBadge}</Badge> : null}
+                  {item.startDate ? (
+                    <Badge tone="ember">{formatDateTime(item.startDate)}</Badge>
+                  ) : null}
                   {item.endDate ? (
                     <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
                   ) : null}
@@ -128,6 +136,8 @@ export function SlipTestsPage({
                     </Badge>
                   ) : inProgress ? (
                     <Badge tone="ink">In progress</Badge>
+                  ) : notYetOpen ? (
+                    <Badge tone="ember">Not open yet</Badge>
                   ) : closed ? (
                     <Badge tone="ink">Closed</Badge>
                   ) : null}
@@ -173,6 +183,12 @@ export function SlipTestsPage({
                   </p>
                 ) : null}
 
+                {notYetOpen ? (
+                  <p className="mt-3 text-sm text-ink-900/55">
+                    Opens on {formatDateTime(item.startDate)}.
+                  </p>
+                ) : null}
+
                 {closed ? (
                   <p className="mt-3 text-sm text-ink-900/55">
                     This slip test closed on {formatDateTime(item.endDate)}.
@@ -187,6 +203,10 @@ export function SlipTestsPage({
                         {item.resultsReleased ? 'View result' : 'Submission status'}
                       </Button>
                     </Link>
+                  ) : notYetOpen ? (
+                    <Button size="sm" disabled>
+                      Not open yet
+                    </Button>
                   ) : closed ? (
                     <Button size="sm" disabled>
                       Closed

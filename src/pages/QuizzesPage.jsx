@@ -68,11 +68,15 @@ export function QuizzesPage({
           {quizzes.map((item) => {
             const done = item.attemptStatus === 'submitted';
             const inProgress = item.attemptStatus === 'in_progress';
+            const notYetOpen = item.isNotYetOpen && !done && !inProgress;
             const closed = item.isClosed && !done && !inProgress;
 
             return (
               <Card key={item.id} className="flex h-full flex-col">
                 <div className="mb-2 flex flex-wrap gap-2">
+                  {item.startDate ? (
+                    <Badge tone="ember">{formatDateTime(item.startDate)}</Badge>
+                  ) : null}
                   {item.endDate ? (
                     <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
                   ) : null}
@@ -82,6 +86,8 @@ export function QuizzesPage({
                     </Badge>
                   ) : inProgress ? (
                     <Badge tone="ink">In progress</Badge>
+                  ) : notYetOpen ? (
+                    <Badge tone="ember">Not open yet</Badge>
                   ) : closed ? (
                     <Badge tone="ink">Closed</Badge>
                   ) : null}
@@ -125,6 +131,12 @@ export function QuizzesPage({
                   </p>
                 ) : null}
 
+                {notYetOpen ? (
+                  <p className="mt-3 text-sm text-ink-900/55">
+                    Opens on {formatDateTime(item.startDate)}.
+                  </p>
+                ) : null}
+
                 {closed ? (
                   <p className="mt-3 text-sm text-ink-900/55">
                     This quiz closed on {formatDateTime(item.endDate)}.
@@ -139,6 +151,10 @@ export function QuizzesPage({
                         {item.resultsReleased ? 'View result' : 'Submission status'}
                       </Button>
                     </Link>
+                  ) : notYetOpen ? (
+                    <Button size="sm" disabled>
+                      Not open yet
+                    </Button>
                   ) : closed ? (
                     <Button size="sm" disabled>
                       Closed

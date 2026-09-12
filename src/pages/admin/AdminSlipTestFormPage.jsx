@@ -31,6 +31,7 @@ const emptyForm = {
   subject: '',
   chapter: '',
   topic: '',
+  startDate: toDateTimeLocalValue(),
   endDate: toDateTimeLocalValue(undefined, { endOfDay: true }),
   durationMinutes: '15',
   negativeMarkPerWrong: '0',
@@ -86,6 +87,7 @@ export function AdminSlipTestFormPage() {
             subject: item.subject || '',
             chapter: item.chapter || '',
             topic: item.topic || '',
+            startDate: toDateTimeLocalValue(item.startDate),
             endDate: toDateTimeLocalValue(item.endDate),
             durationMinutes: String(item.durationMinutes ?? '15'),
             negativeMarkPerWrong: String(item.negativeMarkPerWrong ?? '0'),
@@ -128,7 +130,11 @@ export function AdminSlipTestFormPage() {
     if (!form.title.trim()) next.title = 'Title is required.';
     if (!form.studentClasses.length) next.studentClasses = 'Select at least one class.';
     if (!form.chapter.trim()) next.chapter = 'Chapter is required.';
+    if (!form.startDate) next.startDate = 'Starting date and time is required.';
     if (!form.endDate) next.endDate = 'Ending date and time is required.';
+    if (form.startDate && form.endDate && new Date(form.endDate) < new Date(form.startDate)) {
+      next.endDate = 'Ending date and time cannot be before the starting date and time.';
+    }
 
     const duration = Number(form.durationMinutes);
     if (!Number.isFinite(duration) || duration < 1 || duration > 300) {
@@ -162,6 +168,7 @@ export function AdminSlipTestFormPage() {
       subject: form.subject.trim(),
       chapter: form.chapter.trim(),
       topic: form.topic.trim(),
+      startDate: toApiDateTime(form.startDate),
       endDate: toApiDateTime(form.endDate),
       durationMinutes: Number(form.durationMinutes),
       negativeMarkPerWrong: Number(form.negativeMarkPerWrong),
@@ -282,6 +289,15 @@ export function AdminSlipTestFormPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
+              label="Starting date and time"
+              name="startDate"
+              type="datetime-local"
+              value={form.startDate}
+              onChange={updateField}
+              required
+              error={fieldErrors.startDate}
+            />
+            <Input
               label="Ending date and time"
               name="endDate"
               type="datetime-local"
@@ -291,19 +307,20 @@ export function AdminSlipTestFormPage() {
               error={fieldErrors.endDate}
               hint="After this date and time students can no longer start the slip test"
             />
-            <Input
-              label="Duration (minutes)"
-              name="durationMinutes"
-              type="number"
-              min="1"
-              max="300"
-              value={form.durationMinutes}
-              onChange={updateField}
-              required
-              error={fieldErrors.durationMinutes}
-              hint="The test submits automatically when time runs out"
-            />
           </div>
+
+          <Input
+            label="Duration (minutes)"
+            name="durationMinutes"
+            type="number"
+            min="1"
+            max="300"
+            value={form.durationMinutes}
+            onChange={updateField}
+            required
+            error={fieldErrors.durationMinutes}
+            hint="The test submits automatically when time runs out"
+          />
 
           <Textarea
             label="Instructions"

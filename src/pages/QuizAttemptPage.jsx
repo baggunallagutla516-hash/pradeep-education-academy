@@ -6,8 +6,13 @@ import { PageShell } from '../components/layout/PageShell';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { AttemptRunner } from '../components/quiz/AttemptRunner';
+import { markSubmissionCelebrate } from '../utils/submissionCelebrate';
 
-export function QuizAttemptPage({ api = quizApi, basePath = '/quizzes' } = {}) {
+export function QuizAttemptPage({
+  api = quizApi,
+  basePath = '/quizzes',
+  celebrateKind = 'quiz',
+} = {}) {
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -62,7 +67,8 @@ export function QuizAttemptPage({ api = quizApi, basePath = '/quizzes' } = {}) {
             /* ignore */
           }
         }
-        navigate(`${basePath}/${id}/result`, { replace: true });
+        markSubmissionCelebrate(celebrateKind, id);
+        navigate(`${basePath}/${id}/result`, { replace: true, state: { celebrate: true } });
       } catch (err) {
         if (err.response?.status === 409) {
           navigate(`${basePath}/${id}/result`, { replace: true });
@@ -73,7 +79,7 @@ export function QuizAttemptPage({ api = quizApi, basePath = '/quizzes' } = {}) {
         throw err;
       }
     },
-    [api, basePath, id, navigate, storageKey]
+    [api, basePath, celebrateKind, id, navigate, storageKey]
   );
 
   if (status === 'loading') {

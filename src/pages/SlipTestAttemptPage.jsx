@@ -6,10 +6,12 @@ import { PageShell } from '../components/layout/PageShell';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { AttemptRunner } from '../components/quiz/AttemptRunner';
+import { markSubmissionCelebrate } from '../utils/submissionCelebrate';
 
 export function SlipTestAttemptPage({
   api = slipTestApi,
   basePath = '/slip-tests',
+  celebrateKind = 'slip-test',
 } = {}) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -66,7 +68,8 @@ export function SlipTestAttemptPage({
             /* ignore */
           }
         }
-        navigate(`${basePath}/${id}/result`, { replace: true });
+        markSubmissionCelebrate(celebrateKind, id);
+        navigate(`${basePath}/${id}/result`, { replace: true, state: { celebrate: true } });
       } catch (err) {
         // A duplicate submit still has a result waiting.
         if (err.response?.status === 409) {
@@ -78,7 +81,7 @@ export function SlipTestAttemptPage({
         throw err;
       }
     },
-    [api, basePath, id, navigate, storageKey]
+    [api, basePath, celebrateKind, id, navigate, storageKey]
   );
 
   if (status === 'loading') {

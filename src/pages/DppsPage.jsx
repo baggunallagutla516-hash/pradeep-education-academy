@@ -112,13 +112,18 @@ export function DppsPage({
           {dpps.map((item) => {
             const done = item.attemptStatus === 'submitted';
             const inProgress = item.attemptStatus === 'in_progress';
+            const notYetOpen = item.isNotYetOpen && !done && !inProgress;
             const closed = item.isClosed && !done && !inProgress;
+            const classBadge =
+              !enableClassFilter && student
+                ? classLabel(student)
+                : item.studentClassName;
 
             return (
               <Card key={item.id} className="flex h-full flex-col">
                 <div className="mb-2 flex flex-wrap gap-2">
                   <Badge tone="ember">{formatDateTime(item.practiceDate)}</Badge>
-                  {item.studentClassName ? <Badge tone="ink">{item.studentClassName}</Badge> : null}
+                  {classBadge ? <Badge tone="ink">{classBadge}</Badge> : null}
                   {item.endDate ? (
                     <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
                   ) : null}
@@ -128,6 +133,8 @@ export function DppsPage({
                     </Badge>
                   ) : inProgress ? (
                     <Badge tone="ink">In progress</Badge>
+                  ) : notYetOpen ? (
+                    <Badge tone="ember">Not open yet</Badge>
                   ) : closed ? (
                     <Badge tone="ink">Closed</Badge>
                   ) : null}
@@ -171,6 +178,12 @@ export function DppsPage({
                   </p>
                 ) : null}
 
+                {notYetOpen ? (
+                  <p className="mt-3 text-sm text-ink-900/55">
+                    Opens on {formatDateTime(item.practiceDate)}.
+                  </p>
+                ) : null}
+
                 {closed ? (
                   <p className="mt-3 text-sm text-ink-900/55">
                     This DPP closed on {formatDateTime(item.endDate)}.
@@ -185,6 +198,10 @@ export function DppsPage({
                         {item.resultsReleased ? 'View result' : 'Submission status'}
                       </Button>
                     </Link>
+                  ) : notYetOpen ? (
+                    <Button size="sm" disabled>
+                      Not open yet
+                    </Button>
                   ) : closed ? (
                     <Button size="sm" disabled>
                       Closed

@@ -44,10 +44,13 @@ export function AdminAssessmentResultsPage() {
   }, [id]);
 
   async function handleRelease() {
+    const pending = Number(data?.summary?.pendingReleaseCount || 0);
     const released = data?.assessment?.resultsReleased;
+    if (pending <= 0) return;
+
     const confirmMessage = released
-      ? 'Results are already released. Send the notification email again to all students who submitted?'
-      : 'Release results to students? They will be able to view scores on the site, and each submitted student will get an email (no scores in the email).';
+      ? `Announce results for ${pending} new submission${pending === 1 ? '' : 's'}? Those students will be able to view scores and get an email (no scores in the email).`
+      : 'Announce results to students? They will be able to view scores on the site, and each submitted student will get an email (no scores in the email).';
     if (!window.confirm(confirmMessage)) return;
 
     setReleasing(true);
@@ -64,6 +67,10 @@ export function AdminAssessmentResultsPage() {
                 ...prev.assessment,
                 resultsReleased: true,
               },
+              summary: {
+                ...prev.summary,
+                pendingReleaseCount: res.data.data.summary?.pendingReleaseCount ?? 0,
+              },
             }
           : prev
       );
@@ -74,13 +81,15 @@ export function AdminAssessmentResultsPage() {
           '.'
       );
     } catch (err) {
-      setActionError(getErrorMessage(err, 'Could not release results.'));
+      setActionError(getErrorMessage(err, 'Could not announce results.'));
     } finally {
       setReleasing(false);
     }
   }
 
   const released = Boolean(data?.assessment?.resultsReleased);
+  const pendingReleaseCount = Number(data?.summary?.pendingReleaseCount || 0);
+  const canAnnounce = pendingReleaseCount > 0;
 
   return (
     <PageShell
@@ -108,9 +117,20 @@ export function AdminAssessmentResultsPage() {
             </Link>
           ) : null}
           {status === 'ready' ? (
-            <Button size="sm" loading={releasing} onClick={handleRelease}>
+            <Button
+              size="sm"
+              loading={releasing}
+              disabled={!canAnnounce}
+              onClick={handleRelease}
+            >
               <Megaphone className="h-4 w-4" />
-              {released ? 'Resend release email' : 'Release results'}
+              {canAnnounce
+                ? released
+                  ? `Announce new results (${pendingReleaseCount})`
+                  : 'Announce results'
+                : released
+                  ? 'Results announced'
+                  : 'Announce results'}
             </Button>
           ) : null}
         </div>
@@ -133,16 +153,20 @@ export function AdminAssessmentResultsPage() {
       {status === 'ready' ? (
         <>
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <Badge tone={released ? 'lagoon' : 'ember'}>
-              {released ? 'Results released to students' : 'Results on hold'}
+            <Badge tone={released && !canAnnounce ? 'lagoon' : 'ember'}>
+              {released && !canAnnounce
+                ? 'Results announced'
+                : canAnnounce && released
+                  ? `${pendingReleaseCount} new result${pendingReleaseCount === 1 ? '' : 's'} pending announce`
+                  : 'Results on hold'}
             </Badge>
             {released && data.assessment.resultsReleasedAt ? (
               <span className="text-xs text-ink-900/50">
-                Released {formatDate(data.assessment.resultsReleasedAt)}
+                Last announced {formatDate(data.assessment.resultsReleasedAt)}
               </span>
             ) : (
               <span className="text-xs text-ink-900/50">
-                Students cannot see scores until you release results.
+                Students cannot see scores until you announce results.
               </span>
             )}
           </div>
@@ -198,8 +222,9 @@ export function AdminAssessmentResultsPage() {
           )}
 
           <p className="mt-4 text-xs text-ink-900/50">
-            <Badge tone="ink">Note</Badge> Release emails tell students to open results on the
-            website. Scores are never included in the email.
+            <Badge tone="ink">Note</Badge> Announce emails tell students to open results on the
+            website. Scores are never included in the email. Late attempts after announce stay on
+            hold until you announce again.
           </p>
         </>
       ) : null}

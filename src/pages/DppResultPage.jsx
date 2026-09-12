@@ -1,27 +1,35 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Camera, Clock3 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Camera } from 'lucide-react';
 import { dppApi } from '../api/adminApi';
 import { useAuth } from '../context/AuthContext';
 import { useEducatorAuth } from '../context/EducatorAuthContext';
 import { useParentAuth } from '../context/ParentAuthContext';
 import { getErrorMessage } from '../utils/errors';
 import { formatDate } from '../utils/quizFormat';
+import { consumeSubmissionCelebrate } from '../utils/submissionCelebrate';
 import { PageShell } from '../components/layout/PageShell';
 import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { ResultCard } from '../components/quiz/ResultCard';
 import { ResultCertificateModal } from '../components/quiz/ResultCertificateModal';
+import { SubmissionHeldCard } from '../components/quiz/SubmissionHeldCard';
+import { SubmissionThanksBanner } from '../components/quiz/SubmissionThanksBanner';
 
 export function DppResultPage({
   api = dppApi,
   basePath = '/dpps',
   role = 'student',
+  celebrateKind = 'dpp',
 } = {}) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const celebrate = useMemo(
+    () => Boolean(location.state?.celebrate) || consumeSubmissionCelebrate(celebrateKind, id),
+    [celebrateKind, id, location.state]
+  );
   const { student } = useAuth();
   const { educator } = useEducatorAuth();
   const { parent } = useParentAuth();
@@ -105,23 +113,12 @@ export function DppResultPage({
       ) : null}
 
       {status === 'ready' && held ? (
-        <Card className="mx-auto max-w-xl text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-ember-400/15 text-ember-700">
-            <Clock3 className="h-7 w-7" />
-          </div>
-          <h2 className="font-display text-xl font-bold text-ink-900">Results on hold</h2>
-          <p className="mt-2 text-sm leading-relaxed text-ink-900/60">
-            Your answers were submitted
-            {held.submittedAt ? ` on ${formatDate(held.submittedAt)}` : ''}. The academy will
-            release results soon. You will get an email when they are available — then open them
-            here on the site.
-          </p>
-          <p className="mt-4 text-xs text-ink-900/45">Scores are not shared by email.</p>
-        </Card>
+        <SubmissionHeldCard submittedAt={held.submittedAt} activityLabel="D.P.P." celebrate />
       ) : null}
 
       {status === 'ready' && result ? (
         <>
+          <SubmissionThanksBanner celebrate={celebrate} activityLabel="D.P.P." />
           <ResultCard result={result} />
           <ResultCertificateModal
             open={shareOpen}

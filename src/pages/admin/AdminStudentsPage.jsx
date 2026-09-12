@@ -18,6 +18,7 @@ import { Alert } from '../../components/ui/Alert';
 export function AdminStudentsPage() {
   const [students, setStudents] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
+  const [pageSize, setPageSize] = useState(10);
   const [q, setQ] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [status, setStatus] = useState('loading');
@@ -25,13 +26,13 @@ export function AdminStudentsPage() {
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');
 
-  async function load(page = 1) {
+  async function load(page = 1, limit = pageSize) {
     setStatus('loading');
     setError('');
     try {
       const { data } = await adminApi.students({
         page,
-        limit: 20,
+        limit,
         q: q.trim() || undefined,
         status: statusFilter || undefined,
       });
@@ -48,6 +49,12 @@ export function AdminStudentsPage() {
     load(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function handlePageSizeChange(event) {
+    const next = Number(event.target.value) || 10;
+    setPageSize(next);
+    load(1, next);
+  }
 
   async function toggleActive(student) {
     setActionError('');
@@ -197,12 +204,26 @@ export function AdminStudentsPage() {
             </Card>
           ))}
 
-          {pagination.pages > 1 ? (
-            <div className="flex items-center justify-between pt-2">
+          {pagination.total > 0 ? (
+            <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-ink-900/55">
                 Page {pagination.page} of {pagination.pages} · {pagination.total} total
               </p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="flex items-center gap-2 text-sm text-ink-900/65">
+                  <span className="whitespace-nowrap">Per page</span>
+                  <select
+                    className="h-9 rounded-xl border border-ink-900/10 bg-white px-2.5 text-sm text-ink-900 shadow-sm"
+                    value={pageSize}
+                    onChange={handlePageSizeChange}
+                    aria-label="Results per page"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={15}>15</option>
+                    <option value={20}>20</option>
+                  </select>
+                </label>
                 <Button
                   variant="secondary"
                   size="sm"

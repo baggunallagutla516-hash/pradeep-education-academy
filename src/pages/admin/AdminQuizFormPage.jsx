@@ -29,6 +29,7 @@ const emptyForm = {
   description: '',
   studentClasses: [],
   subject: '',
+  startDate: toDateTimeLocalValue(),
   endDate: toDateTimeLocalValue(undefined, { endOfDay: true }),
   durationMinutes: '15',
   negativeMarkPerWrong: '0',
@@ -82,6 +83,7 @@ export function AdminQuizFormPage() {
             description: item.description || '',
             studentClasses: selectedClassIdsFromItem(item),
             subject: item.subject || '',
+            startDate: toDateTimeLocalValue(item.startDate),
             endDate: toDateTimeLocalValue(item.endDate),
             durationMinutes: String(item.durationMinutes ?? '15'),
             negativeMarkPerWrong: String(item.negativeMarkPerWrong ?? '0'),
@@ -123,7 +125,11 @@ export function AdminQuizFormPage() {
     const next = {};
     if (!form.title.trim()) next.title = 'Title is required.';
     if (!form.studentClasses.length) next.studentClasses = 'Select at least one class.';
+    if (!form.startDate) next.startDate = 'Starting date and time is required.';
     if (!form.endDate) next.endDate = 'Ending date and time is required.';
+    if (form.startDate && form.endDate && new Date(form.endDate) < new Date(form.startDate)) {
+      next.endDate = 'Ending date and time cannot be before the starting date and time.';
+    }
 
     const duration = Number(form.durationMinutes);
     if (!Number.isFinite(duration) || duration < 1 || duration > 300) {
@@ -155,6 +161,7 @@ export function AdminQuizFormPage() {
       description: form.description.trim(),
       studentClasses: form.studentClasses,
       subject: form.subject.trim(),
+      startDate: toApiDateTime(form.startDate),
       endDate: toApiDateTime(form.endDate),
       durationMinutes: Number(form.durationMinutes),
       negativeMarkPerWrong: Number(form.negativeMarkPerWrong),
@@ -257,6 +264,15 @@ export function AdminQuizFormPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
+              label="Starting date and time"
+              name="startDate"
+              type="datetime-local"
+              value={form.startDate}
+              onChange={updateField}
+              required
+              error={fieldErrors.startDate}
+            />
+            <Input
               label="Ending date and time"
               name="endDate"
               type="datetime-local"
@@ -266,19 +282,20 @@ export function AdminQuizFormPage() {
               error={fieldErrors.endDate}
               hint="After this date and time students can no longer start the quiz"
             />
-            <Input
-              label="Duration (minutes)"
-              name="durationMinutes"
-              type="number"
-              min="1"
-              max="300"
-              value={form.durationMinutes}
-              onChange={updateField}
-              required
-              error={fieldErrors.durationMinutes}
-              hint="The quiz submits automatically when time runs out"
-            />
           </div>
+
+          <Input
+            label="Duration (minutes)"
+            name="durationMinutes"
+            type="number"
+            min="1"
+            max="300"
+            value={form.durationMinutes}
+            onChange={updateField}
+            required
+            error={fieldErrors.durationMinutes}
+            hint="The quiz submits automatically when time runs out"
+          />
 
           <Textarea
             label="Instructions"
