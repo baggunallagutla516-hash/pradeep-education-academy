@@ -31,6 +31,21 @@
     text-wrap: balance;
   }
 
+  /* Exam questions cannot be highlighted, copied, or pasted. */
+  .exam-no-copy,
+  .exam-no-copy * {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+  }
+
+  .exam-no-copy input:not([type='radio']):not([type='checkbox']):not([type='button']):not([type='submit']),
+  .exam-no-copy textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
   .anim-delay-1 {
     animation-delay: 80ms;
   }

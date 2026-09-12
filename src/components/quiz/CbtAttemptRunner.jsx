@@ -3,6 +3,7 @@ import { AlertTriangle, Maximize2 } from 'lucide-react';
 import { formatClock, optionLabel } from '../../utils/quizFormat';
 import { cn } from '../../utils/cn';
 import { MathText } from './MathText';
+import { useExamCopyLock } from './useExamCopyLock';
 
 function readStoredState(storageKey) {
   if (!storageKey) {
@@ -97,6 +98,7 @@ export function CbtAttemptRunner({
   onFullscreenExit,
 }) {
   const rootRef = useRef(null);
+  useExamCopyLock(rootRef);
   const submittedRef = useRef(false);
   const exitHandlingRef = useRef(false);
   const stored = useMemo(() => readStoredState(storageKey), [storageKey]);
@@ -369,7 +371,7 @@ export function CbtAttemptRunner({
   return (
     <div
       ref={rootRef}
-      className="fixed inset-0 z-[80] flex flex-col bg-[#f4f6f8] text-slate-900"
+      className="exam-no-copy fixed inset-0 z-[80] flex flex-col bg-[#f4f6f8] text-slate-900"
     >
       {needsFullscreenGesture ? (
         <div className="absolute inset-0 z-[90] flex items-center justify-center bg-ink-900/70 p-6">

@@ -6,6 +6,7 @@ import { Alert } from '../ui/Alert';
 import { formatClock, optionLabel } from '../../utils/quizFormat';
 import { cn } from '../../utils/cn';
 import { MathText } from './MathText';
+import { useExamCopyLock } from './useExamCopyLock';
 
 function readStoredAnswers(storageKey) {
   if (!storageKey) return { selections: {}, textAnswers: {}, matrixAnswers: {} };
@@ -177,6 +178,8 @@ export function AttemptRunner({
   onDismissError,
   onSubmit,
 }) {
+  const rootRef = useRef(null);
+  useExamCopyLock(rootRef);
   const [selections, setSelections] = useState(() => readStoredAnswers(storageKey).selections);
   const [textAnswers, setTextAnswers] = useState(() => readStoredAnswers(storageKey).textAnswers);
   const [matrixAnswers, setMatrixAnswers] = useState(
@@ -296,7 +299,7 @@ export function AttemptRunner({
   const progress = questions.length ? (answeredCount / questions.length) * 100 : 0;
 
   return (
-    <div>
+    <div ref={rootRef} className="exam-no-copy">
       <div className="sticky top-0 z-30 -mx-4 mb-5 border-b border-ink-900/8 bg-sand-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">

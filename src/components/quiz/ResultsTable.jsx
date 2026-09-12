@@ -49,7 +49,7 @@ export function ResultsTable({ results }) {
         <thead className="bg-ink-900/4 text-xs uppercase tracking-wide text-ink-900/55">
           <tr>
             <th className="px-4 py-3 font-semibold">Rank</th>
-            <th className="px-4 py-3 font-semibold">Student</th>
+            <th className="px-4 py-3 font-semibold">Participant</th>
             <th className="px-4 py-3 font-semibold">Score</th>
             <th className="px-4 py-3 font-semibold">%</th>
             <th className="px-4 py-3 font-semibold">Right</th>
