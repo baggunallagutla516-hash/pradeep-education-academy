@@ -105,7 +105,10 @@ export function ParentLoginPage() {
           </form>
 
           <p className="mt-5 text-center text-sm text-ink-900/65">
-            Parent accounts are created by the academy. Use the email and password shared with you.
+            New here?{' '}
+            <Link to="/parent/register" className="font-semibold text-lagoon-700 hover:underline">
+              Create a parent account
+            </Link>
           </p>
           <p className="mt-2 text-center text-sm text-ink-900/55">
             Student instead?{' '}

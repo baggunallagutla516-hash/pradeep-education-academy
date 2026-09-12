@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BarChart3, ClipboardList, Pencil, Plus, Trash2 } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
-import { formatDate, formatMarks } from '../../utils/quizFormat';
+import {
+  classOptionsFromItems,
+  itemMatchesClassFilter,
+} from '../../utils/contentClasses';
+import { formatDateTime, formatMarks } from '../../utils/quizFormat';
+import {
+  confirmEditPublishedMessage,
+  confirmUnpublishMessage,
+} from '../../utils/wipeAttemptsConfirm';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -17,6 +25,8 @@ import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
 
 export function AdminDppsPage() {
+  const { basePath, api } = useStaffContent();
+  const navigate = useNavigate();
   const [dpps, setDpps] = useState([]);
   const [classFilter, setClassFilter] = useState('');
   const [status, setStatus] = useState('loading');
@@ -28,7 +38,7 @@ export function AdminDppsPage() {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await adminApi.dpps();
+      const { data } = await api.dpps();
       setDpps(data.data.dpps);
       setStatus('ready');
     } catch (err) {
@@ -41,17 +51,53 @@ export function AdminDppsPage() {
     load();
   }, []);
 
-  const classes = useMemo(() => {
-    const seen = new Map();
-    dpps.forEach((item) => {
-      if (item.studentClass && !seen.has(item.studentClass)) {
-        seen.set(item.studentClass, classLabel(item));
-      }
-    });
-    return [...seen].map(([id, name]) => ({ id, name }));
-  }, [dpps]);
+  const classes = useMemo(() => classOptionsFromItems(dpps, classLabel), [dpps]);
 
-  const visible = classFilter ? dpps.filter((item) => item.studentClass === classFilter) : dpps;
+  const visible = useMemo(
+    () => dpps.filter((item) => itemMatchesClassFilter(item, classFilter)),
+    [dpps, classFilter]
+  );
+
+  function handleEdit(item) {
+    if (item.isPublished || item.attemptCount > 0) {
+      if (!window.confirm(confirmEditPublishedMessage(item.title, item.attemptCount || 0))) {
+        return;
+      }
+    }
+    navigate(`${basePath}/dpps/${item.id}/edit`);
+  }
+
+  async function handleTogglePublish(item) {
+    if (item.isPublished) {
+      if (!window.confirm(confirmUnpublishMessage(item.title, item.attemptCount || 0))) {
+        return;
+      }
+    }
+
+    setBusyId(item.id);
+    setActionError('');
+    try {
+      const payload = item.isPublished
+        ? { isPublished: false, confirmWipeAttempts: true }
+        : { isPublished: true };
+      await api.updateDpp(item.id, payload);
+      setDpps((prev) =>
+        prev.map((d) =>
+          d.id === item.id
+            ? {
+                ...d,
+                isPublished: !item.isPublished,
+                ...(item.isPublished ? { attemptCount: 0, resultsReleased: false } : {}),
+              }
+            : d
+        )
+      );
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not update publish status.'));
+    } finally {
+      setBusyId('');
+    }
+  }
 
   async function handleDelete(item) {
     const warning = item.attemptCount
@@ -62,7 +108,7 @@ export function AdminDppsPage() {
     setBusyId(item.id);
     setActionError('');
     try {
-      await adminApi.deleteDpp(item.id);
+      await api.deleteDpp(item.id);
       setDpps((prev) => prev.filter((d) => d.id !== item.id));
     } catch (err) {
       setActionError(getErrorMessage(err, 'Could not delete this DPP.'));
@@ -96,7 +142,7 @@ export function AdminDppsPage() {
               </Select>
             </div>
           ) : null}
-          <Link to="/admin/dpps/new">
+          <Link to={`${basePath}/dpps/new`}>
             <Button size="sm">
               <Plus className="h-4 w-4" />
               New DPP
@@ -119,7 +165,7 @@ export function AdminDppsPage() {
           description="Create a daily practice problem set, add MCQ questions, and publish it to a class."
           icon={ClipboardList}
           action={
-            <Link to="/admin/dpps/new">
+            <Link to={`${basePath}/dpps/new`}>
               <Button>Create DPP</Button>
             </Link>
           }
@@ -145,9 +191,9 @@ export function AdminDppsPage() {
                   {item.resultsReleased ? 'Results out' : 'Results held'}
                 </Badge>
                 <Badge tone="ink">{classLabel(item)}</Badge>
-                <Badge tone="ember">{formatDate(item.practiceDate)}</Badge>
+                <Badge tone="ember">{formatDateTime(item.practiceDate)}</Badge>
                 {item.endDate ? (
-                  <Badge tone="ink">Ends {formatDate(item.endDate)}</Badge>
+                  <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
                 ) : null}
               </div>
 
@@ -166,20 +212,24 @@ export function AdminDppsPage() {
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <Link to={`/admin/dpps/${item.id}/results`}>
+                <Link to={`${basePath}/dpps/${item.id}/results`}>
                   <Button variant="secondary" size="sm">
                     <BarChart3 className="h-4 w-4" />
                     Results
                   </Button>
                 </Link>
-                {!item.isPublished ? (
-                  <Link to={`/admin/dpps/${item.id}/edit`}>
-                    <Button variant="secondary" size="sm">
-                      <Pencil className="h-4 w-4" />
-                      Edit
-                    </Button>
-                  </Link>
-                ) : null}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  loading={busyId === item.id}
+                  onClick={() => handleTogglePublish(item)}
+                >
+                  {item.isPublished ? 'Unpublish' : 'Publish'}
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => handleEdit(item)}>
+                  <Pencil className="h-4 w-4" />
+                  Edit
+                </Button>
                 <Button
                   variant="danger"
                   size="sm"

@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { authApi } from '../../api/authApi';
 import { getErrorMessage } from '../../utils/errors';
-import { toDateInputValue } from '../../utils/quizFormat';
+import { toApiDateTime, toDateTimeLocalValue } from '../../utils/quizFormat';
+import { confirmSavePublishedMessage } from '../../utils/wipeAttemptsConfirm';
+import { selectedClassIdsFromItem } from '../../utils/contentClasses';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
+import { ClassMultiSelect } from '../../components/ui/ClassMultiSelect';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
@@ -24,10 +27,10 @@ import {
 const emptyForm = {
   title: '',
   description: '',
-  studentClass: '',
+  studentClasses: [],
   subject: '',
-  assessmentDate: toDateInputValue(),
-  endDate: toDateInputValue(),
+  assessmentDate: toDateTimeLocalValue(),
+  endDate: toDateTimeLocalValue(undefined, { endOfDay: true }),
   durationMinutes: '60',
   negativeMarkPerWrong: '0',
   allowPartialCredit: 'true',
@@ -38,6 +41,7 @@ const emptyForm = {
 const DEFAULT_SECTIONS = ['Section A'];
 
 export function AdminAssessmentFormPage() {
+  const { basePath, api } = useStaffContent();
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
@@ -52,6 +56,8 @@ export function AdminAssessmentFormPage() {
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
   const [hasAttempts, setHasAttempts] = useState(false);
+  const [initiallyPublished, setInitiallyPublished] = useState(false);
+  const [attemptCount, setAttemptCount] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -67,16 +73,14 @@ export function AdminAssessmentFormPage() {
 
         if (isEdit) {
           const [{ data }, resultsRes] = await Promise.all([
-            adminApi.assessment(id),
-            adminApi.assessmentResults(id).catch(() => null),
+            api.assessment(id),
+            api.assessmentResults(id).catch(() => null),
           ]);
           if (!active) return;
 
           const item = data.data.assessment;
-          if (item.isPublished) {
-            navigate('/admin/assessments', { replace: true });
-            return;
-          }
+          const attempts =
+            item.attemptCount ?? resultsRes?.data?.data?.summary?.submitted ?? 0;
           const nextSections =
             Array.isArray(item.sections) && item.sections.length > 0
               ? item.sections
@@ -84,10 +88,12 @@ export function AdminAssessmentFormPage() {
           setForm({
             title: item.title,
             description: item.description || '',
-            studentClass: item.studentClass || '',
+            studentClasses: selectedClassIdsFromItem(item),
             subject: item.subject || '',
-            assessmentDate: toDateInputValue(item.assessmentDate),
-            endDate: toDateInputValue(item.endDate || item.assessmentDate),
+            assessmentDate: toDateTimeLocalValue(item.assessmentDate),
+            endDate: toDateTimeLocalValue(item.endDate || item.assessmentDate, {
+              endOfDay: !item.endDate,
+            }),
             durationMinutes: String(item.durationMinutes ?? '60'),
             negativeMarkPerWrong: String(item.negativeMarkPerWrong ?? '0'),
             allowPartialCredit: item.allowPartialCredit ? 'true' : 'false',
@@ -101,9 +107,14 @@ export function AdminAssessmentFormPage() {
               section: question.section || nextSections[0],
             }))
           );
-          setHasAttempts(Boolean(resultsRes?.data?.data?.summary?.submitted));
+          setInitiallyPublished(Boolean(item.isPublished));
+          setAttemptCount(Number(attempts) || 0);
+          setHasAttempts(Boolean(attempts));
         } else {
-          setForm((prev) => ({ ...prev, studentClass: list[0]?.id || '' }));
+          setForm((prev) => ({
+            ...prev,
+            studentClasses: list[0]?.id ? [list[0].id] : [],
+          }));
         }
         setLoading(false);
       } catch (err) {
@@ -164,11 +175,11 @@ export function AdminAssessmentFormPage() {
   function validate() {
     const next = {};
     if (!form.title.trim()) next.title = 'Title is required.';
-    if (!form.studentClass) next.studentClass = 'Class is required.';
-    if (!form.assessmentDate) next.assessmentDate = 'Assessment date is required.';
-    if (!form.endDate) next.endDate = 'End date is required.';
+    if (!form.studentClasses.length) next.studentClasses = 'Select at least one class.';
+    if (!form.assessmentDate) next.assessmentDate = 'Starting date and time is required.';
+    if (!form.endDate) next.endDate = 'Ending date and time is required.';
     if (form.assessmentDate && form.endDate && form.endDate < form.assessmentDate) {
-      next.endDate = 'End date cannot be before the assessment date.';
+      next.endDate = 'Ending date and time cannot be before the starting date and time.';
     }
 
     const duration = Number(form.durationMinutes);
@@ -216,10 +227,10 @@ export function AdminAssessmentFormPage() {
     const payload = {
       title: form.title.trim(),
       description: form.description.trim(),
-      studentClass: form.studentClass,
+      studentClasses: form.studentClasses,
       subject: form.subject.trim(),
-      assessmentDate: form.assessmentDate,
-      endDate: form.endDate,
+      assessmentDate: toApiDateTime(form.assessmentDate),
+      endDate: toApiDateTime(form.endDate),
       durationMinutes: Number(form.durationMinutes),
       negativeMarkPerWrong: Number(form.negativeMarkPerWrong),
       allowPartialCredit: form.allowPartialCredit === 'true',
@@ -229,11 +240,16 @@ export function AdminAssessmentFormPage() {
       questions: payloadQuestions,
     };
 
+    if (isEdit && (initiallyPublished || hasAttempts)) {
+      if (!window.confirm(confirmSavePublishedMessage(attemptCount))) return;
+      payload.confirmWipeAttempts = true;
+    }
+
     setSaving(true);
     try {
-      if (isEdit) await adminApi.updateAssessment(id, payload);
-      else await adminApi.createAssessment(payload);
-      navigate('/admin/assessments');
+      if (isEdit) await api.updateAssessment(id, payload);
+      else await api.createAssessment(payload);
+      navigate(`${basePath}/assessments`);
     } catch (err) {
       setError(getErrorMessage(err, 'Could not save this assessment.'));
     } finally {
@@ -264,7 +280,7 @@ export function AdminAssessmentFormPage() {
       title={isEdit ? 'Edit online assessment' : 'New online assessment'}
       description="Create sections (e.g. Section A / Section B), then add single and multi-select questions to each."
       actions={
-        <Link to="/admin/assessments">
+        <Link to={`${basePath}/assessments`}>
           <Button variant="secondary" size="sm">
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -278,9 +294,9 @@ export function AdminAssessmentFormPage() {
         </Alert>
       ) : null}
 
-      {hasAttempts ? (
-        <Alert type="warning" title="Students have already attempted this" className="mb-4">
-          Editing questions or marks now will not re-grade results that are already submitted.
+      {initiallyPublished || hasAttempts ? (
+        <Alert type="warning" title="Saving will clear attempt data" className="mb-4">
+          Saving deletes all attempt data so corrected answers apply for everyone.
         </Alert>
       ) : null}
 
@@ -297,21 +313,15 @@ export function AdminAssessmentFormPage() {
           />
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Select
-              label="Class"
-              name="studentClass"
-              value={form.studentClass}
-              onChange={updateField}
-              required
-              error={fieldErrors.studentClass}
-            >
-              <option value="">Select class</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
+            <ClassMultiSelect
+              classes={classes}
+              value={form.studentClasses}
+              onChange={(studentClasses) => {
+                setForm((prev) => ({ ...prev, studentClasses }));
+                setFieldErrors((prev) => ({ ...prev, studentClasses: '' }));
+              }}
+              error={fieldErrors.studentClasses}
+            />
             <Input
               label="Subject"
               name="subject"
@@ -323,23 +333,23 @@ export function AdminAssessmentFormPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
-              label="Assessment date"
+              label="Starting date and time"
               name="assessmentDate"
-              type="date"
+              type="datetime-local"
               value={form.assessmentDate}
               onChange={updateField}
               required
               error={fieldErrors.assessmentDate}
             />
             <Input
-              label="End date"
+              label="Ending date and time"
               name="endDate"
-              type="date"
+              type="datetime-local"
               value={form.endDate}
               onChange={updateField}
               required
               error={fieldErrors.endDate}
-              hint="After this date students can no longer start the assessment"
+              hint="After this date and time students can no longer start the assessment"
             />
           </div>
 
@@ -472,7 +482,7 @@ export function AdminAssessmentFormPage() {
           <Button type="submit" loading={saving}>
             {isEdit ? 'Save changes' : 'Create online assessment'}
           </Button>
-          <Link to="/admin/assessments">
+          <Link to={`${basePath}/assessments`}>
             <Button type="button" variant="secondary">
               Cancel
             </Button>

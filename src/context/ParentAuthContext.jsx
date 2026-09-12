@@ -48,6 +48,11 @@ export function ParentAuthProvider({ children }) {
     return data;
   }, []);
 
+  const register = useCallback(async (payload) => {
+    const { data } = await parentApi.register(payload);
+    return data;
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await parentApi.logout();
@@ -75,12 +80,13 @@ export function ParentAuthProvider({ children }) {
       isAuthenticated: status === 'authenticated',
       isLoading: status === 'loading',
       login,
+      register,
       logout,
       updateProfile,
       refresh: bootstrap,
       setParent,
     }),
-    [parent, status, error, login, logout, updateProfile, bootstrap]
+    [parent, status, error, login, register, logout, updateProfile, bootstrap]
   );
 
   return <ParentAuthContext.Provider value={value}>{children}</ParentAuthContext.Provider>;

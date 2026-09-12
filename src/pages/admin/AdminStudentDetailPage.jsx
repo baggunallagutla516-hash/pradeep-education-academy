@@ -95,6 +95,7 @@ export function AdminStudentDetailPage() {
             </div>
             <dl>
               <Row label="Full name" value={student.fullName} />
+              <Row label="Registration ID" value={student.registrationId} />
               <Row label="Email" value={student.email} />
               <Row label="Phone" value={student.phone} />
               <Row label="Class" value={classLabel(student)} />

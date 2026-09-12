@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BarChart3, ClipboardCheck, Pencil, Plus, Trash2 } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
-import { formatDate, formatMarks } from '../../utils/quizFormat';
+import { formatDateTime, formatMarks } from '../../utils/quizFormat';
+import {
+  classOptionsFromItems,
+  itemMatchesClassFilter,
+} from '../../utils/contentClasses';
+import {
+  confirmEditPublishedMessage,
+  confirmUnpublishMessage,
+} from '../../utils/wipeAttemptsConfirm';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -17,6 +25,8 @@ import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
 
 export function AdminAssessmentsPage() {
+  const { basePath, api } = useStaffContent();
+  const navigate = useNavigate();
   const [assessments, setAssessments] = useState([]);
   const [classFilter, setClassFilter] = useState('');
   const [status, setStatus] = useState('loading');
@@ -28,7 +38,7 @@ export function AdminAssessmentsPage() {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await adminApi.assessments();
+      const { data } = await api.assessments();
       setAssessments(data.data.assessments);
       setStatus('ready');
     } catch (err) {
@@ -41,17 +51,56 @@ export function AdminAssessmentsPage() {
     load();
   }, []);
 
-  const classes = useMemo(() => {
-    const seen = new Map();
-    assessments.forEach((item) => {
-      if (item.studentClass && !seen.has(item.studentClass)) {
-        seen.set(item.studentClass, classLabel(item));
-      }
-    });
-    return [...seen].map(([id, name]) => ({ id, name }));
-  }, [assessments]);
+  const classes = useMemo(
+    () => classOptionsFromItems(assessments, classLabel),
+    [assessments]
+  );
 
-  const visible = classFilter ? assessments.filter((item) => item.studentClass === classFilter) : assessments;
+  const visible = useMemo(
+    () => assessments.filter((item) => itemMatchesClassFilter(item, classFilter)),
+    [assessments, classFilter]
+  );
+
+  function handleEdit(item) {
+    if (item.isPublished || item.attemptCount > 0) {
+      if (!window.confirm(confirmEditPublishedMessage(item.title, item.attemptCount || 0))) {
+        return;
+      }
+    }
+    navigate(`${basePath}/assessments/${item.id}/edit`);
+  }
+
+  async function handleTogglePublish(item) {
+    if (item.isPublished) {
+      if (!window.confirm(confirmUnpublishMessage(item.title, item.attemptCount || 0))) {
+        return;
+      }
+    }
+
+    setBusyId(item.id);
+    setActionError('');
+    try {
+      const payload = item.isPublished
+        ? { isPublished: false, confirmWipeAttempts: true }
+        : { isPublished: true };
+      await api.updateAssessment(item.id, payload);
+      setAssessments((prev) =>
+        prev.map((d) =>
+          d.id === item.id
+            ? {
+                ...d,
+                isPublished: !item.isPublished,
+                ...(item.isPublished ? { attemptCount: 0, resultsReleased: false } : {}),
+              }
+            : d
+        )
+      );
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not update publish status.'));
+    } finally {
+      setBusyId('');
+    }
+  }
 
   async function handleDelete(item) {
     const warning = item.attemptCount
@@ -62,7 +111,7 @@ export function AdminAssessmentsPage() {
     setBusyId(item.id);
     setActionError('');
     try {
-      await adminApi.deleteAssessment(item.id);
+      await api.deleteAssessment(item.id);
       setAssessments((prev) => prev.filter((d) => d.id !== item.id));
     } catch (err) {
       setActionError(getErrorMessage(err, 'Could not delete this assessment.'));
@@ -96,7 +145,7 @@ export function AdminAssessmentsPage() {
               </Select>
             </div>
           ) : null}
-          <Link to="/admin/assessments/new">
+          <Link to={`${basePath}/assessments/new`}>
             <Button size="sm">
               <Plus className="h-4 w-4" />
               New online assessment
@@ -116,10 +165,10 @@ export function AdminAssessmentsPage() {
       {status === 'ready' && assessments.length === 0 ? (
         <EmptyState
           title="No online assessments yet"
-          description="Create an assessment with single/multi-select questions and publish it to a class."
+          description="Create an assessment with single/multi-select questions and publish it to one or more classes."
           icon={ClipboardCheck}
           action={
-            <Link to="/admin/assessments/new">
+            <Link to={`${basePath}/assessments/new`}>
               <Button>Create online assessment</Button>
             </Link>
           }
@@ -145,9 +194,9 @@ export function AdminAssessmentsPage() {
                   {item.resultsReleased ? 'Results out' : 'Results held'}
                 </Badge>
                 <Badge tone="ink">{classLabel(item)}</Badge>
-                <Badge tone="ember">{formatDate(item.assessmentDate)}</Badge>
+                <Badge tone="ember">{formatDateTime(item.assessmentDate)}</Badge>
                 {item.endDate ? (
-                  <Badge tone="ink">Ends {formatDate(item.endDate)}</Badge>
+                  <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
                 ) : null}
               </div>
 
@@ -166,20 +215,24 @@ export function AdminAssessmentsPage() {
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <Link to={`/admin/assessments/${item.id}/results`}>
+                <Link to={`${basePath}/assessments/${item.id}/results`}>
                   <Button variant="secondary" size="sm">
                     <BarChart3 className="h-4 w-4" />
                     Results
                   </Button>
                 </Link>
-                {!item.isPublished ? (
-                  <Link to={`/admin/assessments/${item.id}/edit`}>
-                    <Button variant="secondary" size="sm">
-                      <Pencil className="h-4 w-4" />
-                      Edit
-                    </Button>
-                  </Link>
-                ) : null}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  loading={busyId === item.id}
+                  onClick={() => handleTogglePublish(item)}
+                >
+                  {item.isPublished ? 'Unpublish' : 'Publish'}
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => handleEdit(item)}>
+                  <Pencil className="h-4 w-4" />
+                  Edit
+                </Button>
                 <Button
                   variant="danger"
                   size="sm"

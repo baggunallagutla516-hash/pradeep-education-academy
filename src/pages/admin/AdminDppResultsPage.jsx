@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, BarChart3, Megaphone } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
 import { formatDate, formatMarks } from '../../utils/quizFormat';
@@ -16,6 +16,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { ResultsTable } from '../../components/quiz/ResultsTable';
 
 export function AdminDppResultsPage() {
+  const { basePath, api } = useStaffContent();
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [status, setStatus] = useState('loading');
@@ -28,7 +29,7 @@ export function AdminDppResultsPage() {
     setStatus('loading');
     setError('');
     try {
-      const res = await adminApi.dppResults(id);
+      const res = await api.dppResults(id);
       setData(res.data.data);
       setStatus('ready');
     } catch (err) {
@@ -53,7 +54,7 @@ export function AdminDppResultsPage() {
     setActionError('');
     setActionInfo('');
     try {
-      const res = await adminApi.releaseDppResults(id);
+      const res = await api.releaseDppResults(id);
       const notify = res.data.data.notify || {};
       setData((prev) =>
         prev
@@ -93,14 +94,14 @@ export function AdminDppResultsPage() {
       }
       actions={
         <div className="flex flex-wrap gap-2">
-          <Link to="/admin/dpps">
+          <Link to={`${basePath}/dpps`}>
             <Button variant="secondary" size="sm">
               <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
           </Link>
           {status === 'ready' && !data?.dpp?.isPublished ? (
-            <Link to={`/admin/dpps/${id}/edit`}>
+            <Link to={`${basePath}/dpps/${id}/edit`}>
               <Button variant="secondary" size="sm">
                 Edit DPP
               </Button>
@@ -184,7 +185,7 @@ export function AdminDppResultsPage() {
               icon={BarChart3}
               action={
                 data.dpp.isPublished ? null : (
-                  <Link to={`/admin/dpps/${id}/edit`}>
+                  <Link to={`${basePath}/dpps/${id}/edit`}>
                     <Button>Publish it</Button>
                   </Link>
                 )

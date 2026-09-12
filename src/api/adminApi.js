@@ -303,8 +303,8 @@ export const cetApi = {
 };
 
 export const assessmentApi = {
-  list() {
-    return api.get('/assessments');
+  list(params) {
+    return api.get('/assessments', { params });
   },
   get(id) {
     return api.get(`/assessments/${id}`);
@@ -324,8 +324,8 @@ export const assessmentApi = {
 };
 
 export const dppApi = {
-  list() {
-    return api.get('/dpps');
+  list(params) {
+    return api.get('/dpps', { params });
   },
   get(id) {
     return api.get(`/dpps/${id}`);
@@ -360,8 +360,8 @@ export const quizApi = {
 };
 
 export const slipTestApi = {
-  list() {
-    return api.get('/slip-tests');
+  list(params) {
+    return api.get('/slip-tests', { params });
   },
   get(id) {
     return api.get(`/slip-tests/${id}`);

@@ -29,7 +29,7 @@ export function LoginPage() {
 
   function validate() {
     const next = {};
-    if (!form.email.trim()) next.email = 'Email is required.';
+    if (!form.email.trim()) next.email = 'Email or Registration ID is required.';
     if (!form.password) next.password = 'Password is required.';
     setFieldErrors(next);
     return Object.keys(next).length === 0;
@@ -70,15 +70,15 @@ export function LoginPage() {
 
           <form className="space-y-4" onSubmit={handleSubmit} noValidate>
             <Input
-              label="Email"
+              label="Email or Registration ID"
               name="email"
-              type="email"
+              type="text"
               value={form.email}
               onChange={updateField}
               required
               error={fieldErrors.email}
-              placeholder="student@email.com"
-              autoComplete="email"
+              placeholder="student@email.com or PDPEDU1234"
+              autoComplete="username"
             />
             <PasswordInput
               label="Password"

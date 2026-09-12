@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, BarChart3, Megaphone } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
 import { formatDate, formatMarks } from '../../utils/quizFormat';
@@ -16,6 +16,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { ResultsTable } from '../../components/quiz/ResultsTable';
 
 export function AdminAssessmentResultsPage() {
+  const { basePath, api } = useStaffContent();
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [status, setStatus] = useState('loading');
@@ -28,7 +29,7 @@ export function AdminAssessmentResultsPage() {
     setStatus('loading');
     setError('');
     try {
-      const res = await adminApi.assessmentResults(id);
+      const res = await api.assessmentResults(id);
       setData(res.data.data);
       setStatus('ready');
     } catch (err) {
@@ -53,7 +54,7 @@ export function AdminAssessmentResultsPage() {
     setActionError('');
     setActionInfo('');
     try {
-      const res = await adminApi.releaseAssessmentResults(id);
+      const res = await api.releaseAssessmentResults(id);
       const notify = res.data.data.notify || {};
       setData((prev) =>
         prev
@@ -93,14 +94,14 @@ export function AdminAssessmentResultsPage() {
       }
       actions={
         <div className="flex flex-wrap gap-2">
-          <Link to="/admin/assessments">
+          <Link to={`${basePath}/assessments`}>
             <Button variant="secondary" size="sm">
               <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
           </Link>
           {status === 'ready' && !data?.assessment?.isPublished ? (
-            <Link to={`/admin/assessments/${id}/edit`}>
+            <Link to={`${basePath}/assessments/${id}/edit`}>
               <Button variant="secondary" size="sm">
                 Edit online assessment
               </Button>
@@ -184,7 +185,7 @@ export function AdminAssessmentResultsPage() {
               icon={BarChart3}
               action={
                 data.assessment.isPublished ? null : (
-                  <Link to={`/admin/assessments/${id}/edit`}>
+                  <Link to={`${basePath}/assessments/${id}/edit`}>
                     <Button>Publish it</Button>
                   </Link>
                 )

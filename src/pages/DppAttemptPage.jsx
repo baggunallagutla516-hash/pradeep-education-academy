@@ -7,7 +7,7 @@ import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { AttemptRunner } from '../components/quiz/AttemptRunner';
 
-export function DppAttemptPage() {
+export function DppAttemptPage({ api = dppApi, basePath = '/dpps' } = {}) {
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -27,7 +27,7 @@ export function DppAttemptPage() {
 
     async function start() {
       try {
-        const { data } = await dppApi.start(id);
+        const { data } = await api.start(id);
         if (!active) return;
         setAttempt(data.data.attempt);
         setDpp(data.data.dpp);
@@ -36,7 +36,7 @@ export function DppAttemptPage() {
         if (!active) return;
         // Already submitted — send them to the result card instead of a dead end.
         if (err.response?.status === 409) {
-          navigate(`/dpps/${id}/result`, { replace: true });
+          navigate(`${basePath}/${id}/result`, { replace: true });
           return;
         }
         setStatus('error');
@@ -48,14 +48,14 @@ export function DppAttemptPage() {
     return () => {
       active = false;
     };
-  }, [id, navigate]);
+  }, [api, basePath, id, navigate]);
 
   const handleSubmit = useCallback(
     async (answers, autoSubmitted) => {
       setSubmitting(true);
       setSubmitError('');
       try {
-        await dppApi.submit(id, { answers, autoSubmitted });
+        await api.submit(id, { answers, autoSubmitted });
         if (storageKey) {
           try {
             localStorage.removeItem(storageKey);
@@ -63,11 +63,11 @@ export function DppAttemptPage() {
             /* ignore */
           }
         }
-        navigate(`/dpps/${id}/result`, { replace: true });
+        navigate(`${basePath}/${id}/result`, { replace: true });
       } catch (err) {
         // A duplicate submit still has a result waiting.
         if (err.response?.status === 409) {
-          navigate(`/dpps/${id}/result`, { replace: true });
+          navigate(`${basePath}/${id}/result`, { replace: true });
           return;
         }
         setSubmitError(getErrorMessage(err, 'Could not submit your answers.'));
@@ -75,7 +75,7 @@ export function DppAttemptPage() {
         throw err;
       }
     },
-    [id, navigate, storageKey]
+    [api, basePath, id, navigate, storageKey]
   );
 
   if (status === 'loading') {
@@ -89,7 +89,11 @@ export function DppAttemptPage() {
   if (status === 'error') {
     return (
       <PageShell embedded title="D.P.P.">
-        <ErrorState description={loadError} onRetry={() => navigate('/dpps')} retryLabel="Back to DPPs" />
+        <ErrorState
+          description={loadError}
+          onRetry={() => navigate(basePath)}
+          retryLabel="Back to DPPs"
+        />
       </PageShell>
     );
   }

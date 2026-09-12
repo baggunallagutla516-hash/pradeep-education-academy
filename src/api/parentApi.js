@@ -1,6 +1,9 @@
 import api from './client';
 
 export const parentApi = {
+  register(payload) {
+    return api.post('/parent/register', payload);
+  },
   login(payload) {
     return api.post('/parent/login', payload);
   },

@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { authApi } from '../../api/authApi';
 import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
+import {
+  appendStudentClasses,
+  selectedClassIdsFromItem,
+} from '../../utils/contentClasses';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
+import { ClassMultiSelect } from '../../components/ui/ClassMultiSelect';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
@@ -18,13 +23,14 @@ import { ErrorState } from '../../components/ui/ErrorState';
 const emptyForm = {
   title: '',
   description: '',
-  studentClass: '',
+  studentClasses: [],
   chapterNumber: '',
   chapterName: '',
   isPublished: 'true',
 };
 
 export function AdminCetFormPage() {
+  const { basePath, api } = useStaffContent();
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
@@ -55,13 +61,13 @@ export function AdminCetFormPage() {
         setClasses(list);
 
         if (isEdit) {
-          const { data } = await adminApi.cet(id);
+          const { data } = await api.cet(id);
           if (!active) return;
           const item = data.data.cet;
           setForm({
             title: item.title,
             description: item.description || '',
-            studentClass: item.studentClass || '',
+            studentClasses: selectedClassIdsFromItem(item),
             chapterNumber: String(item.chapterNumber ?? ''),
             chapterName: item.chapterName || '',
             isPublished: item.isPublished ? 'true' : 'false',
@@ -71,7 +77,7 @@ export function AdminCetFormPage() {
         } else {
           setForm((prev) => ({
             ...prev,
-            studentClass: list[0]?.id || '',
+            studentClasses: list[0]?.id ? [list[0].id] : [],
           }));
         }
         setLoading(false);
@@ -119,7 +125,7 @@ export function AdminCetFormPage() {
   function validate() {
     const next = {};
     if (!form.title.trim()) next.title = 'Title is required.';
-    if (!form.studentClass) next.studentClass = 'Class is required.';
+    if (!form.studentClasses.length) next.studentClasses = 'Select at least one class.';
 
     const chapter = Number(form.chapterNumber);
     if (!form.chapterNumber.trim()) {
@@ -141,7 +147,7 @@ export function AdminCetFormPage() {
     const fd = new FormData();
     fd.append('title', form.title.trim());
     fd.append('description', form.description.trim());
-    fd.append('studentClass', form.studentClass);
+    appendStudentClasses(fd, form.studentClasses);
     fd.append('chapterNumber', form.chapterNumber.trim());
     fd.append('chapterName', form.chapterName.trim());
     fd.append('isPublished', form.isPublished);
@@ -152,11 +158,11 @@ export function AdminCetFormPage() {
     setSaving(true);
     try {
       if (isEdit) {
-        await adminApi.updateCet(id, fd);
+        await api.updateCet(id, fd);
       } else {
-        await adminApi.createCet(fd);
+        await api.createCet(fd);
       }
-      navigate('/admin/cets');
+      navigate(`${basePath}/cets`);
     } catch (err) {
       setError(getErrorMessage(err, 'Could not save C.E.T.'));
     } finally {
@@ -185,9 +191,9 @@ export function AdminCetFormPage() {
       embedded
       eyebrow="C.E.T."
       title={isEdit ? 'Edit C.E.T.' : 'New C.E.T.'}
-      description="Pick the class and chapter, then upload the Chapter End Test question paper as a PDF or Word file. Students in that class can download it."
+      description="Pick the classes and chapter, then upload the Chapter End Test question paper as a PDF or Word file. Students in those classes can download it."
       actions={
-        <Link to="/admin/cets">
+        <Link to={`${basePath}/cets`}>
           <Button variant="secondary" size="sm">
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -212,21 +218,15 @@ export function AdminCetFormPage() {
             error={fieldErrors.title}
             hint="Example: Chapter 5 C.E.T. — Chemical Reactions"
           />
-          <Select
-            label="Class"
-            name="studentClass"
-            value={form.studentClass}
-            onChange={updateField}
-            required
-            error={fieldErrors.studentClass}
-          >
-            <option value="">Select class</option>
-            {classes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
+          <ClassMultiSelect
+            classes={classes}
+            value={form.studentClasses}
+            onChange={(studentClasses) => {
+              setForm((prev) => ({ ...prev, studentClasses }));
+              setFieldErrors((prev) => ({ ...prev, studentClasses: '' }));
+            }}
+            error={fieldErrors.studentClasses}
+          />
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
               label="Chapter number"

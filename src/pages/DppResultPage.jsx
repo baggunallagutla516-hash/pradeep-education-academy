@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Camera, Clock3 } from 'lucide-react';
 import { dppApi } from '../api/adminApi';
 import { useAuth } from '../context/AuthContext';
+import { useEducatorAuth } from '../context/EducatorAuthContext';
+import { useParentAuth } from '../context/ParentAuthContext';
 import { getErrorMessage } from '../utils/errors';
 import { formatDate } from '../utils/quizFormat';
 import { PageShell } from '../components/layout/PageShell';
@@ -13,10 +15,19 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { ResultCard } from '../components/quiz/ResultCard';
 import { ResultCertificateModal } from '../components/quiz/ResultCertificateModal';
 
-export function DppResultPage() {
+export function DppResultPage({
+  api = dppApi,
+  basePath = '/dpps',
+  role = 'student',
+} = {}) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { student } = useAuth();
+  const { educator } = useEducatorAuth();
+  const { parent } = useParentAuth();
+
+  const participant =
+    role === 'educator' ? educator : role === 'parent' ? parent : student;
 
   const [result, setResult] = useState(null);
   const [held, setHeld] = useState(null);
@@ -30,7 +41,7 @@ export function DppResultPage() {
 
     async function load() {
       try {
-        const { data } = await dppApi.result(id);
+        const { data } = await api.result(id);
         if (!active) return;
         if (data.data.resultsHeld) {
           setHeld(data.data);
@@ -51,7 +62,7 @@ export function DppResultPage() {
     return () => {
       active = false;
     };
-  }, [id]);
+  }, [api, id]);
 
   const title = result?.title || held?.dpp?.title || 'Your result';
   const description = result
@@ -75,7 +86,7 @@ export function DppResultPage() {
               Screenshot result
             </Button>
           ) : null}
-          <Link to="/dpps">
+          <Link to={basePath}>
             <Button variant="secondary" size="sm">
               <ArrowLeft className="h-4 w-4" />
               All DPPs
@@ -88,7 +99,7 @@ export function DppResultPage() {
       {status === 'error' ? (
         <ErrorState
           description={error}
-          onRetry={() => navigate('/dpps')}
+          onRetry={() => navigate(basePath)}
           retryLabel="Back to DPPs"
         />
       ) : null}
@@ -116,7 +127,7 @@ export function DppResultPage() {
             open={shareOpen}
             onClose={() => setShareOpen(false)}
             result={result}
-            student={student}
+            student={participant}
             kindLabel="D.P.P. result"
             activityLabel="D.P.P."
             dateValue={result.practiceDate}

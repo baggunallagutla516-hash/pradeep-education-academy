@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
+  ClipboardList,
   FileStack,
   HelpCircle,
   LayoutDashboard,
   LogOut,
+  NotebookPen,
   PenLine,
   ScrollText,
+  Target,
   UserRound,
 } from 'lucide-react';
 import { useEducatorAuth } from '../../context/EducatorAuthContext';
@@ -23,7 +26,10 @@ const links = [
   { to: '/educator/worksheets', label: 'WORKSHEETS', icon: FileStack },
   { to: '/educator/unit-tests', label: 'EXAMS', icon: PenLine },
   { to: '/educator/cets', label: 'C.E.T.', icon: ScrollText },
+  { to: '/educator/assessments', label: 'ASSESSMENTS', icon: ClipboardList },
+  { to: '/educator/dpps', label: 'D.P.P.', icon: Target },
   { to: '/educator/quizzes', label: 'QUIZ', icon: HelpCircle },
+  { to: '/educator/slip-tests', label: 'SLIP TESTS', icon: NotebookPen },
   { to: '/educator/account', label: 'MY ACCOUNT', icon: UserRound },
 ];
 
@@ -106,7 +112,7 @@ export function EducatorSidebar({ expanded, onExpandedChange }) {
 
       <nav
         aria-label="Educator menu"
-        className={cn('flex flex-1 flex-col gap-2', expanded ? '' : 'items-center')}
+        className={cn('flex flex-1 flex-col gap-2 overflow-y-auto', expanded ? '' : 'items-center')}
       >
         {links.map((link) => (
           <RailLink key={link.to} {...link} expanded={expanded} />

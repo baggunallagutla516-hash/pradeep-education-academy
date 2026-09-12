@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { authApi } from '../../api/authApi';
 import { getErrorMessage } from '../../utils/errors';
-import { toDateInputValue } from '../../utils/quizFormat';
+import { toApiDateTime, toDateTimeLocalValue } from '../../utils/quizFormat';
+import { confirmSavePublishedMessage } from '../../utils/wipeAttemptsConfirm';
+import { selectedClassIdsFromItem } from '../../utils/contentClasses';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
+import { ClassMultiSelect } from '../../components/ui/ClassMultiSelect';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
@@ -24,11 +27,11 @@ import {
 const emptyForm = {
   title: '',
   description: '',
-  studentClass: '',
+  studentClasses: [],
   subject: '',
   chapter: '',
   topic: '',
-  endDate: toDateInputValue(),
+  endDate: toDateTimeLocalValue(undefined, { endOfDay: true }),
   durationMinutes: '15',
   negativeMarkPerWrong: '0',
   allowPartialCredit: 'true',
@@ -37,6 +40,7 @@ const emptyForm = {
 };
 
 export function AdminSlipTestFormPage() {
+  const { basePath, api } = useStaffContent();
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
@@ -50,6 +54,8 @@ export function AdminSlipTestFormPage() {
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
   const [hasAttempts, setHasAttempts] = useState(false);
+  const [initiallyPublished, setInitiallyPublished] = useState(false);
+  const [attemptCount, setAttemptCount] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -65,24 +71,22 @@ export function AdminSlipTestFormPage() {
 
         if (isEdit) {
           const [{ data }, resultsRes] = await Promise.all([
-            adminApi.slipTest(id),
-            adminApi.slipTestResults(id).catch(() => null),
+            api.slipTest(id),
+            api.slipTestResults(id).catch(() => null),
           ]);
           if (!active) return;
 
           const item = data.data.slipTest;
-          if (item.isPublished) {
-            navigate('/admin/slip-tests', { replace: true });
-            return;
-          }
+          const attempts =
+            item.attemptCount ?? resultsRes?.data?.data?.summary?.submitted ?? 0;
           setForm({
             title: item.title,
             description: item.description || '',
-            studentClass: item.studentClass || '',
+            studentClasses: selectedClassIdsFromItem(item),
             subject: item.subject || '',
             chapter: item.chapter || '',
             topic: item.topic || '',
-            endDate: toDateInputValue(item.endDate),
+            endDate: toDateTimeLocalValue(item.endDate),
             durationMinutes: String(item.durationMinutes ?? '15'),
             negativeMarkPerWrong: String(item.negativeMarkPerWrong ?? '0'),
             allowPartialCredit: item.allowPartialCredit ? 'true' : 'false',
@@ -90,9 +94,14 @@ export function AdminSlipTestFormPage() {
             isPublished: item.isPublished ? 'true' : 'false',
           });
           setQuestions((item.questions || []).map(toEditableQuestion));
-          setHasAttempts(Boolean(resultsRes?.data?.data?.summary?.submitted));
+          setInitiallyPublished(Boolean(item.isPublished));
+          setAttemptCount(Number(attempts) || 0);
+          setHasAttempts(Boolean(attempts));
         } else {
-          setForm((prev) => ({ ...prev, studentClass: list[0]?.id || '' }));
+          setForm((prev) => ({
+            ...prev,
+            studentClasses: list[0]?.id ? [list[0].id] : [],
+          }));
         }
         setLoading(false);
       } catch (err) {
@@ -117,9 +126,9 @@ export function AdminSlipTestFormPage() {
   function validate() {
     const next = {};
     if (!form.title.trim()) next.title = 'Title is required.';
-    if (!form.studentClass) next.studentClass = 'Class is required.';
+    if (!form.studentClasses.length) next.studentClasses = 'Select at least one class.';
     if (!form.chapter.trim()) next.chapter = 'Chapter is required.';
-    if (!form.endDate) next.endDate = 'End date is required.';
+    if (!form.endDate) next.endDate = 'Ending date and time is required.';
 
     const duration = Number(form.durationMinutes);
     if (!Number.isFinite(duration) || duration < 1 || duration > 300) {
@@ -149,11 +158,11 @@ export function AdminSlipTestFormPage() {
     const payload = {
       title: form.title.trim(),
       description: form.description.trim(),
-      studentClass: form.studentClass,
+      studentClasses: form.studentClasses,
       subject: form.subject.trim(),
       chapter: form.chapter.trim(),
       topic: form.topic.trim(),
-      endDate: form.endDate,
+      endDate: toApiDateTime(form.endDate),
       durationMinutes: Number(form.durationMinutes),
       negativeMarkPerWrong: Number(form.negativeMarkPerWrong),
       allowPartialCredit: form.allowPartialCredit === 'true',
@@ -162,11 +171,16 @@ export function AdminSlipTestFormPage() {
       questions: toApiQuestions(questions),
     };
 
+    if (isEdit && (initiallyPublished || hasAttempts)) {
+      if (!window.confirm(confirmSavePublishedMessage(attemptCount))) return;
+      payload.confirmWipeAttempts = true;
+    }
+
     setSaving(true);
     try {
-      if (isEdit) await adminApi.updateSlipTest(id, payload);
-      else await adminApi.createSlipTest(payload);
-      navigate('/admin/slip-tests');
+      if (isEdit) await api.updateSlipTest(id, payload);
+      else await api.createSlipTest(payload);
+      navigate(`${basePath}/slip-tests`);
     } catch (err) {
       setError(getErrorMessage(err, 'Could not save this slip test.'));
     } finally {
@@ -195,9 +209,9 @@ export function AdminSlipTestFormPage() {
       embedded
       eyebrow="Slip tests"
       title={isEdit ? 'Edit slip test' : 'New slip test'}
-      description="Set the class and chapter, then add the MCQ questions students will attempt."
+      description="Set the classes and chapter, then add the MCQ questions students will attempt."
       actions={
-        <Link to="/admin/slip-tests">
+        <Link to={`${basePath}/slip-tests`}>
           <Button variant="secondary" size="sm">
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -211,9 +225,9 @@ export function AdminSlipTestFormPage() {
         </Alert>
       ) : null}
 
-      {hasAttempts ? (
-        <Alert type="warning" title="Students have already attempted this" className="mb-4">
-          Editing questions or marks now will not re-grade results that are already submitted.
+      {initiallyPublished || hasAttempts ? (
+        <Alert type="warning" title="Saving will clear attempt data" className="mb-4">
+          Saving deletes all attempt data so corrected answers apply for everyone.
         </Alert>
       ) : null}
 
@@ -230,21 +244,15 @@ export function AdminSlipTestFormPage() {
           />
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Select
-              label="Class"
-              name="studentClass"
-              value={form.studentClass}
-              onChange={updateField}
-              required
-              error={fieldErrors.studentClass}
-            >
-              <option value="">Select class</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
+            <ClassMultiSelect
+              classes={classes}
+              value={form.studentClasses}
+              onChange={(studentClasses) => {
+                setForm((prev) => ({ ...prev, studentClasses }));
+                setFieldErrors((prev) => ({ ...prev, studentClasses: '' }));
+              }}
+              error={fieldErrors.studentClasses}
+            />
             <Input
               label="Subject"
               name="subject"
@@ -274,14 +282,14 @@ export function AdminSlipTestFormPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
-              label="End date"
+              label="Ending date and time"
               name="endDate"
-              type="date"
+              type="datetime-local"
               value={form.endDate}
               onChange={updateField}
               required
               error={fieldErrors.endDate}
-              hint="After this date students can no longer start the slip test"
+              hint="After this date and time students can no longer start the slip test"
             />
             <Input
               label="Duration (minutes)"
@@ -366,7 +374,7 @@ export function AdminSlipTestFormPage() {
           <Button type="submit" loading={saving}>
             {isEdit ? 'Save changes' : 'Create slip test'}
           </Button>
-          <Link to="/admin/slip-tests">
+          <Link to={`${basePath}/slip-tests`}>
             <Button type="button" variant="secondary">
               Cancel
             </Button>

@@ -1,15 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Download } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
+import {
+  classOptionsFromItems,
+  itemMatchesClassFilter,
+} from '../../utils/contentClasses';
 import { formatBytes } from '../../utils/formatBytes';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { Select } from '../../components/ui/Select';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -17,7 +22,9 @@ import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
 
 export function AdminWorksheetsPage() {
+  const { basePath, api } = useStaffContent();
   const [worksheets, setWorksheets] = useState([]);
+  const [classFilter, setClassFilter] = useState('');
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
@@ -27,7 +34,7 @@ export function AdminWorksheetsPage() {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await adminApi.worksheets();
+      const { data } = await api.worksheets();
       setWorksheets(data.data.worksheets);
       setStatus('ready');
     } catch (err) {
@@ -40,12 +47,19 @@ export function AdminWorksheetsPage() {
     load();
   }, []);
 
+  const classes = useMemo(() => classOptionsFromItems(worksheets, classLabel), [worksheets]);
+
+  const visible = useMemo(
+    () => worksheets.filter((item) => itemMatchesClassFilter(item, classFilter)),
+    [worksheets, classFilter]
+  );
+
   async function handleDelete(id) {
     if (!window.confirm('Delete this worksheet? The file will be removed from storage.')) return;
     setBusyId(id);
     setActionError('');
     try {
-      await adminApi.deleteWorksheet(id);
+      await api.deleteWorksheet(id);
       setWorksheets((prev) => prev.filter((w) => w.id !== id));
     } catch (err) {
       setActionError(getErrorMessage(err, 'Could not delete worksheet.'));
@@ -60,7 +74,7 @@ export function AdminWorksheetsPage() {
     try {
       const formData = new FormData();
       formData.append('isPublished', item.isPublished ? 'false' : 'true');
-      const { data } = await adminApi.updateWorksheet(item.id, formData);
+      const { data } = await api.updateWorksheet(item.id, formData);
       setWorksheets((prev) =>
         prev.map((w) => (w.id === item.id ? data.data.worksheet : w))
       );
@@ -76,14 +90,33 @@ export function AdminWorksheetsPage() {
       embedded
       eyebrow="Admin"
       title="Worksheets & files"
-      description="Upload study resources for a class. Students see items matching their class after login."
+      description="Upload study resources for one or more classes. Students see items matching their class after login."
       actions={
-        <Link to="/admin/worksheets/new">
-          <Button size="sm">
-            <Plus className="h-4 w-4" />
-            New worksheet
-          </Button>
-        </Link>
+        <div className="flex flex-wrap items-end gap-3">
+          {classes.length > 1 ? (
+            <div className="w-full min-w-[11rem] sm:w-48">
+              <Select
+                label="Class filter"
+                name="classFilter"
+                value={classFilter}
+                onChange={(event) => setClassFilter(event.target.value)}
+              >
+                <option value="">All classes</option>
+                {classes.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          ) : null}
+          <Link to={`${basePath}/worksheets/new`}>
+            <Button size="sm">
+              <Plus className="h-4 w-4" />
+              New worksheet
+            </Button>
+          </Link>
+        </div>
       }
     >
       {actionError ? (
@@ -99,16 +132,20 @@ export function AdminWorksheetsPage() {
           title="No worksheets yet"
           description="Upload a cover image and file for a class to get started."
           action={
-            <Link to="/admin/worksheets/new">
+            <Link to={`${basePath}/worksheets/new`}>
               <Button>Upload worksheet</Button>
             </Link>
           }
         />
       ) : null}
 
-      {status === 'ready' && worksheets.length > 0 ? (
+      {status === 'ready' && worksheets.length > 0 && visible.length === 0 ? (
+        <EmptyState title="No worksheets for this class" description="Try another class filter." />
+      ) : null}
+
+      {status === 'ready' && visible.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          {worksheets.map((item) => (
+          {visible.map((item) => (
             <Card key={item.id} className="overflow-hidden p-0">
               <img
                 src={mediaUrl(item.coverImageUrl)}
@@ -144,7 +181,7 @@ export function AdminWorksheetsPage() {
                   >
                     {item.isPublished ? 'Unpublish' : 'Publish'}
                   </Button>
-                  <Link to={`/admin/worksheets/${item.id}/edit`}>
+                  <Link to={`${basePath}/worksheets/${item.id}/edit`}>
                     <Button variant="secondary" size="sm">
                       <Pencil className="h-4 w-4" />
                       Edit

@@ -184,6 +184,7 @@ export function AccountPage() {
 
         <dl>
           <DetailRow label="Full name" value={student.fullName} />
+          <DetailRow label="Registration ID" value={student.registrationId} />
           <DetailRow label="Email" value={student.email} />
           <DetailRow label="Phone" value={student.phone} />
           <DetailRow label="Class" value={classLabel(student)} />

@@ -7,7 +7,10 @@ import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { AttemptRunner } from '../components/quiz/AttemptRunner';
 
-export function SlipTestAttemptPage() {
+export function SlipTestAttemptPage({
+  api = slipTestApi,
+  basePath = '/slip-tests',
+} = {}) {
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -27,7 +30,7 @@ export function SlipTestAttemptPage() {
 
     async function start() {
       try {
-        const { data } = await slipTestApi.start(id);
+        const { data } = await api.start(id);
         if (!active) return;
         setAttempt(data.data.attempt);
         setSlipTest(data.data.slipTest);
@@ -36,7 +39,7 @@ export function SlipTestAttemptPage() {
         if (!active) return;
         // Already submitted — send them to the result card instead of a dead end.
         if (err.response?.status === 409) {
-          navigate(`/slip-tests/${id}/result`, { replace: true });
+          navigate(`${basePath}/${id}/result`, { replace: true });
           return;
         }
         setStatus('error');
@@ -48,14 +51,14 @@ export function SlipTestAttemptPage() {
     return () => {
       active = false;
     };
-  }, [id, navigate]);
+  }, [api, basePath, id, navigate]);
 
   const handleSubmit = useCallback(
     async (answers, autoSubmitted) => {
       setSubmitting(true);
       setSubmitError('');
       try {
-        await slipTestApi.submit(id, { answers, autoSubmitted });
+        await api.submit(id, { answers, autoSubmitted });
         if (storageKey) {
           try {
             localStorage.removeItem(storageKey);
@@ -63,11 +66,11 @@ export function SlipTestAttemptPage() {
             /* ignore */
           }
         }
-        navigate(`/slip-tests/${id}/result`, { replace: true });
+        navigate(`${basePath}/${id}/result`, { replace: true });
       } catch (err) {
         // A duplicate submit still has a result waiting.
         if (err.response?.status === 409) {
-          navigate(`/slip-tests/${id}/result`, { replace: true });
+          navigate(`${basePath}/${id}/result`, { replace: true });
           return;
         }
         setSubmitError(getErrorMessage(err, 'Could not submit your answers.'));
@@ -75,7 +78,7 @@ export function SlipTestAttemptPage() {
         throw err;
       }
     },
-    [id, navigate, storageKey]
+    [api, basePath, id, navigate, storageKey]
   );
 
   if (status === 'loading') {
@@ -91,7 +94,7 @@ export function SlipTestAttemptPage() {
       <PageShell embedded title="Slip test">
         <ErrorState
           description={loadError}
-          onRetry={() => navigate('/slip-tests')}
+          onRetry={() => navigate(basePath)}
           retryLabel="Back to slip tests"
         />
       </PageShell>

@@ -8,27 +8,45 @@ import { Badge } from '../../components/ui/Badge';
 const ready = [
   {
     title: 'WORK SHEETS',
-    description: 'Download question papers, slides, and study resources the admin has published.',
+    description: 'Download question papers, slides, and study resources for every class.',
     emoji: '📚',
     to: '/educator/worksheets',
   },
   {
     title: 'EXAMS',
-    description: 'Download exam question papers published by the admin for every class.',
+    description: 'Download exam question papers published for every class.',
     emoji: '✏️',
     to: '/educator/unit-tests',
   },
   {
     title: 'C.E.T.',
-    description: 'Download Chapter End Test papers published by the admin for every class.',
+    description: 'Download Chapter End Test papers for every class.',
     emoji: '📖',
     to: '/educator/cets',
   },
   {
+    title: 'ONLINE ASSESSMENTS',
+    description: 'Attempt timed online assessments for every class, like a student.',
+    emoji: '⏱️',
+    to: '/educator/assessments',
+  },
+  {
+    title: 'D.P.P.',
+    description: 'Attempt daily practice problems online and see your score when released.',
+    emoji: '🎯',
+    to: '/educator/dpps',
+  },
+  {
     title: 'QUIZ',
-    description: 'Open quizzes for every login. Single and multi-select questions.',
+    description: 'Open and attempt quizzes for every login.',
     emoji: '❓',
     to: '/educator/quizzes',
+  },
+  {
+    title: 'SLIP TESTS',
+    description: 'Attempt chapter and topic slip tests for every class.',
+    emoji: '📝',
+    to: '/educator/slip-tests',
   },
 ];
 
@@ -40,7 +58,7 @@ export function EducatorDashboardPage() {
       embedded
       eyebrow="Educator"
       title={`Hello, ${educator?.fullName?.split(' ')[0] || 'teacher'}`}
-      description="Open published worksheets, exams, C.E.T. papers, and quizzes."
+      description="Download papers and attempt assessments across all classes — the same experience as students."
     >
       <section>
         <div className="mb-4">

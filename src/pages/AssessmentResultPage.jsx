@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Camera, Clock3 } from 'lucide-react';
 import { assessmentApi } from '../api/adminApi';
 import { useAuth } from '../context/AuthContext';
+import { useEducatorAuth } from '../context/EducatorAuthContext';
+import { useParentAuth } from '../context/ParentAuthContext';
 import { getErrorMessage } from '../utils/errors';
 import { formatDate } from '../utils/quizFormat';
 import { PageShell } from '../components/layout/PageShell';
@@ -13,10 +15,19 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { ResultCard } from '../components/quiz/ResultCard';
 import { ResultCertificateModal } from '../components/quiz/ResultCertificateModal';
 
-export function AssessmentResultPage() {
+export function AssessmentResultPage({
+  api = assessmentApi,
+  basePath = '/assessments',
+  role = 'student',
+} = {}) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { student } = useAuth();
+  const { educator } = useEducatorAuth();
+  const { parent } = useParentAuth();
+
+  const participant =
+    role === 'educator' ? educator : role === 'parent' ? parent : student;
 
   const [result, setResult] = useState(null);
   const [held, setHeld] = useState(null);
@@ -30,7 +41,7 @@ export function AssessmentResultPage() {
 
     async function load() {
       try {
-        const { data } = await assessmentApi.result(id);
+        const { data } = await api.result(id);
         if (!active) return;
         if (data.data.resultsHeld) {
           setHeld(data.data);
@@ -51,7 +62,7 @@ export function AssessmentResultPage() {
     return () => {
       active = false;
     };
-  }, [id]);
+  }, [api, id]);
 
   const title =
     result?.title || held?.assessment?.title || 'Your result';
@@ -77,7 +88,7 @@ export function AssessmentResultPage() {
               Screenshot result
             </Button>
           ) : null}
-          <Link to="/assessments">
+          <Link to={basePath}>
             <Button variant="secondary" size="sm">
               <ArrowLeft className="h-4 w-4" />
               All online assessments
@@ -90,7 +101,7 @@ export function AssessmentResultPage() {
       {status === 'error' ? (
         <ErrorState
           description={error}
-          onRetry={() => navigate('/assessments')}
+          onRetry={() => navigate(basePath)}
           retryLabel="Back to online assessments"
         />
       ) : null}
@@ -123,7 +134,7 @@ export function AssessmentResultPage() {
             open={shareOpen}
             onClose={() => setShareOpen(false)}
             result={result}
-            student={student}
+            student={participant}
             kindLabel="Online assessment result"
             activityLabel="Assessment"
             dateValue={result.assessmentDate}

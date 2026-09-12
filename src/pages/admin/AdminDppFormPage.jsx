@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { authApi } from '../../api/authApi';
 import { getErrorMessage } from '../../utils/errors';
-import { toDateInputValue } from '../../utils/quizFormat';
+import { toApiDateTime, toDateTimeLocalValue } from '../../utils/quizFormat';
+import { confirmSavePublishedMessage } from '../../utils/wipeAttemptsConfirm';
+import { selectedClassIdsFromItem } from '../../utils/contentClasses';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
+import { ClassMultiSelect } from '../../components/ui/ClassMultiSelect';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
@@ -24,10 +27,10 @@ import {
 const emptyForm = {
   title: '',
   description: '',
-  studentClass: '',
+  studentClasses: [],
   subject: '',
-  practiceDate: toDateInputValue(),
-  endDate: toDateInputValue(),
+  practiceDate: toDateTimeLocalValue(),
+  endDate: toDateTimeLocalValue(undefined, { endOfDay: true }),
   durationMinutes: '15',
   negativeMarkPerWrong: '0',
   allowPartialCredit: 'true',
@@ -36,6 +39,7 @@ const emptyForm = {
 };
 
 export function AdminDppFormPage() {
+  const { basePath, api } = useStaffContent();
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
@@ -49,6 +53,8 @@ export function AdminDppFormPage() {
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
   const [hasAttempts, setHasAttempts] = useState(false);
+  const [initiallyPublished, setInitiallyPublished] = useState(false);
+  const [attemptCount, setAttemptCount] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -64,23 +70,23 @@ export function AdminDppFormPage() {
 
         if (isEdit) {
           const [{ data }, resultsRes] = await Promise.all([
-            adminApi.dpp(id),
-            adminApi.dppResults(id).catch(() => null),
+            api.dpp(id),
+            api.dppResults(id).catch(() => null),
           ]);
           if (!active) return;
 
           const item = data.data.dpp;
-          if (item.isPublished) {
-            navigate('/admin/dpps', { replace: true });
-            return;
-          }
+          const attempts =
+            item.attemptCount ?? resultsRes?.data?.data?.summary?.submitted ?? 0;
           setForm({
             title: item.title,
             description: item.description || '',
-            studentClass: item.studentClass || '',
+            studentClasses: selectedClassIdsFromItem(item),
             subject: item.subject || '',
-            practiceDate: toDateInputValue(item.practiceDate),
-            endDate: toDateInputValue(item.endDate || item.practiceDate),
+            practiceDate: toDateTimeLocalValue(item.practiceDate),
+            endDate: toDateTimeLocalValue(item.endDate || item.practiceDate, {
+              endOfDay: !item.endDate,
+            }),
             durationMinutes: String(item.durationMinutes ?? '15'),
             negativeMarkPerWrong: String(item.negativeMarkPerWrong ?? '0'),
             allowPartialCredit: item.allowPartialCredit ? 'true' : 'false',
@@ -88,9 +94,14 @@ export function AdminDppFormPage() {
             isPublished: item.isPublished ? 'true' : 'false',
           });
           setQuestions((item.questions || []).map(toEditableQuestion));
-          setHasAttempts(Boolean(resultsRes?.data?.data?.summary?.submitted));
+          setInitiallyPublished(Boolean(item.isPublished));
+          setAttemptCount(Number(attempts) || 0);
+          setHasAttempts(Boolean(attempts));
         } else {
-          setForm((prev) => ({ ...prev, studentClass: list[0]?.id || '' }));
+          setForm((prev) => ({
+            ...prev,
+            studentClasses: list[0]?.id ? [list[0].id] : [],
+          }));
         }
         setLoading(false);
       } catch (err) {
@@ -115,11 +126,11 @@ export function AdminDppFormPage() {
   function validate() {
     const next = {};
     if (!form.title.trim()) next.title = 'Title is required.';
-    if (!form.studentClass) next.studentClass = 'Class is required.';
-    if (!form.practiceDate) next.practiceDate = 'Practice date is required.';
-    if (!form.endDate) next.endDate = 'End date is required.';
+    if (!form.studentClasses.length) next.studentClasses = 'Select at least one class.';
+    if (!form.practiceDate) next.practiceDate = 'Starting date and time is required.';
+    if (!form.endDate) next.endDate = 'Ending date and time is required.';
     if (form.practiceDate && form.endDate && form.endDate < form.practiceDate) {
-      next.endDate = 'End date cannot be before the practice date.';
+      next.endDate = 'Ending date and time cannot be before the starting date and time.';
     }
 
     const duration = Number(form.durationMinutes);
@@ -150,10 +161,10 @@ export function AdminDppFormPage() {
     const payload = {
       title: form.title.trim(),
       description: form.description.trim(),
-      studentClass: form.studentClass,
+      studentClasses: form.studentClasses,
       subject: form.subject.trim(),
-      practiceDate: form.practiceDate,
-      endDate: form.endDate,
+      practiceDate: toApiDateTime(form.practiceDate),
+      endDate: toApiDateTime(form.endDate),
       durationMinutes: Number(form.durationMinutes),
       negativeMarkPerWrong: Number(form.negativeMarkPerWrong),
       allowPartialCredit: form.allowPartialCredit === 'true',
@@ -162,11 +173,16 @@ export function AdminDppFormPage() {
       questions: toApiQuestions(questions),
     };
 
+    if (isEdit && (initiallyPublished || hasAttempts)) {
+      if (!window.confirm(confirmSavePublishedMessage(attemptCount))) return;
+      payload.confirmWipeAttempts = true;
+    }
+
     setSaving(true);
     try {
-      if (isEdit) await adminApi.updateDpp(id, payload);
-      else await adminApi.createDpp(payload);
-      navigate('/admin/dpps');
+      if (isEdit) await api.updateDpp(id, payload);
+      else await api.createDpp(payload);
+      navigate(`${basePath}/dpps`);
     } catch (err) {
       setError(getErrorMessage(err, 'Could not save this DPP.'));
     } finally {
@@ -195,9 +211,9 @@ export function AdminDppFormPage() {
       embedded
       eyebrow="D.P.P."
       title={isEdit ? 'Edit DPP' : 'New DPP'}
-      description="Set the class and date, then add the MCQ questions students will attempt."
+      description="Set the classes and date, then add the MCQ questions students will attempt."
       actions={
-        <Link to="/admin/dpps">
+        <Link to={`${basePath}/dpps`}>
           <Button variant="secondary" size="sm">
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -211,9 +227,9 @@ export function AdminDppFormPage() {
         </Alert>
       ) : null}
 
-      {hasAttempts ? (
-        <Alert type="warning" title="Students have already attempted this" className="mb-4">
-          Editing questions or marks now will not re-grade results that are already submitted.
+      {initiallyPublished || hasAttempts ? (
+        <Alert type="warning" title="Saving will clear attempt data" className="mb-4">
+          Saving deletes all attempt data so corrected answers apply for everyone.
         </Alert>
       ) : null}
 
@@ -230,21 +246,15 @@ export function AdminDppFormPage() {
           />
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Select
-              label="Class"
-              name="studentClass"
-              value={form.studentClass}
-              onChange={updateField}
-              required
-              error={fieldErrors.studentClass}
-            >
-              <option value="">Select class</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
+            <ClassMultiSelect
+              classes={classes}
+              value={form.studentClasses}
+              onChange={(studentClasses) => {
+                setForm((prev) => ({ ...prev, studentClasses }));
+                setFieldErrors((prev) => ({ ...prev, studentClasses: '' }));
+              }}
+              error={fieldErrors.studentClasses}
+            />
             <Input
               label="Subject"
               name="subject"
@@ -256,24 +266,23 @@ export function AdminDppFormPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
-              label="Practice date"
+              label="Starting date and time"
               name="practiceDate"
-              type="date"
+              type="datetime-local"
               value={form.practiceDate}
               onChange={updateField}
               required
               error={fieldErrors.practiceDate}
-              hint="The class day this practice set belongs to"
             />
             <Input
-              label="End date"
+              label="Ending date and time"
               name="endDate"
-              type="date"
+              type="datetime-local"
               value={form.endDate}
               onChange={updateField}
               required
               error={fieldErrors.endDate}
-              hint="After this date students can no longer start the DPP"
+              hint="After this date and time students can no longer start the DPP"
             />
           </div>
 
@@ -359,7 +368,7 @@ export function AdminDppFormPage() {
           <Button type="submit" loading={saving}>
             {isEdit ? 'Save changes' : 'Create DPP'}
           </Button>
-          <Link to="/admin/dpps">
+          <Link to={`${basePath}/dpps`}>
             <Button type="button" variant="secondary">
               Cancel
             </Button>

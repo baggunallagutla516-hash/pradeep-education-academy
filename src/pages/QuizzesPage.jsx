@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, Clock, HelpCircle } from 'lucide-react';
 import { quizApi } from '../api/adminApi';
 import { getErrorMessage } from '../utils/errors';
-import { formatDate, formatMarks } from '../utils/quizFormat';
+import { formatDateTime, formatMarks } from '../utils/quizFormat';
 import { PageShell } from '../components/layout/PageShell';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -74,7 +74,7 @@ export function QuizzesPage({
               <Card key={item.id} className="flex h-full flex-col">
                 <div className="mb-2 flex flex-wrap gap-2">
                   {item.endDate ? (
-                    <Badge tone="ink">Ends {formatDate(item.endDate)}</Badge>
+                    <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
                   ) : null}
                   {done ? (
                     <Badge tone={item.resultsReleased ? 'lagoon' : 'ember'}>
@@ -127,7 +127,7 @@ export function QuizzesPage({
 
                 {closed ? (
                   <p className="mt-3 text-sm text-ink-900/55">
-                    This quiz closed on {formatDate(item.endDate)}.
+                    This quiz closed on {formatDateTime(item.endDate)}.
                   </p>
                 ) : null}
 

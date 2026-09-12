@@ -55,24 +55,28 @@ const readyFeatures = [
     description: 'Timed fullscreen online tests with single and multi-select questions.',
     emoji: '⏱️',
     to: '/assessments',
+    educatorTo: '/educator/assessments',
   },
   {
     title: 'D.P.P.',
     description: 'Daily practice problems. Attempt them online and see your score instantly.',
     emoji: '🎯',
     to: '/dpps',
+    educatorTo: '/educator/dpps',
   },
   {
     title: 'QUIZ',
     description: 'Open quizzes for every student. Single and multi-select questions.',
     emoji: '❓',
     to: '/quizzes',
+    educatorTo: '/educator/quizzes',
   },
   {
     title: 'SLIP TESTS',
     description: 'Chapter and topic tests. Attempt them online and see your score instantly.',
     emoji: '📝',
     to: '/slip-tests',
+    educatorTo: '/educator/slip-tests',
   },
 ];
 

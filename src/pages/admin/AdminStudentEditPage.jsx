@@ -20,9 +20,10 @@ const emptyParentForm = {
   phone: '',
   password: '',
   confirmPassword: '',
+  studentClass: '',
 };
 
-function AddParentModal({ open, onClose, onSaved, studentName }) {
+function AddParentModal({ open, onClose, onSaved, studentName, studentClassId, classOptions }) {
   const [form, setForm] = useState(emptyParentForm);
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
@@ -30,10 +31,13 @@ function AddParentModal({ open, onClose, onSaved, studentName }) {
 
   useEffect(() => {
     if (!open) return;
-    setForm(emptyParentForm);
+    setForm({
+      ...emptyParentForm,
+      studentClass: studentClassId ? String(studentClassId) : '',
+    });
     setFieldErrors({});
     setError('');
-  }, [open]);
+  }, [open, studentClassId]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -72,6 +76,9 @@ function AddParentModal({ open, onClose, onSaved, studentName }) {
     if (form.password !== form.confirmPassword) {
       next.confirmPassword = 'Passwords do not match.';
     }
+    if (!form.studentClass) {
+      next.studentClass = 'Please select a class.';
+    }
     setFieldErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -89,6 +96,7 @@ function AddParentModal({ open, onClose, onSaved, studentName }) {
         phone: form.phone.trim(),
         password: form.password,
         confirmPassword: form.confirmPassword,
+        classes: [form.studentClass],
       });
     } catch (err) {
       setError(getErrorMessage(err, 'Could not save parent.'));
@@ -187,6 +195,22 @@ function AddParentModal({ open, onClose, onSaved, studentName }) {
               error={fieldErrors.confirmPassword}
             />
           </div>
+
+          <Select
+            label="Class"
+            name="studentClass"
+            value={form.studentClass}
+            onChange={updateField}
+            required
+            error={fieldErrors.studentClass}
+          >
+            <option value="">Select class</option>
+            {(classOptions || []).map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </Select>
 
           <div className="flex flex-wrap justify-end gap-2 pt-2">
             <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>
@@ -361,10 +385,13 @@ export function AdminStudentEditPage() {
           ) : null}
 
           <Card>
-            <div className="mb-4">
+            <div className="mb-4 flex flex-wrap items-center gap-2">
               <Badge tone={student.isActive ? 'lagoon' : 'ink'}>
                 {student.isActive ? 'Active' : 'Inactive'}
               </Badge>
+              {student.registrationId ? (
+                <Badge tone="ink">ID: {student.registrationId}</Badge>
+              ) : null}
             </div>
 
             {saveError ? (
@@ -495,6 +522,8 @@ export function AdminStudentEditPage() {
             onClose={() => setModalOpen(false)}
             onSaved={handleSaveParent}
             studentName={student.fullName}
+            studentClassId={student.studentClass}
+            classOptions={classes}
           />
         </>
       ) : null}

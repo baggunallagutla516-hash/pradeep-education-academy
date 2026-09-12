@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BarChart3, FileText, Pencil, Plus, Trash2 } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
-import { formatDate, formatMarks } from '../../utils/quizFormat';
+import {
+  classOptionsFromItems,
+  itemMatchesClassFilter,
+} from '../../utils/contentClasses';
+import { formatDateTime, formatMarks } from '../../utils/quizFormat';
+import {
+  confirmEditPublishedMessage,
+  confirmUnpublishMessage,
+} from '../../utils/wipeAttemptsConfirm';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -17,6 +25,8 @@ import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
 
 export function AdminSlipTestsPage() {
+  const { basePath, api } = useStaffContent();
+  const navigate = useNavigate();
   const [slipTests, setSlipTests] = useState([]);
   const [classFilter, setClassFilter] = useState('');
   const [status, setStatus] = useState('loading');
@@ -28,7 +38,7 @@ export function AdminSlipTestsPage() {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await adminApi.slipTests();
+      const { data } = await api.slipTests();
       setSlipTests(data.data.slipTests);
       setStatus('ready');
     } catch (err) {
@@ -41,19 +51,56 @@ export function AdminSlipTestsPage() {
     load();
   }, []);
 
-  const classes = useMemo(() => {
-    const seen = new Map();
-    slipTests.forEach((item) => {
-      if (item.studentClass && !seen.has(item.studentClass)) {
-        seen.set(item.studentClass, classLabel(item));
-      }
-    });
-    return [...seen].map(([id, name]) => ({ id, name }));
-  }, [slipTests]);
+  const classes = useMemo(
+    () => classOptionsFromItems(slipTests, classLabel),
+    [slipTests]
+  );
 
-  const visible = classFilter
-    ? slipTests.filter((item) => item.studentClass === classFilter)
-    : slipTests;
+  const visible = useMemo(
+    () => slipTests.filter((item) => itemMatchesClassFilter(item, classFilter)),
+    [slipTests, classFilter]
+  );
+
+  function handleEdit(item) {
+    if (item.isPublished || item.attemptCount > 0) {
+      if (!window.confirm(confirmEditPublishedMessage(item.title, item.attemptCount || 0))) {
+        return;
+      }
+    }
+    navigate(`${basePath}/slip-tests/${item.id}/edit`);
+  }
+
+  async function handleTogglePublish(item) {
+    if (item.isPublished) {
+      if (!window.confirm(confirmUnpublishMessage(item.title, item.attemptCount || 0))) {
+        return;
+      }
+    }
+
+    setBusyId(item.id);
+    setActionError('');
+    try {
+      const payload = item.isPublished
+        ? { isPublished: false, confirmWipeAttempts: true }
+        : { isPublished: true };
+      await api.updateSlipTest(item.id, payload);
+      setSlipTests((prev) =>
+        prev.map((s) =>
+          s.id === item.id
+            ? {
+                ...s,
+                isPublished: !item.isPublished,
+                ...(item.isPublished ? { attemptCount: 0, resultsReleased: false } : {}),
+              }
+            : s
+        )
+      );
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not update publish status.'));
+    } finally {
+      setBusyId('');
+    }
+  }
 
   async function handleDelete(item) {
     const warning = item.attemptCount
@@ -64,7 +111,7 @@ export function AdminSlipTestsPage() {
     setBusyId(item.id);
     setActionError('');
     try {
-      await adminApi.deleteSlipTest(item.id);
+      await api.deleteSlipTest(item.id);
       setSlipTests((prev) => prev.filter((s) => s.id !== item.id));
     } catch (err) {
       setActionError(getErrorMessage(err, 'Could not delete this slip test.'));
@@ -98,7 +145,7 @@ export function AdminSlipTestsPage() {
               </Select>
             </div>
           ) : null}
-          <Link to="/admin/slip-tests/new">
+          <Link to={`${basePath}/slip-tests/new`}>
             <Button size="sm">
               <Plus className="h-4 w-4" />
               New slip test
@@ -121,7 +168,7 @@ export function AdminSlipTestsPage() {
           description="Create a chapter or topic based test, add MCQ questions, and publish it to a class."
           icon={FileText}
           action={
-            <Link to="/admin/slip-tests/new">
+            <Link to={`${basePath}/slip-tests/new`}>
               <Button>Create slip test</Button>
             </Link>
           }
@@ -149,7 +196,7 @@ export function AdminSlipTestsPage() {
                 <Badge tone="ink">{classLabel(item)}</Badge>
                 <Badge tone="ember">{item.chapter}</Badge>
                 {item.endDate ? (
-                  <Badge tone="ink">Ends {formatDate(item.endDate)}</Badge>
+                  <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
                 ) : null}
               </div>
 
@@ -168,20 +215,24 @@ export function AdminSlipTestsPage() {
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <Link to={`/admin/slip-tests/${item.id}/results`}>
+                <Link to={`${basePath}/slip-tests/${item.id}/results`}>
                   <Button variant="secondary" size="sm">
                     <BarChart3 className="h-4 w-4" />
                     Results
                   </Button>
                 </Link>
-                {!item.isPublished ? (
-                  <Link to={`/admin/slip-tests/${item.id}/edit`}>
-                    <Button variant="secondary" size="sm">
-                      <Pencil className="h-4 w-4" />
-                      Edit
-                    </Button>
-                  </Link>
-                ) : null}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  loading={busyId === item.id}
+                  onClick={() => handleTogglePublish(item)}
+                >
+                  {item.isPublished ? 'Unpublish' : 'Publish'}
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => handleEdit(item)}>
+                  <Pencil className="h-4 w-4" />
+                  Edit
+                </Button>
                 <Button
                   variant="danger"
                   size="sm"

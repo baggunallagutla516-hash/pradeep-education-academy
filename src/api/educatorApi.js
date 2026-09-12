@@ -60,4 +60,58 @@ export const educatorApi = {
       return api.get(`/educator/quizzes/${id}/result`);
     },
   },
+  assessments: {
+    list(params) {
+      return api.get('/educator/assessments', { params });
+    },
+    get(id) {
+      return api.get(`/educator/assessments/${id}`);
+    },
+    start(id) {
+      return api.post(`/educator/assessments/${id}/start`);
+    },
+    fullscreenExit(id) {
+      return api.post(`/educator/assessments/${id}/fullscreen-exit`);
+    },
+    submit(id, payload) {
+      return api.post(`/educator/assessments/${id}/submit`, payload);
+    },
+    result(id) {
+      return api.get(`/educator/assessments/${id}/result`);
+    },
+  },
+  dpps: {
+    list(params) {
+      return api.get('/educator/dpps', { params });
+    },
+    get(id) {
+      return api.get(`/educator/dpps/${id}`);
+    },
+    start(id) {
+      return api.post(`/educator/dpps/${id}/start`);
+    },
+    submit(id, payload) {
+      return api.post(`/educator/dpps/${id}/submit`, payload);
+    },
+    result(id) {
+      return api.get(`/educator/dpps/${id}/result`);
+    },
+  },
+  slipTests: {
+    list(params) {
+      return api.get('/educator/slip-tests', { params });
+    },
+    get(id) {
+      return api.get(`/educator/slip-tests/${id}`);
+    },
+    start(id) {
+      return api.post(`/educator/slip-tests/${id}/start`);
+    },
+    submit(id, payload) {
+      return api.post(`/educator/slip-tests/${id}/submit`, payload);
+    },
+    result(id) {
+      return api.get(`/educator/slip-tests/${id}/result`);
+    },
+  },
 };

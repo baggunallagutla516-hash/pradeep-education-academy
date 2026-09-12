@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Download, PenLine } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
 import { formatBytes } from '../../utils/formatBytes';
 import { unitLabel } from '../../utils/unitLabel';
+import {
+  classOptionsFromItems,
+  itemMatchesClassFilter,
+} from '../../utils/contentClasses';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -19,6 +23,7 @@ import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
 
 export function AdminUnitTestsPage() {
+  const { basePath, api } = useStaffContent();
   const [unitTests, setUnitTests] = useState([]);
   const [classFilter, setClassFilter] = useState('');
   const [status, setStatus] = useState('loading');
@@ -30,7 +35,7 @@ export function AdminUnitTestsPage() {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await adminApi.unitTests();
+      const { data } = await api.unitTests();
       setUnitTests(data.data.unitTests);
       setStatus('ready');
     } catch (err) {
@@ -43,26 +48,22 @@ export function AdminUnitTestsPage() {
     load();
   }, []);
 
-  const classes = useMemo(() => {
-    const seen = new Map();
-    unitTests.forEach((item) => {
-      if (item.studentClass && !seen.has(item.studentClass)) {
-        seen.set(item.studentClass, classLabel(item));
-      }
-    });
-    return [...seen].map(([id, name]) => ({ id, name }));
-  }, [unitTests]);
+  const classes = useMemo(
+    () => classOptionsFromItems(unitTests, classLabel),
+    [unitTests]
+  );
 
-  const visible = classFilter
-    ? unitTests.filter((item) => item.studentClass === classFilter)
-    : unitTests;
+  const visible = useMemo(
+    () => unitTests.filter((item) => itemMatchesClassFilter(item, classFilter)),
+    [unitTests, classFilter]
+  );
 
   async function handleDelete(id) {
     if (!window.confirm('Delete this exam? The file will be removed from storage.')) return;
     setBusyId(id);
     setActionError('');
     try {
-      await adminApi.deleteUnitTest(id);
+      await api.deleteUnitTest(id);
       setUnitTests((prev) => prev.filter((u) => u.id !== id));
     } catch (err) {
       setActionError(getErrorMessage(err, 'Could not delete exam.'));
@@ -77,7 +78,7 @@ export function AdminUnitTestsPage() {
     try {
       const formData = new FormData();
       formData.append('isPublished', item.isPublished ? 'false' : 'true');
-      const { data } = await adminApi.updateUnitTest(item.id, formData);
+      const { data } = await api.updateUnitTest(item.id, formData);
       setUnitTests((prev) =>
         prev.map((u) => (u.id === item.id ? data.data.unitTest : u))
       );
@@ -113,7 +114,7 @@ export function AdminUnitTestsPage() {
               </Select>
             </div>
           ) : null}
-          <Link to="/admin/unit-tests/new">
+          <Link to={`${basePath}/unit-tests/new`}>
             <Button size="sm">
               <Plus className="h-4 w-4" />
               New exam
@@ -141,7 +142,7 @@ export function AdminUnitTestsPage() {
           description="Pick a class and unit, then upload the question paper as a PDF or Word file."
           icon={PenLine}
           action={
-            <Link to="/admin/unit-tests/new">
+            <Link to={`${basePath}/unit-tests/new`}>
               <Button>Upload exam</Button>
             </Link>
           }
@@ -200,7 +201,7 @@ export function AdminUnitTestsPage() {
                   >
                     {item.isPublished ? 'Unpublish' : 'Publish'}
                   </Button>
-                  <Link to={`/admin/unit-tests/${item.id}/edit`}>
+                  <Link to={`${basePath}/unit-tests/${item.id}/edit`}>
                     <Button variant="secondary" size="sm">
                       <Pencil className="h-4 w-4" />
                       Edit

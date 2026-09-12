@@ -1,13 +1,23 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { BarChart3, HelpCircle, Pencil, Plus, Trash2 } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { getErrorMessage } from '../../utils/errors';
-import { formatDate, formatMarks } from '../../utils/quizFormat';
+import { classLabel } from '../../utils/classLabel';
+import { formatDateTime, formatMarks } from '../../utils/quizFormat';
+import {
+  classOptionsFromItems,
+  itemMatchesClassFilter,
+} from '../../utils/contentClasses';
+import {
+  confirmEditPublishedMessage,
+  confirmUnpublishMessage,
+} from '../../utils/wipeAttemptsConfirm';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { Select } from '../../components/ui/Select';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -15,7 +25,10 @@ import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
 
 export function AdminQuizzesPage() {
+  const { basePath, api } = useStaffContent();
+  const navigate = useNavigate();
   const [quizzes, setQuizzes] = useState([]);
+  const [classFilter, setClassFilter] = useState('');
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
@@ -25,7 +38,7 @@ export function AdminQuizzesPage() {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await adminApi.quizzes();
+      const { data } = await api.quizzes();
       setQuizzes(data.data.quizzes);
       setStatus('ready');
     } catch (err) {
@@ -38,6 +51,54 @@ export function AdminQuizzesPage() {
     load();
   }, []);
 
+  const classes = useMemo(() => classOptionsFromItems(quizzes, classLabel), [quizzes]);
+
+  const visible = useMemo(
+    () => quizzes.filter((item) => itemMatchesClassFilter(item, classFilter)),
+    [quizzes, classFilter]
+  );
+
+  function handleEdit(item) {
+    if (item.isPublished || item.attemptCount > 0) {
+      if (!window.confirm(confirmEditPublishedMessage(item.title, item.attemptCount || 0))) {
+        return;
+      }
+    }
+    navigate(`${basePath}/quizzes/${item.id}/edit`);
+  }
+
+  async function handleTogglePublish(item) {
+    if (item.isPublished) {
+      if (!window.confirm(confirmUnpublishMessage(item.title, item.attemptCount || 0))) {
+        return;
+      }
+    }
+
+    setBusyId(item.id);
+    setActionError('');
+    try {
+      const payload = item.isPublished
+        ? { isPublished: false, confirmWipeAttempts: true }
+        : { isPublished: true };
+      await api.updateQuiz(item.id, payload);
+      setQuizzes((prev) =>
+        prev.map((d) =>
+          d.id === item.id
+            ? {
+                ...d,
+                isPublished: !item.isPublished,
+                ...(item.isPublished ? { attemptCount: 0, resultsReleased: false } : {}),
+              }
+            : d
+        )
+      );
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not update publish status.'));
+    } finally {
+      setBusyId('');
+    }
+  }
+
   async function handleDelete(item) {
     const warning = item.attemptCount
       ? `Delete "${item.title}"? ${item.attemptCount} student result(s) will be deleted too.`
@@ -47,7 +108,7 @@ export function AdminQuizzesPage() {
     setBusyId(item.id);
     setActionError('');
     try {
-      await adminApi.deleteQuiz(item.id);
+      await api.deleteQuiz(item.id);
       setQuizzes((prev) => prev.filter((d) => d.id !== item.id));
     } catch (err) {
       setActionError(getErrorMessage(err, 'Could not delete this quiz.'));
@@ -61,14 +122,33 @@ export function AdminQuizzesPage() {
       embedded
       eyebrow="Admin"
       title="QUIZ"
-      description="Open quizzes for every login — students, educators, and parents. Single and multi-select questions only."
+      description="Assign quizzes to one or more classes. Students and educators in those classes can attempt after publish."
       actions={
-        <Link to="/admin/quizzes/new">
-          <Button size="sm">
-            <Plus className="h-4 w-4" />
-            New quiz
-          </Button>
-        </Link>
+        <div className="flex flex-wrap items-end gap-3">
+          {classes.length > 1 ? (
+            <div className="w-full min-w-[11rem] sm:w-48">
+              <Select
+                label="Class filter"
+                name="classFilter"
+                value={classFilter}
+                onChange={(event) => setClassFilter(event.target.value)}
+              >
+                <option value="">All classes</option>
+                {classes.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          ) : null}
+          <Link to={`${basePath}/quizzes/new`}>
+            <Button size="sm">
+              <Plus className="h-4 w-4" />
+              New quiz
+            </Button>
+          </Link>
+        </div>
       }
     >
       {actionError ? (
@@ -82,19 +162,23 @@ export function AdminQuizzesPage() {
       {status === 'ready' && quizzes.length === 0 ? (
         <EmptyState
           title="No quizzes yet"
-          description="Create a quiz with single and multi-select questions. Students, educators, and parents can attempt it after you publish."
+          description="Create a quiz with single and multi-select questions, assign classes, then publish."
           icon={HelpCircle}
           action={
-            <Link to="/admin/quizzes/new">
+            <Link to={`${basePath}/quizzes/new`}>
               <Button>Create quiz</Button>
             </Link>
           }
         />
       ) : null}
 
-      {status === 'ready' && quizzes.length > 0 ? (
+      {status === 'ready' && quizzes.length > 0 && visible.length === 0 ? (
+        <EmptyState title="No quizzes for this class" description="Try another class filter." />
+      ) : null}
+
+      {status === 'ready' && visible.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          {quizzes.map((item) => (
+          {visible.map((item) => (
             <Card key={item.id}>
               <div className="mb-2 flex flex-wrap gap-2">
                 <Badge tone={item.isPublished ? 'lagoon' : 'ink'}>
@@ -103,9 +187,9 @@ export function AdminQuizzesPage() {
                 <Badge tone={item.resultsReleased ? 'lagoon' : 'ember'}>
                   {item.resultsReleased ? 'Results out' : 'Results held'}
                 </Badge>
-                <Badge tone="ink">Everyone</Badge>
+                <Badge tone="ink">{classLabel(item) || 'All classes'}</Badge>
                 {item.endDate ? (
-                  <Badge tone="ink">Ends {formatDate(item.endDate)}</Badge>
+                  <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
                 ) : null}
               </div>
 
@@ -124,20 +208,24 @@ export function AdminQuizzesPage() {
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <Link to={`/admin/quizzes/${item.id}/results`}>
+                <Link to={`${basePath}/quizzes/${item.id}/results`}>
                   <Button variant="secondary" size="sm">
                     <BarChart3 className="h-4 w-4" />
                     Results
                   </Button>
                 </Link>
-                {!item.isPublished ? (
-                  <Link to={`/admin/quizzes/${item.id}/edit`}>
-                    <Button variant="secondary" size="sm">
-                      <Pencil className="h-4 w-4" />
-                      Edit
-                    </Button>
-                  </Link>
-                ) : null}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  loading={busyId === item.id}
+                  onClick={() => handleTogglePublish(item)}
+                >
+                  {item.isPublished ? 'Unpublish' : 'Publish'}
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => handleEdit(item)}>
+                  <Pencil className="h-4 w-4" />
+                  Edit
+                </Button>
                 <Button
                   variant="danger"
                   size="sm"

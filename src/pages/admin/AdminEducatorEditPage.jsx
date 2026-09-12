@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
+import { authApi } from '../../api/authApi';
 import { getErrorMessage } from '../../utils/errors';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
+import { Select } from '../../components/ui/Select';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { Alert } from '../../components/ui/Alert';
@@ -18,6 +20,7 @@ export function AdminEducatorEditPage() {
 
   const [educator, setEducator] = useState(null);
   const [form, setForm] = useState(null);
+  const [classOptions, setClassOptions] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
@@ -28,14 +31,20 @@ export function AdminEducatorEditPage() {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await adminApi.educator(id);
-      const item = data.data.educator;
+      const [eduRes, classRes] = await Promise.all([
+        adminApi.educator(id),
+        authApi.classes(),
+      ]);
+      const item = eduRes.data.data.educator;
       setEducator(item);
+      setClassOptions(classRes.data.data.classes || []);
+      const firstClass = (item.classes || [])[0];
       setForm({
         fullName: item.fullName || '',
         email: item.email || '',
         phone: item.phone || '',
         schoolName: item.schoolName || '',
+        studentClass: firstClass?.id || firstClass || '',
       });
       setStatus('ready');
     } catch (err) {
@@ -69,6 +78,9 @@ export function AdminEducatorEditPage() {
     if (!/^[6-9]\d{9}$/.test(phone)) {
       next.phone = 'Enter a valid 10-digit Indian mobile number.';
     }
+    if (!form.studentClass) {
+      next.studentClass = 'Please select a class.';
+    }
     setFieldErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -85,6 +97,7 @@ export function AdminEducatorEditPage() {
         email: form.email.trim(),
         phone: form.phone.trim(),
         schoolName: form.schoolName.trim(),
+        classes: [form.studentClass],
       });
       navigate(`/admin/educators/${id}`);
     } catch (err) {
@@ -99,7 +112,7 @@ export function AdminEducatorEditPage() {
       embedded
       eyebrow="Educators"
       title={educator?.fullName || 'Edit educator'}
-      description="Update educator profile details."
+      description="Update educator profile and the class they can access."
       actions={
         <Link to={educator ? `/admin/educators/${educator.id}` : '/admin/educators'}>
           <Button variant="secondary" size="sm">
@@ -158,6 +171,22 @@ export function AdminEducatorEditPage() {
               value={form.schoolName}
               onChange={updateField}
             />
+            <Select
+              label="Class"
+              name="studentClass"
+              value={form.studentClass}
+              onChange={updateField}
+              required
+              error={fieldErrors.studentClass}
+              hint="Educator will only see content for this class."
+            >
+              <option value="">Select class</option>
+              {classOptions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
             <div className="flex flex-wrap gap-2 pt-2">
               <Button type="submit" loading={saving}>
                 Save changes

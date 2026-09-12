@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Download, ScrollText } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
+import {
+  classOptionsFromItems,
+  itemMatchesClassFilter,
+} from '../../utils/contentClasses';
 import { formatBytes } from '../../utils/formatBytes';
 import { chapterLabel } from '../../utils/chapterLabel';
 import { PageShell } from '../../components/layout/PageShell';
@@ -19,6 +23,7 @@ import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
 
 export function AdminCetsPage() {
+  const { basePath, api } = useStaffContent();
   const [cets, setCets] = useState([]);
   const [classFilter, setClassFilter] = useState('');
   const [status, setStatus] = useState('loading');
@@ -30,7 +35,7 @@ export function AdminCetsPage() {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await adminApi.cets();
+      const { data } = await api.cets();
       setCets(data.data.cets);
       setStatus('ready');
     } catch (err) {
@@ -43,26 +48,19 @@ export function AdminCetsPage() {
     load();
   }, []);
 
-  const classes = useMemo(() => {
-    const seen = new Map();
-    cets.forEach((item) => {
-      if (item.studentClass && !seen.has(item.studentClass)) {
-        seen.set(item.studentClass, classLabel(item));
-      }
-    });
-    return [...seen].map(([id, name]) => ({ id, name }));
-  }, [cets]);
+  const classes = useMemo(() => classOptionsFromItems(cets, classLabel), [cets]);
 
-  const visible = classFilter
-    ? cets.filter((item) => item.studentClass === classFilter)
-    : cets;
+  const visible = useMemo(
+    () => cets.filter((item) => itemMatchesClassFilter(item, classFilter)),
+    [cets, classFilter]
+  );
 
   async function handleDelete(id) {
     if (!window.confirm('Delete this C.E.T.? The file will be removed from storage.')) return;
     setBusyId(id);
     setActionError('');
     try {
-      await adminApi.deleteCet(id);
+      await api.deleteCet(id);
       setCets((prev) => prev.filter((item) => item.id !== id));
     } catch (err) {
       setActionError(getErrorMessage(err, 'Could not delete C.E.T.'));
@@ -77,7 +75,7 @@ export function AdminCetsPage() {
     try {
       const formData = new FormData();
       formData.append('isPublished', item.isPublished ? 'false' : 'true');
-      const { data } = await adminApi.updateCet(item.id, formData);
+      const { data } = await api.updateCet(item.id, formData);
       setCets((prev) => prev.map((c) => (c.id === item.id ? data.data.cet : c)));
     } catch (err) {
       setActionError(getErrorMessage(err, 'Could not update publish status.'));
@@ -111,7 +109,7 @@ export function AdminCetsPage() {
               </Select>
             </div>
           ) : null}
-          <Link to="/admin/cets/new">
+          <Link to={`${basePath}/cets/new`}>
             <Button size="sm">
               <Plus className="h-4 w-4" />
               New C.E.T.
@@ -139,7 +137,7 @@ export function AdminCetsPage() {
           description="Pick a class and chapter, then upload the question paper as a PDF or Word file."
           icon={ScrollText}
           action={
-            <Link to="/admin/cets/new">
+            <Link to={`${basePath}/cets/new`}>
               <Button>Upload C.E.T.</Button>
             </Link>
           }
@@ -198,7 +196,7 @@ export function AdminCetsPage() {
                   >
                     {item.isPublished ? 'Unpublish' : 'Publish'}
                   </Button>
-                  <Link to={`/admin/cets/${item.id}/edit`}>
+                  <Link to={`${basePath}/cets/${item.id}/edit`}>
                     <Button variant="secondary" size="sm">
                       <Pencil className="h-4 w-4" />
                       Edit

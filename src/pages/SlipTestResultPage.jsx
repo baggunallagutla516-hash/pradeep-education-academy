@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Camera, Clock3 } from 'lucide-react';
 import { slipTestApi } from '../api/adminApi';
 import { useAuth } from '../context/AuthContext';
+import { useEducatorAuth } from '../context/EducatorAuthContext';
+import { useParentAuth } from '../context/ParentAuthContext';
 import { getErrorMessage } from '../utils/errors';
 import { formatDate } from '../utils/quizFormat';
 import { PageShell } from '../components/layout/PageShell';
@@ -13,10 +15,19 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { ResultCard } from '../components/quiz/ResultCard';
 import { ResultCertificateModal } from '../components/quiz/ResultCertificateModal';
 
-export function SlipTestResultPage() {
+export function SlipTestResultPage({
+  api = slipTestApi,
+  basePath = '/slip-tests',
+  role = 'student',
+} = {}) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { student } = useAuth();
+  const { educator } = useEducatorAuth();
+  const { parent } = useParentAuth();
+
+  const participant =
+    role === 'educator' ? educator : role === 'parent' ? parent : student;
 
   const [result, setResult] = useState(null);
   const [held, setHeld] = useState(null);
@@ -30,7 +41,7 @@ export function SlipTestResultPage() {
 
     async function load() {
       try {
-        const { data } = await slipTestApi.result(id);
+        const { data } = await api.result(id);
         if (!active) return;
         if (data.data.resultsHeld) {
           setHeld(data.data);
@@ -51,7 +62,7 @@ export function SlipTestResultPage() {
     return () => {
       active = false;
     };
-  }, [id]);
+  }, [api, id]);
 
   const title = result?.title || held?.slipTest?.title || 'Your result';
   const description = result
@@ -75,7 +86,7 @@ export function SlipTestResultPage() {
               Screenshot result
             </Button>
           ) : null}
-          <Link to="/slip-tests">
+          <Link to={basePath}>
             <Button variant="secondary" size="sm">
               <ArrowLeft className="h-4 w-4" />
               All slip tests
@@ -88,7 +99,7 @@ export function SlipTestResultPage() {
       {status === 'error' ? (
         <ErrorState
           description={error}
-          onRetry={() => navigate('/slip-tests')}
+          onRetry={() => navigate(basePath)}
           retryLabel="Back to slip tests"
         />
       ) : null}
@@ -116,7 +127,7 @@ export function SlipTestResultPage() {
             open={shareOpen}
             onClose={() => setShareOpen(false)}
             result={result}
-            student={student}
+            student={participant}
             kindLabel="Slip test result"
             activityLabel="Slip test"
             dateValue={result.submittedAt}

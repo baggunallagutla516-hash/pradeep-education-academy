@@ -109,7 +109,7 @@ export function AdminStudentsPage() {
               name="q"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Name, email, phone, school"
+              placeholder="Name, email, phone, Registration ID, school"
             />
           </div>
           <div className="sm:w-44">
@@ -160,6 +160,7 @@ export function AdminStudentsPage() {
                   <Badge>{classLabel(student)}</Badge>
                 </div>
                 <p className="mt-1 truncate text-sm text-ink-900/60">
+                  {student.registrationId ? `${student.registrationId} · ` : ''}
                   {student.email} · {student.phone}
                 </p>
               </div>

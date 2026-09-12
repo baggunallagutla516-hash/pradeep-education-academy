@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { StaffContentProvider } from '../../context/StaffContentContext';
 import { AdminSidebar, useAdminSidebarExpanded } from './AdminSidebar';
 import { LoadingState } from '../ui/LoadingState';
 import { ErrorState } from '../ui/ErrorState';
@@ -55,18 +56,20 @@ export function AdminLayout() {
   const [expanded, setExpanded] = useAdminSidebarExpanded();
 
   return (
-    <div className="min-h-screen bg-sand-50">
-      <AdminSidebar expanded={expanded} onExpandedChange={setExpanded} />
-      <div
-        className={cn(
-          'min-h-screen transition-[padding] duration-200 ease-out',
-          expanded ? 'pl-64' : 'pl-14'
-        )}
-      >
-        <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-          <Outlet />
-        </main>
+    <StaffContentProvider basePath="/admin">
+      <div className="min-h-screen bg-sand-50">
+        <AdminSidebar expanded={expanded} onExpandedChange={setExpanded} />
+        <div
+          className={cn(
+            'min-h-screen transition-[padding] duration-200 ease-out',
+            expanded ? 'pl-64' : 'pl-14'
+          )}
+        >
+          <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+            <Outlet />
+          </main>
+        </div>
       </div>
-    </div>
+    </StaffContentProvider>
   );
 }

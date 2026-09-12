@@ -7,7 +7,10 @@ import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { CbtAttemptRunner } from '../components/quiz/CbtAttemptRunner';
 
-export function AssessmentAttemptPage() {
+export function AssessmentAttemptPage({
+  api = assessmentApi,
+  basePath = '/assessments',
+} = {}) {
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -28,7 +31,7 @@ export function AssessmentAttemptPage() {
 
     async function start() {
       try {
-        const { data } = await assessmentApi.start(id);
+        const { data } = await api.start(id);
         if (!active) return;
         setAttempt(data.data.attempt);
         setAssessment(data.data.assessment);
@@ -37,7 +40,7 @@ export function AssessmentAttemptPage() {
       } catch (err) {
         if (!active) return;
         if (err.response?.status === 409) {
-          navigate(`/assessments/${id}/result`, { replace: true });
+          navigate(`${basePath}/${id}/result`, { replace: true });
           return;
         }
         setStatus('error');
@@ -49,19 +52,19 @@ export function AssessmentAttemptPage() {
     return () => {
       active = false;
     };
-  }, [id, navigate]);
+  }, [api, basePath, id, navigate]);
 
   const handleFullscreenExit = useCallback(async () => {
-    const { data } = await assessmentApi.fullscreenExit(id);
+    const { data } = await api.fullscreenExit(id);
     return data.data;
-  }, [id]);
+  }, [api, id]);
 
   const handleSubmit = useCallback(
     async (answers, autoSubmitted, submitReason = 'manual') => {
       setSubmitting(true);
       setSubmitError('');
       try {
-        await assessmentApi.submit(id, {
+        await api.submit(id, {
           answers,
           autoSubmitted,
           submitReason: autoSubmitted ? submitReason : 'manual',
@@ -73,10 +76,10 @@ export function AssessmentAttemptPage() {
             /* ignore */
           }
         }
-        navigate(`/assessments/${id}/result`, { replace: true });
+        navigate(`${basePath}/${id}/result`, { replace: true });
       } catch (err) {
         if (err.response?.status === 409) {
-          navigate(`/assessments/${id}/result`, { replace: true });
+          navigate(`${basePath}/${id}/result`, { replace: true });
           return;
         }
         setSubmitError(getErrorMessage(err, 'Could not submit your answers.'));
@@ -84,7 +87,7 @@ export function AssessmentAttemptPage() {
         throw err;
       }
     },
-    [id, navigate, storageKey]
+    [api, basePath, id, navigate, storageKey]
   );
 
   if (status === 'loading') {
@@ -100,7 +103,7 @@ export function AssessmentAttemptPage() {
       <PageShell embedded title="Online Assessment">
         <ErrorState
           description={loadError}
-          onRetry={() => navigate('/assessments')}
+          onRetry={() => navigate(basePath)}
           retryLabel="Back to online assessments"
         />
       </PageShell>

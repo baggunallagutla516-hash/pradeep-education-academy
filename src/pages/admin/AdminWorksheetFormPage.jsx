@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { adminApi } from '../../api/adminApi';
+import { useStaffContent } from '../../context/StaffContentContext';
 import { authApi } from '../../api/authApi';
 import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
+import {
+  appendStudentClasses,
+  selectedClassIdsFromItem,
+} from '../../utils/contentClasses';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
+import { ClassMultiSelect } from '../../components/ui/ClassMultiSelect';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
@@ -18,11 +23,12 @@ import { ErrorState } from '../../components/ui/ErrorState';
 const emptyForm = {
   title: '',
   description: '',
-  studentClass: '',
+  studentClasses: [],
   isPublished: 'true',
 };
 
 export function AdminWorksheetFormPage() {
+  const { basePath, api } = useStaffContent();
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
@@ -52,13 +58,13 @@ export function AdminWorksheetFormPage() {
         setClasses(list);
 
         if (isEdit) {
-          const { data } = await adminApi.worksheet(id);
+          const { data } = await api.worksheet(id);
           if (!active) return;
           const item = data.data.worksheet;
           setForm({
             title: item.title,
             description: item.description || '',
-            studentClass: item.studentClass || '',
+            studentClasses: selectedClassIdsFromItem(item),
             isPublished: item.isPublished ? 'true' : 'false',
           });
           setCoverPreview(mediaUrl(item.coverImageUrl));
@@ -66,7 +72,7 @@ export function AdminWorksheetFormPage() {
         } else {
           setForm((prev) => ({
             ...prev,
-            studentClass: list[0]?.id || '',
+            studentClasses: list[0]?.id ? [list[0].id] : [],
           }));
         }
         setLoading(false);
@@ -105,7 +111,7 @@ export function AdminWorksheetFormPage() {
   function validate() {
     const next = {};
     if (!form.title.trim()) next.title = 'Title is required.';
-    if (!form.studentClass) next.studentClass = 'Class is required.';
+    if (!form.studentClasses.length) next.studentClasses = 'Select at least one class.';
     if (!isEdit && !coverFile) next.coverImage = 'Cover image is required.';
     if (!isEdit && !resourceFile) next.file = 'Worksheet file is required.';
     setFieldErrors(next);
@@ -120,7 +126,7 @@ export function AdminWorksheetFormPage() {
     const fd = new FormData();
     fd.append('title', form.title.trim());
     fd.append('description', form.description.trim());
-    fd.append('studentClass', form.studentClass);
+    appendStudentClasses(fd, form.studentClasses);
     fd.append('isPublished', form.isPublished);
     if (coverFile) fd.append('coverImage', coverFile);
     if (resourceFile) fd.append('file', resourceFile);
@@ -128,11 +134,11 @@ export function AdminWorksheetFormPage() {
     setSaving(true);
     try {
       if (isEdit) {
-        await adminApi.updateWorksheet(id, fd);
+        await api.updateWorksheet(id, fd);
       } else {
-        await adminApi.createWorksheet(fd);
+        await api.createWorksheet(fd);
       }
-      navigate('/admin/worksheets');
+      navigate(`${basePath}/worksheets`);
     } catch (err) {
       setError(getErrorMessage(err, 'Could not save worksheet.'));
     } finally {
@@ -161,9 +167,9 @@ export function AdminWorksheetFormPage() {
       embedded
       eyebrow="Worksheets"
       title={isEdit ? 'Edit worksheet' : 'New worksheet'}
-      description="Cover image and file are stored on Supabase Storage. Students in the selected class can download the file."
+      description="Cover image and file are stored on Supabase Storage. Students in the selected classes can download the file."
       actions={
-        <Link to="/admin/worksheets">
+        <Link to={`${basePath}/worksheets`}>
           <Button variant="secondary" size="sm">
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -195,21 +201,15 @@ export function AdminWorksheetFormPage() {
             rows={4}
             hint="Optional short note for students"
           />
-          <Select
-            label="Class"
-            name="studentClass"
-            value={form.studentClass}
-            onChange={updateField}
-            required
-            error={fieldErrors.studentClass}
-          >
-            <option value="">Select class</option>
-            {classes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
+          <ClassMultiSelect
+            classes={classes}
+            value={form.studentClasses}
+            onChange={(studentClasses) => {
+              setForm((prev) => ({ ...prev, studentClasses }));
+              setFieldErrors((prev) => ({ ...prev, studentClasses: '' }));
+            }}
+            error={fieldErrors.studentClasses}
+          />
           <Select
             label="Status"
             name="isPublished"

@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, ClipboardList, Clock } from 'lucide-react';
 import { dppApi } from '../api/adminApi';
 import { useAuth } from '../context/AuthContext';
 import { getErrorMessage } from '../utils/errors';
 import { classLabel } from '../utils/classLabel';
-import { formatDate, formatMarks } from '../utils/quizFormat';
+import { formatDateTime, formatMarks } from '../utils/quizFormat';
 import { PageShell } from '../components/layout/PageShell';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
+import { Select } from '../components/ui/Select';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -21,43 +22,87 @@ function scoreTone(percentage) {
   return 'text-red-600';
 }
 
-export function DppsPage() {
+export function DppsPage({
+  api = dppApi,
+  basePath = '/dpps',
+  badgeLabel,
+  enableClassFilter = false,
+} = {}) {
   const { student } = useAuth();
   const [dpps, setDpps] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [classFilter, setClassFilter] = useState('');
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
 
-  async function load() {
+  const load = useCallback(async () => {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await dppApi.list();
-      setDpps(data.data.dpps);
+      const params = enableClassFilter && classFilter ? { studentClass: classFilter } : undefined;
+      const { data } = await api.list(params);
+      setDpps(data.data.dpps || []);
+      if (Array.isArray(data.data.classes) && data.data.classes.length > 0) {
+        setClasses(data.data.classes);
+      }
       setStatus('ready');
     } catch (err) {
       setStatus('error');
       setError(getErrorMessage(err, 'Could not load your daily practice problems.'));
     }
-  }
+  }, [api, classFilter, enableClassFilter]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
+
+  const badge =
+    badgeLabel ||
+    (enableClassFilter
+      ? classFilter
+        ? classes.find((c) => c.id === classFilter)?.name || 'Class'
+        : 'All classes'
+      : classLabel(student) || 'Student');
 
   return (
     <PageShell
       embedded
       eyebrow="Practice"
       title="D.P.P."
-      description="Daily practice problems for your class. Submit online; scores appear after the academy releases results."
-      actions={<Badge>{classLabel(student) || 'Student'}</Badge>}
+      description={
+        enableClassFilter
+          ? 'Daily practice problems for every class. Attempt them like a student; scores appear after the academy releases results.'
+          : 'Daily practice problems for your class. Submit online; scores appear after the academy releases results.'
+      }
+      actions={<Badge>{badge}</Badge>}
     >
+      {enableClassFilter && classes.length > 0 ? (
+        <div className="mb-6 max-w-xs">
+          <Select
+            label="Class"
+            value={classFilter}
+            onChange={(e) => setClassFilter(e.target.value)}
+          >
+            <option value="">All classes</option>
+            {classes.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+      ) : null}
+
       {status === 'loading' ? <LoadingState label="Loading daily practice problems…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
       {status === 'ready' && dpps.length === 0 ? (
         <EmptyState
           title="Nothing here yet"
-          description={`No daily practice problems have been published for ${classLabel(student) || 'your class'} yet. Check back soon.`}
+          description={
+            enableClassFilter
+              ? 'No daily practice problems have been published yet for this filter.'
+              : `No daily practice problems have been published for ${classLabel(student) || 'your class'} yet. Check back soon.`
+          }
           icon={ClipboardList}
         />
       ) : null}
@@ -72,9 +117,10 @@ export function DppsPage() {
             return (
               <Card key={item.id} className="flex h-full flex-col">
                 <div className="mb-2 flex flex-wrap gap-2">
-                  <Badge tone="ember">{formatDate(item.practiceDate)}</Badge>
+                  <Badge tone="ember">{formatDateTime(item.practiceDate)}</Badge>
+                  {item.studentClassName ? <Badge tone="ink">{item.studentClassName}</Badge> : null}
                   {item.endDate ? (
-                    <Badge tone="ink">Ends {formatDate(item.endDate)}</Badge>
+                    <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
                   ) : null}
                   {done ? (
                     <Badge tone={item.resultsReleased ? 'lagoon' : 'ember'}>
@@ -127,13 +173,13 @@ export function DppsPage() {
 
                 {closed ? (
                   <p className="mt-3 text-sm text-ink-900/55">
-                    This DPP closed on {formatDate(item.endDate)}.
+                    This DPP closed on {formatDateTime(item.endDate)}.
                   </p>
                 ) : null}
 
                 <div className="mt-auto pt-4">
                   {done ? (
-                    <Link to={`/dpps/${item.id}/result`}>
+                    <Link to={`${basePath}/${item.id}/result`}>
                       <Button variant="secondary" size="sm">
                         <CheckCircle2 className="h-4 w-4" />
                         {item.resultsReleased ? 'View result' : 'Submission status'}
@@ -144,7 +190,7 @@ export function DppsPage() {
                       Closed
                     </Button>
                   ) : (
-                    <Link to={`/dpps/${item.id}/attempt`}>
+                    <Link to={`${basePath}/${item.id}/attempt`}>
                       <Button size="sm">
                         {inProgress ? 'Resume' : 'Start'}
                         <ArrowRight className="h-4 w-4" />

@@ -96,6 +96,15 @@ export function AdminEducatorDetailPage() {
             <Row label="Email" value={educator.email} />
             <Row label="Phone" value={educator.phone} />
             <Row label="School" value={educator.schoolName} />
+            <Row
+              label="Classes"
+              value={
+                (educator.classes || [])
+                  .map((item) => item.name || item.id)
+                  .filter(Boolean)
+                  .join(', ') || 'None assigned'
+              }
+            />
             <Row label="Member since" value={formatDate(educator.createdAt)} />
             <Row label="Last login" value={formatDate(educator.lastLoginAt)} />
           </dl>

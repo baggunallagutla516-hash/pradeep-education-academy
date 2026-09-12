@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
-import { useEducatorAuth } from '../../context/EducatorAuthContext';
+import { useParentAuth } from '../../context/ParentAuthContext';
 import { authApi } from '../../api/authApi';
 import { getErrorMessage } from '../../utils/errors';
 import { PageShell } from '../../components/layout/PageShell';
@@ -15,14 +15,13 @@ const initialForm = {
   fullName: '',
   email: '',
   phone: '',
-  schoolName: '',
   password: '',
   confirmPassword: '',
   studentClass: '',
 };
 
-export function EducatorRegisterPage() {
-  const { register } = useEducatorAuth();
+export function ParentRegisterPage() {
+  const { register } = useParentAuth();
 
   const [form, setForm] = useState(initialForm);
   const [classOptions, setClassOptions] = useState([]);
@@ -69,7 +68,7 @@ export function EducatorRegisterPage() {
       next.phone = 'Enter a valid 10-digit Indian mobile number.';
     }
     if (!form.studentClass) {
-      next.studentClass = 'Please select your class.';
+      next.studentClass = 'Please select a class.';
     }
     if (!form.password || form.password.length < 8) {
       next.password = 'Password must be at least 8 characters.';
@@ -92,7 +91,6 @@ export function EducatorRegisterPage() {
         fullName: form.fullName.trim(),
         email: form.email.trim(),
         phone: form.phone.trim(),
-        schoolName: form.schoolName.trim(),
         password: form.password,
         confirmPassword: form.confirmPassword,
         classes: [form.studentClass],
@@ -100,7 +98,7 @@ export function EducatorRegisterPage() {
       setForm(initialForm);
       setSuccess(
         data?.message ||
-          'Registration successful. Your account is not active yet. Please contact the admin to activate it.'
+          'Registration successful. Your account is not active yet. Please contact the admin to activate it and link your children.'
       );
     } catch (err) {
       setError(getErrorMessage(err, 'Registration failed. Please try again.'));
@@ -112,17 +110,17 @@ export function EducatorRegisterPage() {
   if (success) {
     return (
       <PageShell
-        eyebrow="Educator registration"
+        eyebrow="Parent registration"
         title="Account created"
-        description="Your account needs to be activated by the admin before you can log in."
+        description="The admin will activate your account and link your children before you can log in."
       >
         <Card className="mx-auto max-w-2xl">
           <Alert type="success" title="Registration successful">
             {success}
           </Alert>
-          <Link to="/educator/login" className="mt-5 block">
+          <Link to="/parent/login" className="mt-5 block">
             <Button variant="secondary" fullWidth>
-              Go to educator login
+              Go to parent login
             </Button>
           </Link>
         </Card>
@@ -132,9 +130,9 @@ export function EducatorRegisterPage() {
 
   return (
     <PageShell
-      eyebrow="Educator registration"
-      title="Create your teacher account"
-      description="Select your class from the list created by the academy. After the admin activates you, you will see content for that class."
+      eyebrow="Parent registration"
+      title="Create your parent account"
+      description="Select your child's class from the list created by the academy."
     >
       <Card className="mx-auto max-w-2xl">
         {error ? (
@@ -163,31 +161,22 @@ export function EducatorRegisterPage() {
               onChange={updateField}
               required
               error={fieldErrors.email}
-              placeholder="teacher@email.com"
+              placeholder="parent@email.com"
               autoComplete="email"
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              label="Phone"
-              name="phone"
-              value={form.phone}
-              onChange={updateField}
-              required
-              error={fieldErrors.phone}
-              placeholder="10-digit mobile"
-              inputMode="numeric"
-              autoComplete="tel"
-            />
-            <Input
-              label="School / institution (optional)"
-              name="schoolName"
-              value={form.schoolName}
-              onChange={updateField}
-              placeholder="Where you teach"
-            />
-          </div>
+          <Input
+            label="Phone"
+            name="phone"
+            value={form.phone}
+            onChange={updateField}
+            required
+            error={fieldErrors.phone}
+            placeholder="10-digit mobile"
+            inputMode="numeric"
+            autoComplete="tel"
+          />
 
           <Select
             label="Class"
@@ -231,20 +220,14 @@ export function EducatorRegisterPage() {
 
           <Button type="submit" loading={submitting} fullWidth>
             <UserPlus className="h-4 w-4" />
-            Create educator account
+            Create parent account
           </Button>
         </form>
 
         <p className="mt-5 text-center text-sm text-ink-900/65">
           Already registered?{' '}
-          <Link to="/educator/login" className="font-semibold text-lagoon-700 hover:underline">
+          <Link to="/parent/login" className="font-semibold text-lagoon-700 hover:underline">
             Log in
-          </Link>
-        </p>
-        <p className="mt-2 text-center text-sm text-ink-900/55">
-          Student?{' '}
-          <Link to="/register" className="font-semibold text-lagoon-700 hover:underline">
-            Student registration
           </Link>
         </p>
       </Card>

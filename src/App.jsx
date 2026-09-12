@@ -79,6 +79,7 @@ import { SlipTestsPage } from './pages/SlipTestsPage';
 import { SlipTestAttemptPage } from './pages/SlipTestAttemptPage';
 import { SlipTestResultPage } from './pages/SlipTestResultPage';
 import { ParentLoginPage } from './pages/parent/ParentLoginPage';
+import { ParentRegisterPage } from './pages/parent/ParentRegisterPage';
 import { ParentDashboardPage } from './pages/parent/ParentDashboardPage';
 import { ParentChildrenPage } from './pages/parent/ParentChildrenPage';
 import { ParentChildDetailPage } from './pages/parent/ParentChildDetailPage';
@@ -93,6 +94,15 @@ import { EducatorAccountPage } from './pages/educator/EducatorAccountPage';
 import { EducatorQuizzesPage } from './pages/educator/EducatorQuizzesPage';
 import { EducatorQuizAttemptPage } from './pages/educator/EducatorQuizAttemptPage';
 import { EducatorQuizResultPage } from './pages/educator/EducatorQuizResultPage';
+import { EducatorAssessmentsPage } from './pages/educator/EducatorAssessmentsPage';
+import { EducatorAssessmentAttemptPage } from './pages/educator/EducatorAssessmentAttemptPage';
+import { EducatorAssessmentResultPage } from './pages/educator/EducatorAssessmentResultPage';
+import { EducatorDppsPage } from './pages/educator/EducatorDppsPage';
+import { EducatorDppAttemptPage } from './pages/educator/EducatorDppAttemptPage';
+import { EducatorDppResultPage } from './pages/educator/EducatorDppResultPage';
+import { EducatorSlipTestsPage } from './pages/educator/EducatorSlipTestsPage';
+import { EducatorSlipTestAttemptPage } from './pages/educator/EducatorSlipTestAttemptPage';
+import { EducatorSlipTestResultPage } from './pages/educator/EducatorSlipTestResultPage';
 import { ParentQuizzesPage } from './pages/parent/ParentQuizzesPage';
 import { ParentQuizAttemptPage } from './pages/parent/ParentQuizAttemptPage';
 import { ParentQuizResultPage } from './pages/parent/ParentQuizResultPage';
@@ -159,7 +169,14 @@ export default function App() {
                       </ParentGuestRoute>
                     }
                   />
-                  <Route path="parent/register" element={<Navigate to="/parent/login" replace />} />
+                  <Route
+                    path="parent/register"
+                    element={
+                      <ParentGuestRoute>
+                        <ParentRegisterPage />
+                      </ParentGuestRoute>
+                    }
+                  />
                   <Route
                     path="parent/forgot-password"
                     element={
@@ -293,9 +310,30 @@ export default function App() {
                   <Route path="educator/worksheets" element={<EducatorWorksheetsPage />} />
                   <Route path="educator/unit-tests" element={<EducatorUnitTestsPage />} />
                   <Route path="educator/cets" element={<EducatorCetsPage />} />
+                  <Route path="educator/assessments" element={<EducatorAssessmentsPage />} />
+                  <Route
+                    path="educator/assessments/:id/attempt"
+                    element={<EducatorAssessmentAttemptPage />}
+                  />
+                  <Route
+                    path="educator/assessments/:id/result"
+                    element={<EducatorAssessmentResultPage />}
+                  />
+                  <Route path="educator/dpps" element={<EducatorDppsPage />} />
+                  <Route path="educator/dpps/:id/attempt" element={<EducatorDppAttemptPage />} />
+                  <Route path="educator/dpps/:id/result" element={<EducatorDppResultPage />} />
                   <Route path="educator/quizzes" element={<EducatorQuizzesPage />} />
                   <Route path="educator/quizzes/:id/attempt" element={<EducatorQuizAttemptPage />} />
                   <Route path="educator/quizzes/:id/result" element={<EducatorQuizResultPage />} />
+                  <Route path="educator/slip-tests" element={<EducatorSlipTestsPage />} />
+                  <Route
+                    path="educator/slip-tests/:id/attempt"
+                    element={<EducatorSlipTestAttemptPage />}
+                  />
+                  <Route
+                    path="educator/slip-tests/:id/result"
+                    element={<EducatorSlipTestResultPage />}
+                  />
                   <Route path="educator/account" element={<EducatorAccountPage />} />
                 </Route>
 
