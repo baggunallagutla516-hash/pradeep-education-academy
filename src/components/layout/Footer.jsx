@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { SITE } from '../../constants/site';
 import { BrandMark } from './BrandMark';
+import { scrollPageToTop } from './ScrollToTop';
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -20,22 +21,22 @@ export function Footer() {
           <h2 className="font-display text-base font-bold">Explore</h2>
           <ul className="mt-3 space-y-2 text-sm text-white/70">
             <li>
-              <Link className="hover:text-white" to="/about">
+              <Link className="hover:text-white" to="/about" onClick={scrollPageToTop}>
                 About
               </Link>
             </li>
             <li>
-              <Link className="hover:text-white" to="/contact">
+              <Link className="hover:text-white" to="/contact" onClick={scrollPageToTop}>
                 Contact
               </Link>
             </li>
             <li>
-              <Link className="hover:text-white" to="/register">
+              <Link className="hover:text-white" to="/register" onClick={scrollPageToTop}>
                 Student registration
               </Link>
             </li>
             <li>
-              <Link className="hover:text-white" to="/login">
+              <Link className="hover:text-white" to="/login" onClick={scrollPageToTop}>
                 Student login
               </Link>
             </li>

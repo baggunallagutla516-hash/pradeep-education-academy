@@ -4,6 +4,7 @@ import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ParentAuthProvider } from './context/ParentAuthContext';
 import { EducatorAuthProvider } from './context/EducatorAuthContext';
 import { MainLayout } from './components/layout/MainLayout';
+import { ScrollToTop } from './components/layout/ScrollToTop';
 import { StudentLayout } from './components/layout/StudentLayout';
 import {
   AdminGuestRoute,
@@ -114,6 +115,7 @@ export default function App() {
         <EducatorAuthProvider>
           <AdminAuthProvider>
             <BrowserRouter>
+              <ScrollToTop />
               <Routes>
                 <Route element={<MainLayout />}>
                   <Route index element={<HomePage />} />

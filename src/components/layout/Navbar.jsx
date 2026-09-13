@@ -6,6 +6,7 @@ import { SITE } from '../../constants/site';
 import { getErrorMessage } from '../../utils/errors';
 import { cn } from '../../utils/cn';
 import { BrandMark } from './BrandMark';
+import { scrollPageToTop } from './ScrollToTop';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
 
@@ -20,7 +21,10 @@ function NavItem({ to, label, onClick }) {
     <NavLink
       to={to}
       end={to === '/'}
-      onClick={onClick}
+      onClick={() => {
+        scrollPageToTop();
+        onClick?.();
+      }}
       className={({ isActive }) =>
         cn(
           'rounded-xl px-3 py-2 text-sm font-semibold transition',
