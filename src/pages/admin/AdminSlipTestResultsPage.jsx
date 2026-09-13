@@ -24,6 +24,7 @@ export function AdminSlipTestResultsPage() {
   const [actionError, setActionError] = useState('');
   const [actionInfo, setActionInfo] = useState('');
   const [releasing, setReleasing] = useState(false);
+  const [reattemptingId, setReattemptingId] = useState(null);
 
   async function load() {
     setStatus('loading');
@@ -84,6 +85,32 @@ export function AdminSlipTestResultsPage() {
       setActionError(getErrorMessage(err, 'Could not announce results.'));
     } finally {
       setReleasing(false);
+    }
+  }
+
+  async function handleReattempt(row) {
+    const name = row.studentName || 'this participant';
+    const role = row.roleLabel ? ` (${row.roleLabel})` : '';
+    if (
+      !window.confirm(
+        `Let ${name}${role} write this slip test again? Their current score is removed until they submit a new attempt.`
+      )
+    ) {
+      return;
+    }
+
+    setReattemptingId(row.id);
+    setActionError('');
+    setActionInfo('');
+    try {
+      const res = await api.reattemptSlipTest(id, row.id);
+      setActionInfo(res.data.message || `${name} can write this slip test again.`);
+      const refreshed = await api.slipTestResults(id);
+      setData(refreshed.data.data);
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not allow a reattempt.'));
+    } finally {
+      setReattemptingId(null);
     }
   }
 
@@ -217,13 +244,18 @@ export function AdminSlipTestResultsPage() {
             />
           ) : (
             <Card className="overflow-hidden p-0">
-              <ResultsTable results={data.results} />
+              <ResultsTable
+                results={data.results}
+                onReattempt={handleReattempt}
+                reattemptingId={reattemptingId}
+              />
             </Card>
           )}
 
           <p className="mt-4 text-xs text-ink-900/50">
             <Badge tone="ink">Note</Badge> Auto-submitted rows are attempts where the timer ran out
-            before the student pressed submit.
+            before the student pressed submit. Reattempt lets that student or educator write it again
+            while the slip test is still open.
           </p>
         </>
       ) : null}

@@ -154,6 +154,9 @@ export const adminApi = {
   releaseAssessmentResults(id) {
     return api.post(`/admin/assessments/${id}/release-results`);
   },
+  reattemptAssessment(id, attemptId) {
+    return api.post(`/admin/assessments/${id}/attempts/${attemptId}/reattempt`);
+  },
   createAssessment(payload) {
     return api.post('/admin/assessments', payload);
   },
@@ -174,6 +177,9 @@ export const adminApi = {
   },
   releaseDppResults(id) {
     return api.post(`/admin/dpps/${id}/release-results`);
+  },
+  reattemptDpp(id, attemptId) {
+    return api.post(`/admin/dpps/${id}/attempts/${attemptId}/reattempt`);
   },
   createDpp(payload) {
     return api.post('/admin/dpps', payload);
@@ -196,6 +202,9 @@ export const adminApi = {
   releaseQuizResults(id) {
     return api.post(`/admin/quizzes/${id}/release-results`);
   },
+  reattemptQuiz(id, attemptId) {
+    return api.post(`/admin/quizzes/${id}/attempts/${attemptId}/reattempt`);
+  },
   createQuiz(payload) {
     return api.post('/admin/quizzes', payload);
   },
@@ -216,6 +225,9 @@ export const adminApi = {
   },
   releaseSlipTestResults(id) {
     return api.post(`/admin/slip-tests/${id}/release-results`);
+  },
+  reattemptSlipTest(id, attemptId) {
+    return api.post(`/admin/slip-tests/${id}/attempts/${attemptId}/reattempt`);
   },
   createSlipTest(payload) {
     return api.post('/admin/slip-tests', payload);

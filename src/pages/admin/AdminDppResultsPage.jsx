@@ -24,6 +24,7 @@ export function AdminDppResultsPage() {
   const [actionError, setActionError] = useState('');
   const [actionInfo, setActionInfo] = useState('');
   const [releasing, setReleasing] = useState(false);
+  const [reattemptingId, setReattemptingId] = useState(null);
 
   async function load() {
     setStatus('loading');
@@ -84,6 +85,32 @@ export function AdminDppResultsPage() {
       setActionError(getErrorMessage(err, 'Could not announce results.'));
     } finally {
       setReleasing(false);
+    }
+  }
+
+  async function handleReattempt(row) {
+    const name = row.studentName || 'this participant';
+    const role = row.roleLabel ? ` (${row.roleLabel})` : '';
+    if (
+      !window.confirm(
+        `Let ${name}${role} write this DPP again? Their current score is removed until they submit a new attempt.`
+      )
+    ) {
+      return;
+    }
+
+    setReattemptingId(row.id);
+    setActionError('');
+    setActionInfo('');
+    try {
+      const res = await api.reattemptDpp(id, row.id);
+      setActionInfo(res.data.message || `${name} can write this DPP again.`);
+      const refreshed = await api.dppResults(id);
+      setData(refreshed.data.data);
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not allow a reattempt.'));
+    } finally {
+      setReattemptingId(null);
     }
   }
 
@@ -217,9 +244,18 @@ export function AdminDppResultsPage() {
             />
           ) : (
             <Card className="overflow-hidden p-0">
-              <ResultsTable results={data.results} />
+              <ResultsTable
+                results={data.results}
+                onReattempt={handleReattempt}
+                reattemptingId={reattemptingId}
+              />
             </Card>
           )}
+
+          <p className="mt-4 text-xs text-ink-900/50">
+            <Badge tone="ink">Note</Badge> Reattempt lets that student or educator write this DPP
+            again while it is still open. Their current score is removed until they submit.
+          </p>
         </>
       ) : null}
     </PageShell>

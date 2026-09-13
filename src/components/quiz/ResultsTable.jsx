@@ -1,4 +1,6 @@
+import { RotateCcw } from 'lucide-react';
 import { Badge } from '../ui/Badge';
+import { Button } from '../ui/Button';
 import { formatDuration, formatMarks } from '../../utils/quizFormat';
 import { cn } from '../../utils/cn';
 
@@ -40,16 +42,18 @@ function withRanks(results) {
   });
 }
 
-export function ResultsTable({ results }) {
+export function ResultsTable({ results, onReattempt, reattemptingId }) {
   const ranked = withRanks(results);
+  const showReattempt = typeof onReattempt === 'function';
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[46rem] text-left text-sm">
+      <table className="w-full min-w-[52rem] text-left text-sm">
         <thead className="bg-ink-900/4 text-xs uppercase tracking-wide text-ink-900/55">
           <tr>
             <th className="px-4 py-3 font-semibold">Rank</th>
             <th className="px-4 py-3 font-semibold">Participant</th>
+            {showReattempt ? <th className="px-4 py-3 font-semibold">Reattempt</th> : null}
             <th className="px-4 py-3 font-semibold">Score</th>
             <th className="px-4 py-3 font-semibold">%</th>
             <th className="px-4 py-3 font-semibold">Right</th>
@@ -77,6 +81,20 @@ export function ResultsTable({ results }) {
                   </Badge>
                 ) : null}
               </td>
+              {showReattempt ? (
+                <td className="px-4 py-3">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    loading={reattemptingId === row.id}
+                    disabled={Boolean(reattemptingId) && reattemptingId !== row.id}
+                    onClick={() => onReattempt(row)}
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Reattempt
+                  </Button>
+                </td>
+              ) : null}
               <td className="px-4 py-3 font-semibold tabular-nums text-ink-900">
                 {formatMarks(row.scoredMarks)} / {formatMarks(row.totalMarks)}
               </td>
