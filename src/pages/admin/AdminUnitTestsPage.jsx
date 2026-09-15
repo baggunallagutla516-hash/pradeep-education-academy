@@ -7,6 +7,7 @@ import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
 import { formatBytes } from '../../utils/formatBytes';
 import { unitLabel } from '../../utils/unitLabel';
+import { formatDateTime } from '../../utils/quizFormat';
 import {
   classOptionsFromItems,
   itemMatchesClassFilter,
@@ -178,6 +179,9 @@ export function AdminUnitTestsPage() {
                   </Badge>
                   <Badge tone="ink">{classLabel(item)}</Badge>
                   <Badge tone="ember">{unitLabel(item)}</Badge>
+                  {item.endDate ? (
+                    <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
+                  ) : null}
                 </div>
                 <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
                 {item.description ? (

@@ -9,6 +9,7 @@ import {
   appendStudentClasses,
   selectedClassIdsFromItem,
 } from '../../utils/contentClasses';
+import { toApiDateTime, toDateTimeLocalValue } from '../../utils/quizFormat';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -26,6 +27,8 @@ const emptyForm = {
   studentClasses: [],
   unitNumber: '',
   unitName: '',
+  startDate: toDateTimeLocalValue(),
+  endDate: toDateTimeLocalValue(undefined, { endOfDay: true }),
   isPublished: 'true',
 };
 
@@ -70,6 +73,8 @@ export function AdminUnitTestFormPage() {
             studentClasses: selectedClassIdsFromItem(item),
             unitNumber: String(item.unitNumber ?? ''),
             unitName: item.unitName || '',
+            startDate: toDateTimeLocalValue(item.startDate),
+            endDate: toDateTimeLocalValue(item.endDate),
             isPublished: item.isPublished ? 'true' : 'false',
           });
           setCoverPreview(item.coverImageUrl ? mediaUrl(item.coverImageUrl) : '');
@@ -135,6 +140,11 @@ export function AdminUnitTestFormPage() {
     }
 
     if (!isEdit && !resourceFile) next.file = 'Question paper file is required.';
+    if (!form.startDate) next.startDate = 'Starting date and time is required.';
+    if (!form.endDate) next.endDate = 'Ending date and time is required.';
+    if (form.startDate && form.endDate && new Date(form.endDate) < new Date(form.startDate)) {
+      next.endDate = 'Ending date and time cannot be before the starting date and time.';
+    }
     setFieldErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -150,6 +160,8 @@ export function AdminUnitTestFormPage() {
     appendStudentClasses(fd, form.studentClasses);
     fd.append('unitNumber', form.unitNumber.trim());
     fd.append('unitName', form.unitName.trim());
+    fd.append('startDate', toApiDateTime(form.startDate));
+    fd.append('endDate', toApiDateTime(form.endDate));
     fd.append('isPublished', form.isPublished);
     if (coverFile) fd.append('coverImage', coverFile);
     if (removeCover && !coverFile) fd.append('removeCoverImage', 'true');
@@ -191,7 +203,7 @@ export function AdminUnitTestFormPage() {
       embedded
       eyebrow="EXAMS"
       title={isEdit ? 'Edit exam' : 'New exam'}
-      description="Pick the classes and unit, then upload the question paper as a PDF or Word file. Students in those classes can download it."
+      description="Set when students can download the paper. Pick the classes and unit, then upload the question paper as a PDF or Word file."
       actions={
         <Link to={`${basePath}/unit-tests`}>
           <Button variant="secondary" size="sm">
@@ -256,6 +268,27 @@ export function AdminUnitTestFormPage() {
             rows={4}
             hint="Optional instructions for students, such as total marks or duration"
           />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              label="Download opens"
+              name="startDate"
+              type="datetime-local"
+              value={form.startDate}
+              onChange={updateField}
+              required
+              error={fieldErrors.startDate}
+            />
+            <Input
+              label="Download closes"
+              name="endDate"
+              type="datetime-local"
+              value={form.endDate}
+              onChange={updateField}
+              required
+              error={fieldErrors.endDate}
+              hint="After this time students can no longer download the paper"
+            />
+          </div>
           <Select
             label="Status"
             name="isPublished"

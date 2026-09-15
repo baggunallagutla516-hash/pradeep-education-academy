@@ -7,6 +7,7 @@ import { getErrorMessage } from '../utils/errors';
 import { classLabel } from '../utils/classLabel';
 import { formatBytes } from '../utils/formatBytes';
 import { chapterLabel } from '../utils/chapterLabel';
+import { formatDateTime } from '../utils/quizFormat';
 import { PageShell } from '../components/layout/PageShell';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -15,6 +16,39 @@ import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ExpandableText } from '../components/ui/ExpandableText';
+
+function DownloadAction({ item }) {
+  if (item.isNotYetOpen) {
+    return (
+      <p className="mt-4 text-sm text-ink-900/55">
+        Download opens on {formatDateTime(item.startDate)}.
+      </p>
+    );
+  }
+  if (item.isClosed) {
+    return (
+      <p className="mt-4 text-sm text-ink-900/55">
+        Download closed on {formatDateTime(item.endDate)}.
+      </p>
+    );
+  }
+  if (!item.fileUrl) return null;
+
+  return (
+    <a
+      href={mediaUrl(item.fileUrl)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-4 inline-flex"
+      download={item.fileName || undefined}
+    >
+      <Button size="sm">
+        <Download className="h-4 w-4" />
+        Download
+      </Button>
+    </a>
+  );
+}
 
 export function CetsPage() {
   const { student } = useAuth();
@@ -73,29 +107,25 @@ export function CetsPage() {
                     <ScrollText className="h-10 w-10" aria-hidden />
                   </div>
                 )}
-                <div className="absolute left-3 top-3">
+                <div className="absolute left-3 top-3 flex flex-wrap gap-2">
                   <Badge tone="ember">{chapterLabel(item)}</Badge>
+                  {item.isNotYetOpen ? <Badge tone="ember">Not open yet</Badge> : null}
+                  {item.isClosed ? <Badge tone="ink">Closed</Badge> : null}
                 </div>
               </div>
               <div className="p-4">
                 <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
                 {item.description ? <ExpandableText text={item.description} /> : null}
                 <p className="mt-3 text-xs text-ink-900/50">
-                  {item.fileName || 'Download'}
+                  {item.fileName || 'File'}
                   {item.fileSize ? ` · ${formatBytes(item.fileSize)}` : ''}
                 </p>
-                <a
-                  href={mediaUrl(item.fileUrl)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex"
-                  download={item.fileName || undefined}
-                >
-                  <Button size="sm">
-                    <Download className="h-4 w-4" />
-                    Download
-                  </Button>
-                </a>
+                {item.endDate && !item.isClosed && !item.isNotYetOpen ? (
+                  <p className="mt-1 text-xs text-ink-900/45">
+                    Ends {formatDateTime(item.endDate)}
+                  </p>
+                ) : null}
+                <DownloadAction item={item} />
               </div>
             </Card>
           ))}

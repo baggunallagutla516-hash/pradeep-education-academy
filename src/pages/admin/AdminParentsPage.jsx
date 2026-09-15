@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, Search, Pencil, Trash2 } from 'lucide-react';
+import { Download, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { getErrorMessage } from '../../utils/errors';
-import { classLabel } from '../../utils/classLabel';
 import {
   downloadWorkbook,
   fetchAllPages,
-  studentExportRows,
+  parentExportRows,
 } from '../../utils/excelExport';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
@@ -20,8 +19,8 @@ import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Alert } from '../../components/ui/Alert';
 
-export function AdminStudentsPage() {
-  const [students, setStudents] = useState([]);
+export function AdminParentsPage() {
+  const [parents, setParents] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   const [pageSize, setPageSize] = useState(10);
   const [q, setQ] = useState('');
@@ -36,18 +35,18 @@ export function AdminStudentsPage() {
     setStatus('loading');
     setError('');
     try {
-      const { data } = await adminApi.students({
+      const { data } = await adminApi.parents({
         page,
         limit,
         q: q.trim() || undefined,
         status: statusFilter || undefined,
       });
-      setStudents(data.data.students);
+      setParents(data.data.parents);
       setPagination(data.data.pagination);
       setStatus('ready');
     } catch (err) {
       setStatus('error');
-      setError(getErrorMessage(err, 'Could not load students.'));
+      setError(getErrorMessage(err, 'Could not load parents.'));
     }
   }
 
@@ -62,40 +61,40 @@ export function AdminStudentsPage() {
     load(1, next);
   }
 
-  async function toggleActive(student) {
+  async function toggleActive(parent) {
     setActionError('');
-    setBusyId(student.id);
+    setBusyId(parent.id);
     try {
-      const { data } = await adminApi.setStudentActive(student.id, !student.isActive);
-      setStudents((prev) =>
-        prev.map((s) => (s.id === student.id ? data.data.student : s))
+      const { data } = await adminApi.setParentActive(parent.id, !parent.isActive);
+      setParents((prev) =>
+        prev.map((p) => (p.id === parent.id ? data.data.parent : p))
       );
     } catch (err) {
-      setActionError(getErrorMessage(err, 'Could not update student status.'));
+      setActionError(getErrorMessage(err, 'Could not update parent status.'));
     } finally {
       setBusyId('');
     }
   }
 
-  async function handleDelete(student) {
+  async function handleDelete(parent) {
     if (
       !window.confirm(
-        `Delete ${student.fullName}? They will be removed from the list and cannot log in.`
+        `Delete ${parent.fullName}? They will be unlinked from students and cannot log in.`
       )
     ) {
       return;
     }
     setActionError('');
-    setBusyId(student.id);
+    setBusyId(parent.id);
     try {
-      await adminApi.deleteStudent(student.id);
-      setStudents((prev) => prev.filter((s) => s.id !== student.id));
+      await adminApi.deleteParent(parent.id);
+      setParents((prev) => prev.filter((p) => p.id !== parent.id));
       setPagination((prev) => ({
         ...prev,
         total: Math.max(0, (prev.total || 1) - 1),
       }));
     } catch (err) {
-      setActionError(getErrorMessage(err, 'Could not delete student.'));
+      setActionError(getErrorMessage(err, 'Could not delete parent.'));
     } finally {
       setBusyId('');
     }
@@ -106,23 +105,23 @@ export function AdminStudentsPage() {
     setExporting(true);
     try {
       const all = await fetchAllPages(async (page, limit) => {
-        const { data } = await adminApi.students({
+        const { data } = await adminApi.parents({
           page,
           limit,
           q: q.trim() || undefined,
           status: statusFilter || undefined,
         });
         return {
-          items: data.data.students,
+          items: data.data.parents,
           pagination: data.data.pagination,
         };
       });
-      downloadWorkbook(studentExportRows(all), {
-        sheetName: 'Students',
-        fileName: `students-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      downloadWorkbook(parentExportRows(all), {
+        sheetName: 'Parents',
+        fileName: `parents-${new Date().toISOString().slice(0, 10)}.xlsx`,
       });
     } catch (err) {
-      setActionError(getErrorMessage(err, 'Could not export students.'));
+      setActionError(getErrorMessage(err, 'Could not export parents.'));
     } finally {
       setExporting(false);
     }
@@ -132,13 +131,21 @@ export function AdminStudentsPage() {
     <PageShell
       embedded
       eyebrow="Admin"
-      title="Students"
-      description="Search registered students, activate or deactivate accounts, or soft-delete a student."
+      title="Parents"
+      description="Create and manage parent accounts, activate or deactivate access, and export the list to Excel."
       actions={
-        <Button variant="secondary" size="sm" loading={exporting} onClick={handleExport}>
-          <Download className="h-4 w-4" />
-          Download Excel
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" size="sm" loading={exporting} onClick={handleExport}>
+            <Download className="h-4 w-4" />
+            Download Excel
+          </Button>
+          <Link to="/admin/parents/new">
+            <Button size="sm">
+              <Plus className="h-4 w-4" />
+              Add parent
+            </Button>
+          </Link>
+        </div>
       }
     >
       <Card className="mb-4">
@@ -155,7 +162,7 @@ export function AdminStudentsPage() {
               name="q"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Name, email, phone, Registration ID, school"
+              placeholder="Name, email, phone"
             />
           </div>
           <div className="sm:w-44">
@@ -183,40 +190,41 @@ export function AdminStudentsPage() {
         </Alert>
       ) : null}
 
-      {status === 'loading' ? <LoadingState label="Loading students…" /> : null}
+      {status === 'loading' ? <LoadingState label="Loading parents…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={() => load(pagination.page)} /> : null}
 
-      {status === 'ready' && students.length === 0 ? (
-        <EmptyState title="No students found" description="Try a different search or status filter." />
+      {status === 'ready' && parents.length === 0 ? (
+        <EmptyState title="No parents found" description="Try a different search or add a new parent." />
       ) : null}
 
-      {status === 'ready' && students.length > 0 ? (
+      {status === 'ready' && parents.length > 0 ? (
         <div className="space-y-3">
-          {students.map((student) => (
+          {parents.map((parent) => (
             <Card
-              key={student.id}
+              key={parent.id}
               className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-display text-lg font-bold text-ink-900">{student.fullName}</p>
-                  <Badge tone={student.isActive ? 'lagoon' : 'ink'}>
-                    {student.isActive ? 'Active' : 'Inactive'}
+                  <p className="font-display text-lg font-bold text-ink-900">{parent.fullName}</p>
+                  <Badge tone={parent.isActive ? 'lagoon' : 'ink'}>
+                    {parent.isActive ? 'Active' : 'Inactive'}
                   </Badge>
-                  <Badge>{classLabel(student)}</Badge>
+                  <Badge>
+                    {Array.isArray(parent.studentIds) ? parent.studentIds.length : 0} linked
+                  </Badge>
                 </div>
                 <p className="mt-1 truncate text-sm text-ink-900/60">
-                  {student.registrationId ? `${student.registrationId} · ` : ''}
-                  {student.email} · {student.phone}
+                  {parent.email} · {parent.phone}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Link to={`/admin/students/${student.id}`}>
+                <Link to={`/admin/parents/${parent.id}`}>
                   <Button variant="secondary" size="sm">
                     View
                   </Button>
                 </Link>
-                <Link to={`/admin/students/${student.id}/edit`}>
+                <Link to={`/admin/parents/${parent.id}/edit`}>
                   <Button variant="secondary" size="sm">
                     <Pencil className="h-3.5 w-3.5" />
                     Edit
@@ -224,17 +232,17 @@ export function AdminStudentsPage() {
                 </Link>
                 <Button
                   size="sm"
-                  variant={student.isActive ? 'danger' : 'primary'}
-                  loading={busyId === student.id}
-                  onClick={() => toggleActive(student)}
+                  variant={parent.isActive ? 'danger' : 'primary'}
+                  loading={busyId === parent.id}
+                  onClick={() => toggleActive(parent)}
                 >
-                  {student.isActive ? 'Deactivate' : 'Activate'}
+                  {parent.isActive ? 'Deactivate' : 'Activate'}
                 </Button>
                 <Button
                   size="sm"
                   variant="danger"
-                  loading={busyId === student.id}
-                  onClick={() => handleDelete(student)}
+                  loading={busyId === parent.id}
+                  onClick={() => handleDelete(parent)}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   Delete

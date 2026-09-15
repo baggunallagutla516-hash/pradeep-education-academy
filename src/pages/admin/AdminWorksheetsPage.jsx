@@ -10,6 +10,7 @@ import {
   itemMatchesClassFilter,
 } from '../../utils/contentClasses';
 import { formatBytes } from '../../utils/formatBytes';
+import { formatDateTime } from '../../utils/quizFormat';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -158,6 +159,9 @@ export function AdminWorksheetsPage() {
                     {item.isPublished ? 'Published' : 'Draft'}
                   </Badge>
                   <Badge tone="ink">{classLabel(item)}</Badge>
+                  {item.endDate ? (
+                    <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
+                  ) : null}
                 </div>
                 <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
                 {item.description ? (

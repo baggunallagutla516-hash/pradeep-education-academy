@@ -64,8 +64,14 @@ export const adminApi = {
   createParent(payload) {
     return api.post('/admin/parents', payload);
   },
+  updateParent(id, payload) {
+    return api.patch(`/admin/parents/${id}`, payload);
+  },
   setParentActive(id, isActive) {
     return api.patch(`/admin/parents/${id}/active`, { isActive });
+  },
+  deleteParent(id) {
+    return api.delete(`/admin/parents/${id}`);
   },
   linkParentStudent(payload) {
     return api.post('/admin/parents/link', payload);
@@ -255,6 +261,11 @@ export const adminApi = {
   },
   uploadLogo(formData) {
     return api.post('/admin/settings/logo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  uploadQuestionImage(formData) {
+    return api.post('/admin/question-images', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },

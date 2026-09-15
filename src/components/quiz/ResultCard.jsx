@@ -4,6 +4,7 @@ import { Badge } from '../ui/Badge';
 import { formatDuration, formatMarks, optionLabel } from '../../utils/quizFormat';
 import { cn } from '../../utils/cn';
 import { MathText } from './MathText';
+import { QuestionMedia } from './QuestionMedia';
 
 const OUTCOMES = {
   correct: { label: 'Correct', tone: 'text-lagoon-700', chip: 'bg-lagoon-100 text-lagoon-800', icon: Check },
@@ -52,6 +53,7 @@ function ReviewQuestion({ item }) {
         text={item.text}
         className="text-base font-semibold leading-relaxed text-ink-900"
       />
+      <QuestionMedia src={item.imageUrl} alt={`Question ${item.number}`} />
 
       {isBlank ? (
         <div className="mt-3 space-y-2">
@@ -146,7 +148,16 @@ function ReviewQuestion({ item }) {
                 <span className="w-5 shrink-0 pt-0.5 text-sm font-bold text-ink-900/45">
                   {optionLabel(displayIndex)}
                 </span>
-                <MathText text={option.text} className="flex-1 leading-relaxed text-ink-900" />
+                <div className="min-w-0 flex-1">
+                  {option.text?.trim() ? (
+                    <MathText text={option.text} className="leading-relaxed text-ink-900" />
+                  ) : null}
+                  <QuestionMedia
+                    src={option.imageUrl}
+                    alt={`Option ${optionLabel(displayIndex)}`}
+                    size="option"
+                  />
+                </div>
                 <span className="flex shrink-0 flex-wrap justify-end gap-1">
                   {isPicked ? (
                     <span

@@ -3,6 +3,7 @@ import { AlertTriangle, Maximize2 } from 'lucide-react';
 import { formatClock, optionLabel } from '../../utils/quizFormat';
 import { cn } from '../../utils/cn';
 import { MathText } from './MathText';
+import { QuestionMedia } from './QuestionMedia';
 import { useExamCopyLock } from './useExamCopyLock';
 
 function readStoredState(storageKey) {
@@ -498,6 +499,7 @@ export function CbtAttemptRunner({
               text={question?.text}
               className="text-base font-semibold leading-relaxed text-ink-900"
             />
+            <QuestionMedia src={question?.imageUrl} alt={`Question ${question?.number}`} />
 
             {question?.type === 'matrix' ? (
               <div className="mt-5 overflow-x-auto">
@@ -512,7 +514,13 @@ export function CbtAttemptRunner({
                           key={option.index}
                           className="border border-slate-300 bg-slate-100 px-3 py-2 text-center font-semibold"
                         >
-                          <MathText text={option.text} />
+                          {option.text?.trim() ? <MathText text={option.text} /> : null}
+                          <QuestionMedia
+                            src={option.imageUrl}
+                            alt={`Column ${optionLabel(option.index)}`}
+                            size="option"
+                            className="mx-auto"
+                          />
                         </th>
                       ))}
                     </tr>
@@ -554,7 +562,7 @@ export function CbtAttemptRunner({
                     <label
                       key={option.index}
                       className={cn(
-                        'flex cursor-pointer items-center gap-3 rounded-md border px-4 py-3 transition',
+                        'flex cursor-pointer items-start gap-3 rounded-md border px-4 py-3 transition',
                         isSelected
                           ? 'border-[#1e3a5f] bg-[#e8eef6]'
                           : 'border-slate-300 bg-slate-100 hover:border-slate-400'
@@ -565,12 +573,21 @@ export function CbtAttemptRunner({
                         name={`question-${question.id}`}
                         checked={isSelected}
                         onChange={() => toggleOption(option.index)}
-                        className="h-4 w-4 shrink-0 accent-[#1e3a5f]"
+                        className="mt-0.5 h-4 w-4 shrink-0 accent-[#1e3a5f]"
                       />
-                      <span className="w-5 shrink-0 text-sm font-bold text-slate-500">
+                      <span className="w-5 shrink-0 pt-0.5 text-sm font-bold text-slate-500">
                         {optionLabel(displayIndex)}
                       </span>
-                      <MathText text={option.text} className="text-sm leading-relaxed" />
+                      <div className="min-w-0 flex-1">
+                        {option.text?.trim() ? (
+                          <MathText text={option.text} className="text-sm leading-relaxed" />
+                        ) : null}
+                        <QuestionMedia
+                          src={option.imageUrl}
+                          alt={`Option ${optionLabel(displayIndex)}`}
+                          size="option"
+                        />
+                      </div>
                     </label>
                   );
                 })}

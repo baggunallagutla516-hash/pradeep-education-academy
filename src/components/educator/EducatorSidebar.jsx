@@ -112,14 +112,22 @@ export function EducatorSidebar({ expanded, onExpandedChange }) {
 
       <nav
         aria-label="Educator menu"
-        className={cn('flex flex-1 flex-col gap-2 overflow-y-auto', expanded ? '' : 'items-center')}
+        className={cn(
+          'flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pb-2',
+          expanded ? '' : 'items-center'
+        )}
       >
         {links.map((link) => (
           <RailLink key={link.to} {...link} expanded={expanded} />
         ))}
       </nav>
 
-      <div className={cn('mt-auto flex flex-col gap-2', expanded ? '' : 'items-center')}>
+      <div
+        className={cn(
+          'mt-auto flex shrink-0 flex-col gap-2 border-t border-ink-900/10 pt-3',
+          expanded ? '' : 'items-center'
+        )}
+      >
         <button
           type="button"
           title="Logout"

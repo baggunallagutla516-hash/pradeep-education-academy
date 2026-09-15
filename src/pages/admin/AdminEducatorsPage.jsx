@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Pencil, Search, Trash2 } from 'lucide-react';
+import { Download, Pencil, Search, Trash2 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { getErrorMessage } from '../../utils/errors';
+import {
+  downloadWorkbook,
+  educatorExportRows,
+  fetchAllPages,
+} from '../../utils/excelExport';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -24,6 +29,7 @@ export function AdminEducatorsPage() {
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   async function load(page = 1, limit = pageSize) {
     setStatus('loading');
@@ -94,12 +100,45 @@ export function AdminEducatorsPage() {
     }
   }
 
+  async function handleExport() {
+    setActionError('');
+    setExporting(true);
+    try {
+      const all = await fetchAllPages(async (page, limit) => {
+        const { data } = await adminApi.educators({
+          page,
+          limit,
+          q: q.trim() || undefined,
+          status: statusFilter || undefined,
+        });
+        return {
+          items: data.data.educators,
+          pagination: data.data.pagination,
+        };
+      });
+      downloadWorkbook(educatorExportRows(all), {
+        sheetName: 'Educators',
+        fileName: `educators-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      });
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not export educators.'));
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <PageShell
       embedded
       eyebrow="Admin"
       title="Educators"
       description="Search registered educators, activate or deactivate accounts, or remove an educator."
+      actions={
+        <Button variant="secondary" size="sm" loading={exporting} onClick={handleExport}>
+          <Download className="h-4 w-4" />
+          Download Excel
+        </Button>
+      }
     >
       <Card className="mb-4">
         <form

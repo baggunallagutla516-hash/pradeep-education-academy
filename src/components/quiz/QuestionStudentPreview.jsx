@@ -5,6 +5,7 @@ import { Button } from '../ui/Button';
 import { optionLabel } from '../../utils/quizFormat';
 import { cn } from '../../utils/cn';
 import { MathText } from './MathText';
+import { QuestionMedia } from './QuestionMedia';
 
 function typeBadge(type) {
   if (type === 'multiple') return { tone: 'ember', label: 'Select all that apply' };
@@ -47,6 +48,7 @@ export function QuestionStudentPreview({ open, onClose, question, number = 1 }) 
   const options = (question.options || []).map((option, index) => ({
     index,
     text: option.text || '',
+    imageUrl: option.imageUrl || '',
   }));
   const rows = (question.rows || []).map((row, index) => ({
     index,
@@ -80,8 +82,8 @@ export function QuestionStudentPreview({ open, onClose, question, number = 1 }) 
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
-          <div className="rounded-2xl border border-ink-900/10 bg-white p-5 shadow-sm">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5">
+          <div className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm sm:p-5">
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <Badge tone="ink">Q{number}</Badge>
               <Badge tone={badge.tone}>{badge.label}</Badge>
@@ -99,6 +101,7 @@ export function QuestionStudentPreview({ open, onClose, question, number = 1 }) 
             ) : (
               <p className="text-sm italic text-ink-900/45">No question text yet.</p>
             )}
+            <QuestionMedia src={question.imageUrl} alt={`Question ${number}`} />
 
             {isBlank ? (
               <div className="mt-4">
@@ -130,6 +133,12 @@ export function QuestionStudentPreview({ open, onClose, question, number = 1 }) 
                             className="border border-ink-900/10 bg-sand-50 px-3 py-2 text-center font-semibold text-ink-900"
                           >
                             <MathText text={option.text || optionLabel(option.index)} />
+                            <QuestionMedia
+                              src={option.imageUrl}
+                              alt={`Column ${optionLabel(option.index)}`}
+                              size="option"
+                              className="mx-auto"
+                            />
                           </th>
                         ))}
                       </tr>
@@ -180,7 +189,7 @@ export function QuestionStudentPreview({ open, onClose, question, number = 1 }) 
                       <label
                         key={option.index}
                         className={cn(
-                          'flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition',
+                          'flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition',
                           isSelected
                             ? 'border-lagoon-500 bg-lagoon-50 shadow-sm'
                             : 'border-ink-900/10 bg-white hover:border-lagoon-300'
@@ -201,15 +210,29 @@ export function QuestionStudentPreview({ open, onClose, question, number = 1 }) 
                               setSelected([option.index]);
                             }
                           }}
-                          className="h-4 w-4 shrink-0 accent-lagoon-600"
+                          className="mt-0.5 h-4 w-4 shrink-0 accent-lagoon-600"
                         />
-                        <span className="w-5 shrink-0 text-sm font-bold text-ink-900/45">
+                        <span className="w-5 shrink-0 pt-0.5 text-sm font-bold text-ink-900/45">
                           {optionLabel(displayIndex)}
                         </span>
-                        <MathText
-                          text={option.text || `Option ${optionLabel(displayIndex)}`}
-                          className="text-sm leading-relaxed text-ink-900"
-                        />
+                        <div className="min-w-0 flex-1">
+                          {option.text?.trim() ? (
+                            <MathText
+                              text={option.text}
+                              className="text-sm leading-relaxed text-ink-900"
+                            />
+                          ) : null}
+                          <QuestionMedia
+                            src={option.imageUrl}
+                            alt={`Option ${optionLabel(displayIndex)}`}
+                            size="option"
+                          />
+                          {!option.text?.trim() && !option.imageUrl ? (
+                            <span className="text-sm italic text-ink-900/45">
+                              Option {optionLabel(displayIndex)}
+                            </span>
+                          ) : null}
+                        </div>
                       </label>
                     );
                   })

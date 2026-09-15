@@ -15,6 +15,7 @@ import {
   ClipboardCheck,
   Settings,
   Users,
+  UserRound,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { SITE } from '../../constants/site';
@@ -28,6 +29,7 @@ const links = [
   { to: '/admin', label: 'DASHBOARD', icon: LayoutDashboard, end: true },
   { to: '/admin/students', label: 'STUDENTS', icon: Users },
   { to: '/admin/educators', label: 'EDUCATORS', icon: GraduationCap },
+  { to: '/admin/parents', label: 'PARENTS', icon: UserRound },
   { to: '/admin/contact-queries', label: 'CONTACT', icon: MessageSquare },
   { to: '/admin/worksheets', label: 'WORKSHEETS', icon: FileStack },
   { to: '/admin/unit-tests', label: 'EXAMS', icon: PenLine },
@@ -114,14 +116,22 @@ export function AdminSidebar({ expanded, onExpandedChange }) {
 
       <nav
         aria-label="Admin menu"
-        className={cn('flex flex-1 flex-col gap-2', expanded ? '' : 'items-center')}
+        className={cn(
+          'flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pb-2',
+          expanded ? '' : 'items-center'
+        )}
       >
         {links.map((link) => (
           <RailLink key={link.to} {...link} expanded={expanded} />
         ))}
       </nav>
 
-      <div className={cn('mt-auto flex flex-col gap-2', expanded ? '' : 'items-center')}>
+      <div
+        className={cn(
+          'mt-auto flex shrink-0 flex-col gap-2 border-t border-ink-900/10 pt-3',
+          expanded ? '' : 'items-center'
+        )}
+      >
         <RailLink to="/admin/settings" label="SETTINGS" icon={Settings} expanded={expanded} />
         <button
           type="button"

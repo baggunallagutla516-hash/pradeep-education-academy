@@ -43,6 +43,10 @@ import { AdminStudentEditPage } from './pages/admin/AdminStudentEditPage';
 import { AdminEducatorsPage } from './pages/admin/AdminEducatorsPage';
 import { AdminEducatorDetailPage } from './pages/admin/AdminEducatorDetailPage';
 import { AdminEducatorEditPage } from './pages/admin/AdminEducatorEditPage';
+import { AdminParentsPage } from './pages/admin/AdminParentsPage';
+import { AdminParentDetailPage } from './pages/admin/AdminParentDetailPage';
+import { AdminParentEditPage } from './pages/admin/AdminParentEditPage';
+import { AdminParentCreatePage } from './pages/admin/AdminParentCreatePage';
 import { AdminNewsPage } from './pages/admin/AdminNewsPage';
 import { AdminWorksheetsPage } from './pages/admin/AdminWorksheetsPage';
 import { AdminWorksheetFormPage } from './pages/admin/AdminWorksheetFormPage';
@@ -387,6 +391,10 @@ export default function App() {
                   <Route path="educators" element={<AdminEducatorsPage />} />
                   <Route path="educators/:id" element={<AdminEducatorDetailPage />} />
                   <Route path="educators/:id/edit" element={<AdminEducatorEditPage />} />
+                  <Route path="parents" element={<AdminParentsPage />} />
+                  <Route path="parents/new" element={<AdminParentCreatePage />} />
+                  <Route path="parents/:id" element={<AdminParentDetailPage />} />
+                  <Route path="parents/:id/edit" element={<AdminParentEditPage />} />
                   <Route path="worksheets" element={<AdminWorksheetsPage />} />
                   <Route path="worksheets/new" element={<AdminWorksheetFormPage />} />
                   <Route path="worksheets/:id/edit" element={<AdminWorksheetFormPage />} />

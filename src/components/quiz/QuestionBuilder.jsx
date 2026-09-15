@@ -1,5 +1,6 @@
-import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronDown, ChevronUp, ImagePlus, Loader2, Plus, Trash2, X } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { adminApi } from '../../api/adminApi';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
@@ -7,8 +8,83 @@ import { Textarea } from '../ui/Textarea';
 import { Badge } from '../ui/Badge';
 import { optionLabel } from '../../utils/quizFormat';
 import { cn } from '../../utils/cn';
+import { getErrorMessage } from '../../utils/errors';
+import { mediaUrl } from '../../utils/media';
 import { MathPreview } from './MathText';
+import { QuestionMedia } from './QuestionMedia';
 import { QuestionPreviewButton, QuestionStudentPreview } from './QuestionStudentPreview';
+
+function emptyOption() {
+  return { text: '', imageUrl: '', imageKey: '' };
+}
+
+function ImageAttachControl({ imageUrl, onUploaded, onClear, ariaLabel = 'Upload image' }) {
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function onFileChange(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setUploading(true);
+    setError('');
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const { data } = await adminApi.uploadQuestionImage(formData);
+      onUploaded({
+        imageUrl: data.data.imageUrl || '',
+        imageKey: data.data.imageKey || '',
+      });
+    } catch (err) {
+      setError(getErrorMessage(err, 'Could not upload image.'));
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="shrink-0">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="hidden"
+        onChange={onFileChange}
+      />
+      {imageUrl ? (
+        <div className="relative">
+          <img
+            src={mediaUrl(imageUrl)}
+            alt=""
+            className="h-9 w-9 rounded-lg border border-ink-900/10 object-cover"
+          />
+          <button
+            type="button"
+            aria-label="Remove image"
+            onClick={onClear}
+            className="absolute -right-1.5 -top-1.5 rounded-full bg-ink-900 p-0.5 text-white shadow"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          aria-label={ariaLabel}
+          disabled={uploading}
+          onClick={() => inputRef.current?.click()}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-ink-900/10 bg-white text-ink-900/55 transition hover:border-lagoon-400 hover:bg-lagoon-50 hover:text-lagoon-700 disabled:opacity-50"
+        >
+          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+        </button>
+      )}
+      {error ? <p className="mt-1 max-w-[7rem] text-[10px] font-medium text-red-600">{error}</p> : null}
+    </div>
+  );
+}
 
 export const MIN_OPTIONS = 2;
 export const MAX_OPTIONS = 6;
@@ -41,8 +117,10 @@ export function makeEmptyQuestion(defaults = {}) {
   return {
     key: nextKey(),
     text: '',
+    imageUrl: '',
+    imageKey: '',
     type: 'single',
-    options: [{ text: '' }, { text: '' }, { text: '' }, { text: '' }],
+    options: [emptyOption(), emptyOption(), emptyOption(), emptyOption()],
     rows: [{ text: '' }, { text: '' }],
     correctOptions: [],
     correctAnswers: [''],
@@ -73,11 +151,17 @@ export function toEditableQuestion(question) {
   return {
     key: nextKey(),
     text: question.text || '',
+    imageUrl: question.imageUrl || '',
+    imageKey: question.imageKey || '',
     type,
     options:
       type === 'blank'
-        ? [{ text: '' }, { text: '' }, { text: '' }, { text: '' }]
-        : (question.options || []).map((option) => ({ text: option.text || '' })),
+        ? [emptyOption(), emptyOption(), emptyOption(), emptyOption()]
+        : (question.options || []).map((option) => ({
+            text: option.text || '',
+            imageUrl: option.imageUrl || '',
+            imageKey: option.imageKey || '',
+          })),
     rows,
     correctOptions: [...(question.correctOptions || [])],
     correctAnswers:
@@ -93,12 +177,26 @@ export function toEditableQuestion(question) {
   };
 }
 
+function toApiOption(option) {
+  return {
+    text: option.text || '',
+    imageUrl: option.imageUrl || '',
+    imageKey: option.imageKey || '',
+  };
+}
+
 /** Strips the local `key` and converts marks back to a number for the API. */
 export function toApiQuestions(questions) {
   return questions.map((question) => {
+    const images = {
+      imageUrl: question.imageUrl || '',
+      imageKey: question.imageKey || '',
+    };
+
     if (question.type === 'blank') {
       return {
         text: question.text,
+        ...images,
         type: 'blank',
         options: [],
         rows: [],
@@ -114,8 +212,9 @@ export function toApiQuestions(questions) {
     if (question.type === 'matrix') {
       return {
         text: question.text,
+        ...images,
         type: 'matrix',
-        options: question.options.map((option) => ({ text: option.text })),
+        options: question.options.map(toApiOption),
         rows: question.rows.map((row) => ({ text: row.text })),
         correctOptions: [],
         correctAnswers: [],
@@ -128,8 +227,9 @@ export function toApiQuestions(questions) {
 
     return {
       text: question.text,
+      ...images,
       type: question.type,
-      options: question.options.map((option) => ({ text: option.text })),
+      options: question.options.map(toApiOption),
       rows: [],
       correctOptions: question.correctOptions,
       correctAnswers: [],
@@ -152,7 +252,7 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove, allo
     if (nextType === 'blank') {
       update({
         type: 'blank',
-        options: [{ text: '' }, { text: '' }, { text: '' }, { text: '' }],
+        options: [emptyOption(), emptyOption(), emptyOption(), emptyOption()],
         rows: [{ text: '' }, { text: '' }],
         correctOptions: [],
         correctAnswers: question.correctAnswers?.length ? question.correctAnswers : [''],
@@ -169,7 +269,7 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove, allo
         options:
           question.options?.length >= MIN_OPTIONS
             ? question.options
-            : [{ text: '' }, { text: '' }, { text: '' }, { text: '' }],
+            : [emptyOption(), emptyOption(), emptyOption(), emptyOption()],
         rows,
         correctOptions: [],
         correctAnswers: [''],
@@ -189,7 +289,7 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove, allo
       options:
         question.options?.length >= MIN_OPTIONS
           ? question.options
-          : [{ text: '' }, { text: '' }, { text: '' }, { text: '' }],
+          : [emptyOption(), emptyOption(), emptyOption(), emptyOption()],
       rows: [{ text: '' }, { text: '' }],
       correctMatrix: [-1, -1],
     });
@@ -210,13 +310,23 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove, allo
 
   function changeOptionText(optionIndex, text) {
     update({
-      options: question.options.map((option, i) => (i === optionIndex ? { text } : option)),
+      options: question.options.map((option, i) =>
+        i === optionIndex ? { ...option, text } : option
+      ),
+    });
+  }
+
+  function changeOptionImage(optionIndex, images) {
+    update({
+      options: question.options.map((option, i) =>
+        i === optionIndex ? { ...option, ...images } : option
+      ),
     });
   }
 
   function addOption() {
     if (question.options.length >= MAX_OPTIONS) return;
-    update({ options: [...question.options, { text: '' }] });
+    update({ options: [...question.options, emptyOption()] });
   }
 
   function removeOption(optionIndex) {
@@ -346,21 +456,35 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove, allo
         number={index + 1}
       />
 
-      <Textarea
-        label="Question"
-        rows={2}
-        required
-        value={question.text}
-        onChange={(event) => update({ text: event.target.value })}
-        placeholder={
-          isBlank
-            ? 'e.g. The chemical symbol for water is ____'
-            : isMatrix
-              ? 'e.g. Find A^{-1} for the matrix below'
-              : 'Type the question here'
-        }
-        hint="For formulas use LaTeX, e.g. A^{-1}=\\frac{1}{|A|}\\begin{bmatrix}d & -b \\\\ -c & a\\end{bmatrix}"
-      />
+      <div className="relative">
+        <Textarea
+          label="Question"
+          rows={2}
+          required
+          value={question.text}
+          onChange={(event) => update({ text: event.target.value })}
+          placeholder={
+            isBlank
+              ? 'e.g. The chemical symbol for water is ____'
+              : isMatrix
+                ? 'e.g. Find A^{-1} for the matrix below'
+                : 'Type the question here'
+          }
+          hint="For formulas use LaTeX, e.g. A^{-1}=\\frac{1}{|A|}\\begin{bmatrix}d & -b \\\\ -c & a\\end{bmatrix}"
+          className="pr-12"
+        />
+        <div className="absolute right-2 top-8">
+          <ImageAttachControl
+            imageUrl={question.imageUrl}
+            ariaLabel="Upload question image"
+            onUploaded={(images) => update(images)}
+            onClear={() => update({ imageUrl: '', imageKey: '' })}
+          />
+        </div>
+      </div>
+      {question.imageUrl ? (
+        <QuestionMedia src={question.imageUrl} alt="Question attachment" />
+      ) : null}
       <MathPreview text={question.text} label="Question preview" />
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -494,6 +618,14 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove, allo
                       placeholder={`Column ${optionLabel(optionIndex)}`}
                       className="h-9 w-full rounded-lg border border-ink-900/10 bg-white px-3 text-sm text-ink-900 transition placeholder:text-ink-900/35 focus:border-lagoon-500"
                     />
+                    <ImageAttachControl
+                      imageUrl={option.imageUrl}
+                      ariaLabel={`Upload image for column ${optionLabel(optionIndex)}`}
+                      onUploaded={(images) => changeOptionImage(optionIndex, images)}
+                      onClear={() =>
+                        changeOptionImage(optionIndex, { imageUrl: '', imageKey: '' })
+                      }
+                    />
                     {question.options.length > MIN_OPTIONS ? (
                       <button
                         type="button"
@@ -505,6 +637,13 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove, allo
                       </button>
                     ) : null}
                   </div>
+                  {option.imageUrl ? (
+                    <QuestionMedia
+                      src={option.imageUrl}
+                      alt={`Column ${optionLabel(optionIndex)}`}
+                      size="option"
+                    />
+                  ) : null}
                   <MathPreview text={option.text} label={`Column ${optionLabel(optionIndex)} preview`} />
                 </div>
               ))}
@@ -575,7 +714,7 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove, allo
                             onChange={() => setRowCorrect(rowIndex, columnIndex)}
                             className="h-3.5 w-3.5 accent-lagoon-600"
                           />
-                          {option.text.trim() || optionLabel(columnIndex)}
+                          {(option.text || '').trim() || optionLabel(columnIndex)}
                         </label>
                       );
                     })}
@@ -638,6 +777,14 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove, allo
                       placeholder={`Option ${optionLabel(optionIndex)}`}
                       className="h-9 w-full rounded-lg border border-ink-900/10 bg-white px-3 text-sm text-ink-900 transition placeholder:text-ink-900/35 focus:border-lagoon-500"
                     />
+                    <ImageAttachControl
+                      imageUrl={option.imageUrl}
+                      ariaLabel={`Upload image for option ${optionLabel(optionIndex)}`}
+                      onUploaded={(images) => changeOptionImage(optionIndex, images)}
+                      onClear={() =>
+                        changeOptionImage(optionIndex, { imageUrl: '', imageKey: '' })
+                      }
+                    />
                     {question.options.length > MIN_OPTIONS ? (
                       <button
                         type="button"
@@ -649,6 +796,13 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove, allo
                       </button>
                     ) : null}
                   </div>
+                  {option.imageUrl ? (
+                    <QuestionMedia
+                      src={option.imageUrl}
+                      alt={`Option ${optionLabel(optionIndex)}`}
+                      size="option"
+                    />
+                  ) : null}
                   <MathPreview text={option.text} label={`Option ${optionLabel(optionIndex)} preview`} />
                 </div>
               );

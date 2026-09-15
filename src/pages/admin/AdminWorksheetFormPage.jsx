@@ -9,6 +9,7 @@ import {
   appendStudentClasses,
   selectedClassIdsFromItem,
 } from '../../utils/contentClasses';
+import { toApiDateTime, toDateTimeLocalValue } from '../../utils/quizFormat';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -24,6 +25,8 @@ const emptyForm = {
   title: '',
   description: '',
   studentClasses: [],
+  startDate: toDateTimeLocalValue(),
+  endDate: toDateTimeLocalValue(undefined, { endOfDay: true }),
   isPublished: 'true',
 };
 
@@ -65,6 +68,8 @@ export function AdminWorksheetFormPage() {
             title: item.title,
             description: item.description || '',
             studentClasses: selectedClassIdsFromItem(item),
+            startDate: toDateTimeLocalValue(item.startDate),
+            endDate: toDateTimeLocalValue(item.endDate),
             isPublished: item.isPublished ? 'true' : 'false',
           });
           setCoverPreview(mediaUrl(item.coverImageUrl));
@@ -112,6 +117,11 @@ export function AdminWorksheetFormPage() {
     const next = {};
     if (!form.title.trim()) next.title = 'Title is required.';
     if (!form.studentClasses.length) next.studentClasses = 'Select at least one class.';
+    if (!form.startDate) next.startDate = 'Starting date and time is required.';
+    if (!form.endDate) next.endDate = 'Ending date and time is required.';
+    if (form.startDate && form.endDate && new Date(form.endDate) < new Date(form.startDate)) {
+      next.endDate = 'Ending date and time cannot be before the starting date and time.';
+    }
     if (!isEdit && !coverFile) next.coverImage = 'Cover image is required.';
     if (!isEdit && !resourceFile) next.file = 'Worksheet file is required.';
     setFieldErrors(next);
@@ -127,6 +137,8 @@ export function AdminWorksheetFormPage() {
     fd.append('title', form.title.trim());
     fd.append('description', form.description.trim());
     appendStudentClasses(fd, form.studentClasses);
+    fd.append('startDate', toApiDateTime(form.startDate));
+    fd.append('endDate', toApiDateTime(form.endDate));
     fd.append('isPublished', form.isPublished);
     if (coverFile) fd.append('coverImage', coverFile);
     if (resourceFile) fd.append('file', resourceFile);
@@ -167,7 +179,7 @@ export function AdminWorksheetFormPage() {
       embedded
       eyebrow="Worksheets"
       title={isEdit ? 'Edit worksheet' : 'New worksheet'}
-      description="Cover image and file are stored on Supabase Storage. Students in the selected classes can download the file."
+      description="Set when students can download this file. Cover image and file are stored on Supabase Storage."
       actions={
         <Link to={`${basePath}/worksheets`}>
           <Button variant="secondary" size="sm">
@@ -210,6 +222,27 @@ export function AdminWorksheetFormPage() {
             }}
             error={fieldErrors.studentClasses}
           />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              label="Download opens"
+              name="startDate"
+              type="datetime-local"
+              value={form.startDate}
+              onChange={updateField}
+              required
+              error={fieldErrors.startDate}
+            />
+            <Input
+              label="Download closes"
+              name="endDate"
+              type="datetime-local"
+              value={form.endDate}
+              onChange={updateField}
+              required
+              error={fieldErrors.endDate}
+              hint="After this time students can no longer download the file"
+            />
+          </div>
           <Select
             label="Status"
             name="isPublished"
