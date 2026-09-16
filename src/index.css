@@ -31,7 +31,25 @@
     text-wrap: balance;
   }
 
-  /* Exam questions cannot be highlighted, copied, or pasted. */
+  /* Site-wide: no highlight / drag of page content (inputs stay editable). */
+  .site-no-copy,
+  .site-no-copy body,
+  .site-no-copy body *:not(input):not(textarea):not(select):not([contenteditable='true']) {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+  }
+
+  .site-no-copy input:not([type='radio']):not([type='checkbox']):not([type='button']):not([type='submit']):not([type='reset']):not([type='file']):not([type='hidden']):not([type='range']):not([type='color']),
+  .site-no-copy textarea,
+  .site-no-copy select,
+  .site-no-copy [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Exam attempts: same lock scoped to the attempt root. */
   .exam-no-copy,
   .exam-no-copy * {
     -webkit-user-select: none;
@@ -116,6 +134,11 @@
   @page {
     size: A4;
     margin: 12mm;
+  }
+
+  /* Blank any print that is not the Result → Print A4 flow. */
+  body:not(.printing-result-certificate) * {
+    visibility: hidden !important;
   }
 
   body.printing-result-certificate * {

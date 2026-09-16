@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, BarChart3, Megaphone } from 'lucide-react';
+import { ArrowLeft, BarChart3, Download, Megaphone } from 'lucide-react';
 import { useStaffContent } from '../../context/StaffContentContext';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
 import { formatDate, formatMarks } from '../../utils/quizFormat';
+import { downloadWorkbook, resultsExportRows } from '../../utils/excelExport';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -24,7 +25,9 @@ export function AdminAssessmentResultsPage() {
   const [actionError, setActionError] = useState('');
   const [actionInfo, setActionInfo] = useState('');
   const [releasing, setReleasing] = useState(false);
-  const [reattemptingId, setReattemptingId] = useState(null);
+  const [exporting, setExporting] = useState(false);
+  const [busyAttemptId, setBusyAttemptId] = useState(null);
+  const [busyAction, setBusyAction] = useState(null);
 
   async function load() {
     setStatus('loading');
@@ -99,7 +102,8 @@ export function AdminAssessmentResultsPage() {
       return;
     }
 
-    setReattemptingId(row.id);
+    setBusyAttemptId(row.id);
+    setBusyAction('reattempt');
     setActionError('');
     setActionInfo('');
     try {
@@ -110,7 +114,86 @@ export function AdminAssessmentResultsPage() {
     } catch (err) {
       setActionError(getErrorMessage(err, 'Could not allow a reattempt.'));
     } finally {
-      setReattemptingId(null);
+      setBusyAttemptId(null);
+      setBusyAction(null);
+    }
+  }
+
+  async function handleExport() {
+    if (!data?.results?.length) return;
+    setActionError('');
+    setExporting(true);
+    try {
+      const slug = (data.assessment?.title || 'assessment')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 40);
+      downloadWorkbook(resultsExportRows(data.results), {
+        sheetName: 'Results',
+        fileName: `${slug || 'assessment'}-results-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      });
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not download Excel.'));
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleToggleHide(row) {
+    const name = row.studentName || 'this participant';
+    const hide = !row.resultsHidden;
+    if (
+      !window.confirm(
+        hide
+          ? `Hide ${name}'s result everywhere? They will not see scores until you unhide.`
+          : `Unhide ${name}'s result? They can see scores again if results are announced.`
+      )
+    ) {
+      return;
+    }
+
+    setBusyAttemptId(row.id);
+    setBusyAction('hide');
+    setActionError('');
+    setActionInfo('');
+    try {
+      const res = await api.setAssessmentAttemptVisibility(id, row.id, hide);
+      setActionInfo(res.data.message || (hide ? 'Result hidden.' : 'Result unhidden.'));
+      const refreshed = await api.assessmentResults(id);
+      setData(refreshed.data.data);
+    } catch (err) {
+      setActionError(getErrorMessage(err, hide ? 'Could not hide result.' : 'Could not unhide result.'));
+    } finally {
+      setBusyAttemptId(null);
+      setBusyAction(null);
+    }
+  }
+
+  async function handleDelete(row) {
+    const name = row.studentName || 'this participant';
+    if (
+      !window.confirm(
+        `Delete ${name}'s result everywhere? This cannot be undone. They can submit again only if the assessment is still open.`
+      )
+    ) {
+      return;
+    }
+
+    setBusyAttemptId(row.id);
+    setBusyAction('delete');
+    setActionError('');
+    setActionInfo('');
+    try {
+      const res = await api.deleteAssessmentAttempt(id, row.id);
+      setActionInfo(res.data.message || 'Result deleted.');
+      const refreshed = await api.assessmentResults(id);
+      setData(refreshed.data.data);
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not delete result.'));
+    } finally {
+      setBusyAttemptId(null);
+      setBusyAction(null);
     }
   }
 
@@ -136,6 +219,12 @@ export function AdminAssessmentResultsPage() {
               Back
             </Button>
           </Link>
+          {status === 'ready' && data?.results?.length ? (
+            <Button variant="secondary" size="sm" loading={exporting} onClick={handleExport}>
+              <Download className="h-4 w-4" />
+              Download Excel
+            </Button>
+          ) : null}
           {status === 'ready' && !data?.assessment?.isPublished ? (
             <Link to={`${basePath}/assessments/${id}/edit`}>
               <Button variant="secondary" size="sm">
@@ -247,7 +336,10 @@ export function AdminAssessmentResultsPage() {
               <ResultsTable
                 results={data.results}
                 onReattempt={handleReattempt}
-                reattemptingId={reattemptingId}
+                onToggleHide={handleToggleHide}
+                onDelete={handleDelete}
+                busyAttemptId={busyAttemptId}
+                busyAction={busyAction}
               />
             </Card>
           )}
@@ -255,8 +347,8 @@ export function AdminAssessmentResultsPage() {
           <p className="mt-4 text-xs text-ink-900/50">
             <Badge tone="ink">Note</Badge> Announce emails tell students to open results on the
             website. Scores are never included in the email. Late attempts after announce stay on
-            hold until you announce again. Reattempt lets that student or educator write it again
-            while the assessment is still open.
+            hold until you announce again. Reattempt clears the score while open; Hide keeps the
+            attempt but hides scores; Delete removes the result everywhere.
           </p>
         </>
       ) : null}

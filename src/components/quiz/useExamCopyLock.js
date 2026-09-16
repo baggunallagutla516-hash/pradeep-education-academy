@@ -39,11 +39,16 @@ export function useExamCopyLock(rootRef) {
     };
 
     const blockShortcut = (event) => {
+      const key = event.key.toLowerCase();
+      if ((event.ctrlKey || event.metaKey) && key === 'p') {
+        event.preventDefault();
+        return;
+      }
       if (isPasteShortcut(event) || isCopyShortcut(event)) {
         event.preventDefault();
         return;
       }
-      const selectAll = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a';
+      const selectAll = (event.ctrlKey || event.metaKey) && key === 'a';
       if (selectAll && !isAnswerField(event.target)) {
         event.preventDefault();
       }

@@ -5,6 +5,7 @@ import { ParentAuthProvider } from './context/ParentAuthContext';
 import { EducatorAuthProvider } from './context/EducatorAuthContext';
 import { MainLayout } from './components/layout/MainLayout';
 import { ScrollToTop } from './components/layout/ScrollToTop';
+import { SiteContentLock } from './components/SiteContentLock';
 import { StudentLayout } from './components/layout/StudentLayout';
 import {
   AdminGuestRoute,
@@ -48,6 +49,9 @@ import { AdminParentDetailPage } from './pages/admin/AdminParentDetailPage';
 import { AdminParentEditPage } from './pages/admin/AdminParentEditPage';
 import { AdminParentCreatePage } from './pages/admin/AdminParentCreatePage';
 import { AdminNewsPage } from './pages/admin/AdminNewsPage';
+import { AdminCarouselPage } from './pages/admin/AdminCarouselPage';
+import { QuizIntroPage } from './pages/QuizIntroPage';
+import { ToppersPage } from './pages/ToppersPage';
 import { AdminWorksheetsPage } from './pages/admin/AdminWorksheetsPage';
 import { AdminWorksheetFormPage } from './pages/admin/AdminWorksheetFormPage';
 import { AdminUnitTestsPage } from './pages/admin/AdminUnitTestsPage';
@@ -119,12 +123,15 @@ export default function App() {
         <EducatorAuthProvider>
           <AdminAuthProvider>
             <BrowserRouter>
+              <SiteContentLock />
               <ScrollToTop />
               <Routes>
                 <Route element={<MainLayout />}>
                   <Route index element={<HomePage />} />
                   <Route path="about" element={<AboutPage />} />
                   <Route path="contact" element={<ContactPage />} />
+                  <Route path="toppers" element={<ToppersPage />} />
+                  <Route path="quizzes/:id" element={<QuizIntroPage />} />
 
                   <Route
                     path="login"
@@ -421,6 +428,7 @@ export default function App() {
                   <Route path="slip-tests/:id/edit" element={<AdminSlipTestFormPage />} />
                   <Route path="slip-tests/:id/results" element={<AdminSlipTestResultsPage />} />
                   <Route path="news" element={<AdminNewsPage />} />
+                  <Route path="carousel" element={<AdminCarouselPage />} />
                   <Route path="contact-queries" element={<AdminContactQueriesPage />} />
                   <Route path="settings" element={<AdminSettingsPage />} />
                 </Route>

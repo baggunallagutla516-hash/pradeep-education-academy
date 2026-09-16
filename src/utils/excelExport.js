@@ -82,3 +82,42 @@ export function parentExportRows(parents) {
     'Last login': formatDate(p.lastLoginAt),
   }));
 }
+
+export function resultsExportRows(results) {
+  const sorted = [...(results || [])].sort((a, b) => {
+    const pctDiff = Number(b.percentage || 0) - Number(a.percentage || 0);
+    if (pctDiff !== 0) return pctDiff;
+    const marksDiff = Number(b.scoredMarks || 0) - Number(a.scoredMarks || 0);
+    if (marksDiff !== 0) return marksDiff;
+    return Number(a.timeTakenSeconds || 0) - Number(b.timeTakenSeconds || 0);
+  });
+
+  let lastPercentage = null;
+  let lastRank = 0;
+
+  return sorted.map((row, index) => {
+    const percentage = Number(row.percentage || 0);
+    if (lastPercentage === null || percentage !== lastPercentage) {
+      lastRank = index + 1;
+      lastPercentage = percentage;
+    }
+
+    return {
+      Rank: lastRank,
+      Participant: row.studentName || '',
+      Role: row.roleLabel || '',
+      Email: row.studentEmail || '',
+      'Roll number': row.rollNumber || '',
+      Score: `${row.scoredMarks ?? 0} / ${row.totalMarks ?? 0}`,
+      'Percentage (%)': Math.round(percentage),
+      Right: row.correctCount ?? 0,
+      Partial: row.partialCount ?? 0,
+      Wrong: row.wrongCount ?? 0,
+      Skipped: row.unansweredCount ?? 0,
+      'Time (seconds)': row.timeTakenSeconds ?? 0,
+      'Auto-submitted': row.autoSubmitted ? 'Yes' : 'No',
+      Hidden: row.resultsHidden ? 'Yes' : 'No',
+      Submitted: formatDate(row.submittedAt),
+    };
+  });
+}

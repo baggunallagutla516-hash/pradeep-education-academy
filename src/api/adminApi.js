@@ -91,6 +91,22 @@ export const adminApi = {
   deleteNews(id) {
     return api.delete(`/admin/news/${id}`);
   },
+  carousel() {
+    return api.get('/admin/carousel');
+  },
+  createCarouselSlide(formData) {
+    return api.post('/admin/carousel', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  updateCarouselSlide(id, formData) {
+    return api.patch(`/admin/carousel/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  deleteCarouselSlide(id) {
+    return api.delete(`/admin/carousel/${id}`);
+  },
   worksheets() {
     return api.get('/admin/worksheets');
   },
@@ -163,6 +179,14 @@ export const adminApi = {
   reattemptAssessment(id, attemptId) {
     return api.post(`/admin/assessments/${id}/attempts/${attemptId}/reattempt`);
   },
+  setAssessmentAttemptVisibility(id, attemptId, resultsHidden) {
+    return api.patch(`/admin/assessments/${id}/attempts/${attemptId}/visibility`, {
+      resultsHidden,
+    });
+  },
+  deleteAssessmentAttempt(id, attemptId) {
+    return api.delete(`/admin/assessments/${id}/attempts/${attemptId}`);
+  },
   createAssessment(payload) {
     return api.post('/admin/assessments', payload);
   },
@@ -186,6 +210,12 @@ export const adminApi = {
   },
   reattemptDpp(id, attemptId) {
     return api.post(`/admin/dpps/${id}/attempts/${attemptId}/reattempt`);
+  },
+  setDppAttemptVisibility(id, attemptId, resultsHidden) {
+    return api.patch(`/admin/dpps/${id}/attempts/${attemptId}/visibility`, { resultsHidden });
+  },
+  deleteDppAttempt(id, attemptId) {
+    return api.delete(`/admin/dpps/${id}/attempts/${attemptId}`);
   },
   createDpp(payload) {
     return api.post('/admin/dpps', payload);
@@ -211,6 +241,12 @@ export const adminApi = {
   reattemptQuiz(id, attemptId) {
     return api.post(`/admin/quizzes/${id}/attempts/${attemptId}/reattempt`);
   },
+  setQuizAttemptVisibility(id, attemptId, resultsHidden) {
+    return api.patch(`/admin/quizzes/${id}/attempts/${attemptId}/visibility`, { resultsHidden });
+  },
+  deleteQuizAttempt(id, attemptId) {
+    return api.delete(`/admin/quizzes/${id}/attempts/${attemptId}`);
+  },
   createQuiz(payload) {
     return api.post('/admin/quizzes', payload);
   },
@@ -234,6 +270,14 @@ export const adminApi = {
   },
   reattemptSlipTest(id, attemptId) {
     return api.post(`/admin/slip-tests/${id}/attempts/${attemptId}/reattempt`);
+  },
+  setSlipTestAttemptVisibility(id, attemptId, resultsHidden) {
+    return api.patch(`/admin/slip-tests/${id}/attempts/${attemptId}/visibility`, {
+      resultsHidden,
+    });
+  },
+  deleteSlipTestAttempt(id, attemptId) {
+    return api.delete(`/admin/slip-tests/${id}/attempts/${attemptId}`);
   },
   createSlipTest(payload) {
     return api.post('/admin/slip-tests', payload);
@@ -295,6 +339,12 @@ export const contentApi = {
   },
   site() {
     return api.get('/content/site');
+  },
+  carousel() {
+    return api.get('/content/carousel');
+  },
+  quizIntro(id) {
+    return api.get(`/content/quizzes/${id}`);
   },
 };
 

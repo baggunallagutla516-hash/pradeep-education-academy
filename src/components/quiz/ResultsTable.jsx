@@ -1,4 +1,4 @@
-import { RotateCcw } from 'lucide-react';
+import { Eye, EyeOff, RotateCcw, Trash2 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { formatDuration, formatMarks } from '../../utils/quizFormat';
@@ -42,18 +42,28 @@ function withRanks(results) {
   });
 }
 
-export function ResultsTable({ results, onReattempt, reattemptingId }) {
+export function ResultsTable({
+  results,
+  onReattempt,
+  onToggleHide,
+  onDelete,
+  busyAttemptId,
+  busyAction,
+}) {
   const ranked = withRanks(results);
-  const showReattempt = typeof onReattempt === 'function';
+  const showActions =
+    typeof onReattempt === 'function' ||
+    typeof onToggleHide === 'function' ||
+    typeof onDelete === 'function';
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[52rem] text-left text-sm">
+      <table className="w-full min-w-[56rem] text-left text-sm">
         <thead className="bg-ink-900/4 text-xs uppercase tracking-wide text-ink-900/55">
           <tr>
             <th className="px-4 py-3 font-semibold">Rank</th>
             <th className="px-4 py-3 font-semibold">Participant</th>
-            {showReattempt ? <th className="px-4 py-3 font-semibold">Reattempt</th> : null}
+            {showActions ? <th className="px-4 py-3 font-semibold">Actions</th> : null}
             <th className="px-4 py-3 font-semibold">Score</th>
             <th className="px-4 py-3 font-semibold">%</th>
             <th className="px-4 py-3 font-semibold">Right</th>
@@ -63,57 +73,102 @@ export function ResultsTable({ results, onReattempt, reattemptingId }) {
           </tr>
         </thead>
         <tbody className="divide-y divide-ink-900/8">
-          {ranked.map((row) => (
-            <tr key={row.id} className="transition hover:bg-lagoon-50/50">
-              <td className="px-4 py-3 font-display text-base font-extrabold tabular-nums text-ink-900">
-                {row.rank}
-              </td>
-              <td className="px-4 py-3">
-                <p className="font-semibold text-ink-900">{row.studentName}</p>
-                <p className="text-xs text-ink-900/50">
-                  {row.roleLabel ? `${row.roleLabel} · ` : ''}
-                  {row.rollNumber ? `Roll ${row.rollNumber} · ` : ''}
-                  {row.studentEmail}
-                </p>
-                {row.autoSubmitted ? (
-                  <Badge tone="ember" className="mt-1">
-                    Auto-submitted
-                  </Badge>
-                ) : null}
-              </td>
-              {showReattempt ? (
-                <td className="px-4 py-3">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    loading={reattemptingId === row.id}
-                    disabled={Boolean(reattemptingId) && reattemptingId !== row.id}
-                    onClick={() => onReattempt(row)}
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Reattempt
-                  </Button>
+          {ranked.map((row) => {
+            const anyBusy = Boolean(busyAttemptId);
+            const isBusy = (action) => busyAttemptId === row.id && busyAction === action;
+            const hidden = Boolean(row.resultsHidden);
+
+            return (
+              <tr
+                key={row.id}
+                className={cn(
+                  'transition hover:bg-lagoon-50/50',
+                  hidden && 'bg-ink-900/[0.03]'
+                )}
+              >
+                <td className="px-4 py-3 font-display text-base font-extrabold tabular-nums text-ink-900">
+                  {row.rank}
                 </td>
-              ) : null}
-              <td className="px-4 py-3 font-semibold tabular-nums text-ink-900">
-                {formatMarks(row.scoredMarks)} / {formatMarks(row.totalMarks)}
-              </td>
-              <td className={cn('px-4 py-3 font-bold tabular-nums', scoreTone(row.percentage))}>
-                {Math.round(row.percentage)}%
-              </td>
-              <td className="px-4 py-3 tabular-nums text-lagoon-700">
-                {row.correctCount}
-                {row.partialCount > 0 ? (
-                  <span className="text-ember-600"> (+{row.partialCount} partial)</span>
+                <td className="px-4 py-3">
+                  <p className="font-semibold text-ink-900">{row.studentName}</p>
+                  <p className="text-xs text-ink-900/50">
+                    {row.roleLabel ? `${row.roleLabel} · ` : ''}
+                    {row.rollNumber ? `Roll ${row.rollNumber} · ` : ''}
+                    {row.studentEmail}
+                  </p>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {row.autoSubmitted ? (
+                      <Badge tone="ember">Auto-submitted</Badge>
+                    ) : null}
+                    {hidden ? <Badge tone="ink">Hidden</Badge> : null}
+                  </div>
+                </td>
+                {showActions ? (
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-2">
+                      {typeof onReattempt === 'function' ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          loading={isBusy('reattempt')}
+                          disabled={anyBusy && !isBusy('reattempt')}
+                          onClick={() => onReattempt(row)}
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                          Reattempt
+                        </Button>
+                      ) : null}
+                      {typeof onToggleHide === 'function' ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          loading={isBusy('hide')}
+                          disabled={anyBusy && !isBusy('hide')}
+                          onClick={() => onToggleHide(row)}
+                        >
+                          {hidden ? (
+                            <Eye className="h-4 w-4" />
+                          ) : (
+                            <EyeOff className="h-4 w-4" />
+                          )}
+                          {hidden ? 'Unhide' : 'Hide'}
+                        </Button>
+                      ) : null}
+                      {typeof onDelete === 'function' ? (
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          loading={isBusy('delete')}
+                          disabled={anyBusy && !isBusy('delete')}
+                          onClick={() => onDelete(row)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </Button>
+                      ) : null}
+                    </div>
+                  </td>
                 ) : null}
-              </td>
-              <td className="px-4 py-3 tabular-nums text-red-600">{row.wrongCount}</td>
-              <td className="px-4 py-3 tabular-nums text-ink-900/55">{row.unansweredCount}</td>
-              <td className="px-4 py-3 tabular-nums text-ink-900/60">
-                {formatDuration(row.timeTakenSeconds)}
-              </td>
-            </tr>
-          ))}
+                <td className="px-4 py-3 font-semibold tabular-nums text-ink-900">
+                  {formatMarks(row.scoredMarks)} / {formatMarks(row.totalMarks)}
+                </td>
+                <td className={cn('px-4 py-3 font-bold tabular-nums', scoreTone(row.percentage))}>
+                  {Math.round(row.percentage)}%
+                </td>
+                <td className="px-4 py-3 tabular-nums text-lagoon-700">
+                  {row.correctCount}
+                  {row.partialCount > 0 ? (
+                    <span className="text-ember-600"> (+{row.partialCount} partial)</span>
+                  ) : null}
+                </td>
+                <td className="px-4 py-3 tabular-nums text-red-600">{row.wrongCount}</td>
+                <td className="px-4 py-3 tabular-nums text-ink-900/55">{row.unansweredCount}</td>
+                <td className="px-4 py-3 tabular-nums text-ink-900/60">
+                  {formatDuration(row.timeTakenSeconds)}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

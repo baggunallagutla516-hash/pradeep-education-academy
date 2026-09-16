@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 import { authApi } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
 import { getErrorMessage } from '../utils/errors';
+import { rememberQuizReturnPath } from '../utils/quizReturnPath';
 import { PageShell } from '../components/layout/PageShell';
 import { Alert } from '../components/ui/Alert';
 import { Button } from '../components/ui/Button';
@@ -27,6 +28,9 @@ const initialForm = {
 
 export function RegisterPage() {
   const { register } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const returnTo = location.state?.from || '';
 
   const [form, setForm] = useState(initialForm);
   const [classes, setClasses] = useState([]);
@@ -53,6 +57,10 @@ export function RegisterPage() {
   useEffect(() => {
     loadClasses();
   }, []);
+
+  useEffect(() => {
+    if (returnTo) rememberQuizReturnPath(returnTo);
+  }, [returnTo]);
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -135,11 +143,29 @@ export function RegisterPage() {
           <Alert type="success" title="Registration successful">
             {success}
           </Alert>
-          <Link to="/login" className="mt-5 block">
+          {returnTo ? (
+            <p className="mt-4 text-sm text-ink-900/65">
+              After activation, log in and you will be taken back to the quiz you selected.
+            </p>
+          ) : null}
+          <Link
+            to="/login"
+            state={returnTo ? { from: returnTo } : undefined}
+            className="mt-5 block"
+          >
             <Button variant="secondary" fullWidth>
               Go to login
             </Button>
           </Link>
+          {returnTo ? (
+            <button
+              type="button"
+              className="mt-3 w-full text-sm font-medium text-lagoon-700 underline-offset-2 hover:underline"
+              onClick={() => navigate(returnTo, { state: { registered: true } })}
+            >
+              Return to quiz details
+            </button>
+          ) : null}
         </Card>
       </PageShell>
     );

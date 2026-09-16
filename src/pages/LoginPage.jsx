@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getErrorMessage } from '../utils/errors';
+import { consumeQuizReturnPath } from '../utils/quizReturnPath';
 import { PageShell } from '../components/layout/PageShell';
 import { Alert } from '../components/ui/Alert';
 import { Button } from '../components/ui/Button';
@@ -14,7 +15,9 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTo = location.state?.from || '/dashboard';
+  const [redirectTo] = useState(
+    () => location.state?.from || consumeQuizReturnPath() || '/dashboard'
+  );
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [fieldErrors, setFieldErrors] = useState({});

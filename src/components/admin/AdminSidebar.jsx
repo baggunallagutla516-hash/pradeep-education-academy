@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquare,
+  Images,
   Newspaper,
   FileStack,
   GraduationCap,
@@ -37,6 +38,7 @@ const links = [
   { to: '/admin/assessments', label: 'ONLINE ASSESSMENTS', icon: ClipboardCheck },
   { to: '/admin/dpps', label: 'D.P.P.', icon: ClipboardList },
   { to: '/admin/quizzes', label: 'QUIZ', icon: HelpCircle },
+  { to: '/admin/carousel', label: 'CAROUSEL', icon: Images },
   { to: '/admin/slip-tests', label: 'SLIP TESTS', icon: FileText },
   { to: '/admin/news', label: 'NEWS', icon: Newspaper },
 ];

@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { VisitorCounter } from '../components/VisitorCounter';
 import { Card } from '../components/ui/Card';
+import { FeaturedQuizzesCarousel, ToppersCarousel, FeaturedPostsCarousel } from '../components/home/HomeCarousels';
 
 const whatYouGet = [
   {
@@ -127,6 +128,9 @@ export function HomePage() {
   const { isAuthenticated, student } = useAuth();
   const { isAuthenticated: isEducator } = useEducatorAuth();
   const [news, setNews] = useState([]);
+  const [quizSlides, setQuizSlides] = useState([]);
+  const [topperSlides, setTopperSlides] = useState([]);
+  const [postSlides, setPostSlides] = useState([]);
 
   function featureLink(item) {
     if (isAuthenticated) return item.to;
@@ -141,16 +145,24 @@ export function HomePage() {
 
   useEffect(() => {
     let active = true;
-    contentApi
-      .news()
-      .then((newsRes) => {
-        if (!active) return;
-        setNews(newsRes.data.data.news || []);
-      })
-      .catch(() => {
-        if (!active) return;
+    Promise.allSettled([contentApi.news(), contentApi.carousel()]).then(([newsRes, carouselRes]) => {
+      if (!active) return;
+      if (newsRes.status === 'fulfilled') {
+        setNews(newsRes.value.data.data.news || []);
+      } else {
         setNews([]);
-      });
+      }
+      if (carouselRes.status === 'fulfilled') {
+        const payload = carouselRes.value.data.data || {};
+        setQuizSlides(payload.quizzes || []);
+        setTopperSlides(payload.toppers || []);
+        setPostSlides(payload.featuredPosts || []);
+      } else {
+        setQuizSlides([]);
+        setTopperSlides([]);
+        setPostSlides([]);
+      }
+    });
     return () => {
       active = false;
     };
@@ -272,6 +284,12 @@ export function HomePage() {
       </section>
 
       <NewsUpdates items={news} />
+
+      <FeaturedQuizzesCarousel slides={quizSlides} />
+
+      <ToppersCarousel slides={topperSlides} />
+
+      <FeaturedPostsCarousel slides={postSlides} />
 
       <section className="border-b border-ink-900/8 bg-sand-50">
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">

@@ -264,6 +264,7 @@ export function ResultCertificateModal({
   }
 
   function handlePrint() {
+    // Only allowed print path; CSS blanks all prints without this class.
     setError('');
     document.body.classList.add('printing-result-certificate');
     const cleanup = () => {

@@ -1,10 +1,12 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LoadingState } from './ui/LoadingState';
 import { PageShell } from './layout/PageShell';
 
 export function GuestRoute({ children }) {
   const { status, isAuthenticated } = useAuth();
+  const location = useLocation();
+  const redirectTo = location.state?.from || '/dashboard';
 
   if (status === 'loading') {
     return (
@@ -15,7 +17,7 @@ export function GuestRoute({ children }) {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   return children;
