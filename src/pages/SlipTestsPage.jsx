@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, Clock, FileText } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock, Download, FileText } from 'lucide-react';
 import { slipTestApi } from '../api/adminApi';
 import { useAuth } from '../context/AuthContext';
+import { mediaUrl } from '../utils/media';
 import { getErrorMessage } from '../utils/errors';
 import { classLabel } from '../utils/classLabel';
+import { formatBytes } from '../utils/formatBytes';
 import { formatDateTime, formatMarks } from '../utils/quizFormat';
 import { PageShell } from '../components/layout/PageShell';
 import { Card } from '../components/ui/Card';
@@ -20,6 +22,39 @@ function scoreTone(percentage) {
   if (percentage >= 75) return 'text-lagoon-700';
   if (percentage >= 40) return 'text-ember-600';
   return 'text-red-600';
+}
+
+function FileDownloadAction({ item }) {
+  if (item.isNotYetOpen) {
+    return (
+      <p className="mt-3 text-sm text-ink-900/55">
+        Download opens on {formatDateTime(item.startDate)}.
+      </p>
+    );
+  }
+  if (item.isClosed) {
+    return (
+      <p className="mt-3 text-sm text-ink-900/55">
+        Download closed on {formatDateTime(item.endDate)}.
+      </p>
+    );
+  }
+  if (!item.fileUrl) return null;
+
+  return (
+    <a
+      href={mediaUrl(item.fileUrl)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-auto inline-flex pt-4"
+      download={item.fileName || undefined}
+    >
+      <Button size="sm">
+        <Download className="h-4 w-4" />
+        Download
+      </Button>
+    </a>
+  );
 }
 
 export function SlipTestsPage({
@@ -71,8 +106,8 @@ export function SlipTestsPage({
       title="Slip tests"
       description={
         enableClassFilter
-          ? 'Short chapter and topic tests for every class. Attempt them like a student; scores appear after the academy releases results.'
-          : 'Short chapter and topic tests for your class. Submit online; scores appear after the academy releases results.'
+          ? 'Short chapter tests — attempt online exams or download uploaded papers.'
+          : 'Short chapter and topic tests for your class. Attempt online or download uploaded papers.'
       }
       actions={<Badge>{badge}</Badge>}
     >
@@ -110,8 +145,9 @@ export function SlipTestsPage({
       {status === 'ready' && slipTests.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {slipTests.map((item) => {
-            const done = item.attemptStatus === 'submitted';
-            const inProgress = item.attemptStatus === 'in_progress';
+            const isFile = item.contentMode === 'file';
+            const done = !isFile && item.attemptStatus === 'submitted';
+            const inProgress = !isFile && item.attemptStatus === 'in_progress';
             const notYetOpen = item.isNotYetOpen && !done && !inProgress;
             const closed = item.isClosed && !done && !inProgress;
             const classBadge =
@@ -119,10 +155,53 @@ export function SlipTestsPage({
                 ? classLabel(student)
                 : item.studentClassName;
 
+            if (isFile) {
+              return (
+                <Card key={item.id} className="flex h-full flex-col overflow-hidden p-0">
+                  {item.coverImageUrl ? (
+                    <div className="relative aspect-[16/10] bg-ink-900/5">
+                      <img
+                        src={mediaUrl(item.coverImageUrl)}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ) : null}
+                  <div className="flex flex-1 flex-col p-4">
+                    <div className="mb-2 flex flex-wrap gap-2">
+                      <Badge tone="ember">{item.chapter}</Badge>
+                      <Badge tone="lagoon">File</Badge>
+                      {classBadge ? <Badge tone="ink">{classBadge}</Badge> : null}
+                      {notYetOpen ? <Badge tone="ember">Not open yet</Badge> : null}
+                      {closed ? <Badge tone="ink">Closed</Badge> : null}
+                      {item.endDate && !closed && !notYetOpen ? (
+                        <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
+                      ) : null}
+                    </div>
+                    <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
+                    {item.subject || item.topic ? (
+                      <p className="mt-0.5 text-sm font-medium text-lagoon-700">
+                        {[item.subject, item.topic].filter(Boolean).join(' · ')}
+                      </p>
+                    ) : null}
+                    {item.description ? (
+                      <ExpandableText text={item.description} lines={2} />
+                    ) : null}
+                    <p className="mt-3 text-xs text-ink-900/50">
+                      {item.fileName || 'File'}
+                      {item.fileSize ? ` · ${formatBytes(item.fileSize)}` : ''}
+                    </p>
+                    <FileDownloadAction item={item} />
+                  </div>
+                </Card>
+              );
+            }
+
             return (
               <Card key={item.id} className="flex h-full flex-col">
                 <div className="mb-2 flex flex-wrap gap-2">
                   <Badge tone="ember">{item.chapter}</Badge>
+                  <Badge tone="lagoon">Online</Badge>
                   {classBadge ? <Badge tone="ink">{classBadge}</Badge> : null}
                   {item.startDate ? (
                     <Badge tone="ember">{formatDateTime(item.startDate)}</Badge>

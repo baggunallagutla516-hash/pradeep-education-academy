@@ -13,6 +13,8 @@ import { Select } from '../../components/ui/Select';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { Alert } from '../../components/ui/Alert';
+import { ProfilePhotoField } from '../../components/ui/ProfilePhotoField';
+import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 const emptyParentForm = {
   fullName: '',
@@ -242,6 +244,8 @@ export function AdminStudentEditPage() {
   const [saving, setSaving] = useState(false);
   const [linkBusyId, setLinkBusyId] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoSubmitting, setPhotoSubmitting] = useState(false);
 
   async function load() {
     setStatus('loading');
@@ -327,6 +331,30 @@ export function AdminStudentEditPage() {
     }
   }
 
+  async function handlePhotoSave(event) {
+    event.preventDefault();
+    setActionError('');
+    setActionSuccess('');
+    if (!photoFile) {
+      setActionError('Please choose a photo to upload.');
+      return;
+    }
+
+    setPhotoSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('profilePhoto', photoFile);
+      const { data } = await adminApi.uploadStudentPhoto(id, formData);
+      setStudent(data.data.student);
+      setPhotoFile(null);
+      setActionSuccess(data.message || 'Profile photo updated.');
+    } catch (err) {
+      setActionError(getErrorMessage(err, 'Could not upload photo.'));
+    } finally {
+      setPhotoSubmitting(false);
+    }
+  }
+
   async function handleSaveParent(payload) {
     const { data } = await adminApi.addParentToStudent(student.id, payload);
     setActionSuccess(data.message || 'Parent saved and linked.');
@@ -385,14 +413,34 @@ export function AdminStudentEditPage() {
           ) : null}
 
           <Card>
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              <Badge tone={student.isActive ? 'lagoon' : 'ink'}>
-                {student.isActive ? 'Active' : 'Inactive'}
-              </Badge>
-              {student.registrationId ? (
-                <Badge tone="ink">ID: {student.registrationId}</Badge>
-              ) : null}
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <ProfileAvatar
+                src={student.profilePhotoUrl}
+                name={student.fullName}
+                size="lg"
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge tone={student.isActive ? 'lagoon' : 'ink'}>
+                  {student.isActive ? 'Active' : 'Inactive'}
+                </Badge>
+                {student.registrationId ? (
+                  <Badge tone="ink">ID: {student.registrationId}</Badge>
+                ) : null}
+              </div>
             </div>
+
+            <form className="mb-6 space-y-4 border-b border-ink-900/8 pb-6" onSubmit={handlePhotoSave}>
+              <ProfilePhotoField
+                value={photoFile}
+                onChange={setPhotoFile}
+                existingUrl={student.profilePhotoUrl}
+                name={student.fullName}
+                label="Upload recent photo / Take photo"
+              />
+              <Button type="submit" loading={photoSubmitting} disabled={!photoFile}>
+                Save photo
+              </Button>
+            </form>
 
             {saveError ? (
               <Alert type="error" title="Save failed" onClose={() => setSaveError('')} className="mb-4">

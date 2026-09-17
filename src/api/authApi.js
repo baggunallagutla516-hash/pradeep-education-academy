@@ -1,8 +1,10 @@
 import api from './client';
 
 export const authApi = {
-  register(payload) {
-    return api.post('/auth/register', payload);
+  register(formData) {
+    return api.post('/auth/register', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
   },
   login(payload) {
     return api.post('/auth/login', payload);
@@ -15,6 +17,11 @@ export const authApi = {
   },
   updateMe(payload) {
     return api.patch('/auth/me', payload);
+  },
+  uploadPhoto(formData) {
+    return api.post('/auth/me/photo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
   },
   changePassword(payload) {
     return api.post('/auth/change-password', payload);

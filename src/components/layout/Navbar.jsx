@@ -9,6 +9,7 @@ import { BrandMark } from './BrandMark';
 import { scrollPageToTop } from './ScrollToTop';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
+import { ProfileAvatar } from '../ui/ProfileAvatar';
 
 const publicLinks = [
   { to: '/', label: 'Home' },
@@ -79,9 +80,18 @@ export function Navbar() {
             <>
               <Link
                 to="/account"
-                className="inline-flex max-w-[180px] items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-ink-800 shadow-soft"
+                className="inline-flex max-w-[200px] items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-ink-800 shadow-soft"
               >
-                <UserRound className="h-4 w-4 text-lagoon-600" />
+                {student?.profilePhotoUrl ? (
+                  <ProfileAvatar
+                    src={student.profilePhotoUrl}
+                    name={student.fullName}
+                    size="sm"
+                    className="h-7 w-7 ring-1 ring-ink-900/10"
+                  />
+                ) : (
+                  <UserRound className="h-4 w-4 text-lagoon-600" />
+                )}
                 <span className="truncate">{student?.fullName?.split(' ')[0]}</span>
               </Link>
               <Button variant="secondary" size="sm" onClick={handleLogout} loading={loggingOut}>

@@ -57,6 +57,15 @@ export function AuthProvider({ children }) {
     return data;
   }, []);
 
+  const uploadPhoto = useCallback(async (file) => {
+    const formData = new FormData();
+    formData.append('profilePhoto', file);
+    const { data } = await authApi.uploadPhoto(formData);
+    setStudent(data.data.student);
+    setError(null);
+    return data;
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await authApi.logout();
@@ -87,9 +96,10 @@ export function AuthProvider({ children }) {
       register,
       logout,
       updateProfile,
+      uploadPhoto,
       refresh: bootstrap,
     }),
-    [student, status, error, login, register, logout, updateProfile, bootstrap]
+    [student, status, error, login, register, logout, updateProfile, uploadPhoto, bootstrap]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

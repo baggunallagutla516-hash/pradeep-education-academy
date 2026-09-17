@@ -21,6 +21,7 @@ import { Button } from '../../components/ui/Button';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 function Fact({ icon: Icon, label, value }) {
   const display = value && String(value).trim() ? value : null;
@@ -146,7 +147,10 @@ export function ParentChildDetailPage() {
       title={child?.fullName || 'Student details'}
       description="Profile and assessment results for a student linked to your parent account."
       actions={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          {child ? (
+            <ProfileAvatar src={child.profilePhotoUrl} name={child.fullName} size="lg" />
+          ) : null}
           {child ? <Badge>{classLabel(child)}</Badge> : null}
           <Link to="/parent/children">
             <Button variant="secondary" size="sm">
@@ -164,13 +168,16 @@ export function ParentChildDetailPage() {
         <div className="space-y-6">
           <Card>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-900/45">
-                  Student profile
-                </p>
-                <p className="mt-0.5 text-sm text-ink-900/60">
-                  Contact and class details for {child.fullName.split(' ')[0]}.
-                </p>
+              <div className="flex items-start gap-3">
+                <ProfileAvatar src={child.profilePhotoUrl} name={child.fullName} size="md" />
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-900/45">
+                    Student profile
+                  </p>
+                  <p className="mt-0.5 text-sm text-ink-900/60">
+                    Contact and class details for {child.fullName.split(' ')[0]}.
+                  </p>
+                </div>
               </div>
               <Badge>{classLabel(child)}</Badge>
             </div>

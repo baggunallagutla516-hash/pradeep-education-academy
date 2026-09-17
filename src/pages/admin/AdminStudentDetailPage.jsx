@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
+import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 function Row({ label, value }) {
   return (
@@ -87,11 +88,18 @@ export function AdminStudentDetailPage() {
       {status === 'ready' && student ? (
         <>
           <Card>
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              <Badge tone={student.isActive ? 'lagoon' : 'ink'}>
-                {student.isActive ? 'Active' : 'Inactive'}
-              </Badge>
-              <Badge>{classLabel(student)}</Badge>
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <ProfileAvatar
+                src={student.profilePhotoUrl}
+                name={student.fullName}
+                size="lg"
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge tone={student.isActive ? 'lagoon' : 'ink'}>
+                  {student.isActive ? 'Active' : 'Inactive'}
+                </Badge>
+                <Badge>{classLabel(student)}</Badge>
+              </div>
             </div>
             <dl>
               <Row label="Full name" value={student.fullName} />

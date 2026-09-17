@@ -1,6 +1,7 @@
 import { Eye, EyeOff, RotateCcw, Trash2 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { ProfileAvatar } from '../ui/ProfileAvatar';
 import { formatDuration, formatMarks } from '../../utils/quizFormat';
 import { cn } from '../../utils/cn';
 
@@ -90,17 +91,26 @@ export function ResultsTable({
                   {row.rank}
                 </td>
                 <td className="px-4 py-3">
-                  <p className="font-semibold text-ink-900">{row.studentName}</p>
-                  <p className="text-xs text-ink-900/50">
-                    {row.roleLabel ? `${row.roleLabel} · ` : ''}
-                    {row.rollNumber ? `Roll ${row.rollNumber} · ` : ''}
-                    {row.studentEmail}
-                  </p>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {row.autoSubmitted ? (
-                      <Badge tone="ember">Auto-submitted</Badge>
-                    ) : null}
-                    {hidden ? <Badge tone="ink">Hidden</Badge> : null}
+                  <div className="flex items-start gap-3">
+                    <ProfileAvatar
+                      src={row.profilePhotoUrl}
+                      name={row.studentName}
+                      size="sm"
+                    />
+                    <div className="min-w-0">
+                      <p className="font-semibold text-ink-900">{row.studentName}</p>
+                      <p className="text-xs text-ink-900/50">
+                        {row.roleLabel ? `${row.roleLabel} · ` : ''}
+                        {row.rollNumber ? `Roll ${row.rollNumber} · ` : ''}
+                        {row.studentEmail}
+                      </p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {row.autoSubmitted ? (
+                          <Badge tone="ember">Auto-submitted</Badge>
+                        ) : null}
+                        {hidden ? <Badge tone="ink">Hidden</Badge> : null}
+                      </div>
+                    </div>
                   </div>
                 </td>
                 {showActions ? (

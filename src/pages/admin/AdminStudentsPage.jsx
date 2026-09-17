@@ -19,6 +19,7 @@ import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Alert } from '../../components/ui/Alert';
+import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 export function AdminStudentsPage() {
   const [students, setStudents] = useState([]);
@@ -197,18 +198,25 @@ export function AdminStudentsPage() {
               key={student.id}
               className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
             >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-display text-lg font-bold text-ink-900">{student.fullName}</p>
-                  <Badge tone={student.isActive ? 'lagoon' : 'ink'}>
-                    {student.isActive ? 'Active' : 'Inactive'}
-                  </Badge>
-                  <Badge>{classLabel(student)}</Badge>
+              <div className="flex min-w-0 items-start gap-3">
+                <ProfileAvatar
+                  src={student.profilePhotoUrl}
+                  name={student.fullName}
+                  size="md"
+                />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-display text-lg font-bold text-ink-900">{student.fullName}</p>
+                    <Badge tone={student.isActive ? 'lagoon' : 'ink'}>
+                      {student.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                    <Badge>{classLabel(student)}</Badge>
+                  </div>
+                  <p className="mt-1 truncate text-sm text-ink-900/60">
+                    {student.registrationId ? `${student.registrationId} · ` : ''}
+                    {student.email} · {student.phone}
+                  </p>
                 </div>
-                <p className="mt-1 truncate text-sm text-ink-900/60">
-                  {student.registrationId ? `${student.registrationId} · ` : ''}
-                  {student.email} · {student.phone}
-                </p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link to={`/admin/students/${student.id}`}>

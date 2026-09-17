@@ -470,7 +470,7 @@ function QuestionCard({ question, index, total, onChange, onRemove, onMove, allo
                 ? 'e.g. Find A^{-1} for the matrix below'
                 : 'Type the question here'
           }
-          hint="For formulas use LaTeX, e.g. A^{-1}=\\frac{1}{|A|}\\begin{bmatrix}d & -b \\\\ -c & a\\end{bmatrix}"
+          hint="Chemistry like H2O / O3 auto-subscripts. Maths/physics: use LaTeX, e.g. $A^{-1}=\\frac{1}{|A|}$ or H_2O"
           className="pr-12"
         />
         <div className="absolute right-2 top-8">

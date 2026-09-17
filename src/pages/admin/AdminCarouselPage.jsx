@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Images, Pencil, Plus, Trash2 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { getErrorMessage } from '../../utils/errors';
+import { toApiDateTime, toDateTimeLocalValue } from '../../utils/quizFormat';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -47,14 +48,6 @@ const emptyForm = {
   showRank: false,
   linkPath: '',
 };
-
-function toDatetimeLocal(value) {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
 
 function PrivacyToggle({ label, name, checked, onChange }) {
   return (
@@ -136,8 +129,8 @@ export function AdminCarouselPage() {
       ctaText: item.ctaText || '',
       displayOrder: String(item.displayOrder ?? 0),
       isEnabled: Boolean(item.isEnabled),
-      publishAt: toDatetimeLocal(item.publishAt),
-      unpublishAt: toDatetimeLocal(item.unpublishAt),
+      publishAt: item.publishAt ? toDateTimeLocalValue(item.publishAt) : '',
+      unpublishAt: item.unpublishAt ? toDateTimeLocalValue(item.unpublishAt) : '',
       quizId: item.quizId || '',
       difficulty: item.difficulty || '',
       category: item.category || '',
@@ -167,6 +160,8 @@ export function AdminCarouselPage() {
     Object.entries(form).forEach(([key, value]) => {
       if (typeof value === 'boolean') {
         fd.append(key, value ? 'true' : 'false');
+      } else if (key === 'publishAt' || key === 'unpublishAt') {
+        fd.append(key, value ? toApiDateTime(value) : '');
       } else {
         fd.append(key, value ?? '');
       }

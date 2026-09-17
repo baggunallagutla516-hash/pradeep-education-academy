@@ -14,6 +14,7 @@ import { PasswordInput } from '../components/ui/PasswordInput';
 import { Select } from '../components/ui/Select';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
+import { ProfilePhotoField } from '../components/ui/ProfilePhotoField';
 
 const initialForm = {
   fullName: '',
@@ -33,6 +34,7 @@ export function RegisterPage() {
   const returnTo = location.state?.from || '';
 
   const [form, setForm] = useState(initialForm);
+  const [profilePhoto, setProfilePhoto] = useState(null);
   const [classes, setClasses] = useState([]);
   const [classesStatus, setClassesStatus] = useState('loading');
   const [classesError, setClassesError] = useState('');
@@ -91,6 +93,9 @@ export function RegisterPage() {
     if (!form.rollNumber.trim()) {
       next.rollNumber = 'Roll number is required.';
     }
+    if (!profilePhoto) {
+      next.profilePhoto = 'Please upload a recent photo or take a photo.';
+    }
     if (!form.password || form.password.length < 8) {
       next.password = 'Password must be at least 8 characters.';
     }
@@ -110,17 +115,20 @@ export function RegisterPage() {
 
     setSubmitting(true);
     try {
-      const data = await register({
-        fullName: form.fullName.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        studentClass: form.studentClass,
-        schoolName: form.schoolName.trim(),
-        rollNumber: form.rollNumber.trim(),
-        password: form.password,
-        confirmPassword: form.confirmPassword,
-      });
+      const formData = new FormData();
+      formData.append('fullName', form.fullName.trim());
+      formData.append('email', form.email.trim());
+      formData.append('phone', form.phone.trim());
+      formData.append('studentClass', form.studentClass);
+      formData.append('schoolName', form.schoolName.trim());
+      formData.append('rollNumber', form.rollNumber.trim());
+      formData.append('password', form.password);
+      formData.append('confirmPassword', form.confirmPassword);
+      formData.append('profilePhoto', profilePhoto);
+
+      const data = await register(formData);
       setForm(initialForm);
+      setProfilePhoto(null);
       setSuccess(
         data?.message ||
           'Registration successful. Your account is not active yet. Please contact the admin to activate it.'
@@ -300,6 +308,17 @@ export function RegisterPage() {
                 placeholder="School roll no."
               />
             </div>
+
+            <ProfilePhotoField
+              value={profilePhoto}
+              onChange={(file) => {
+                setProfilePhoto(file);
+                setFieldErrors((prev) => ({ ...prev, profilePhoto: '' }));
+              }}
+              name={form.fullName}
+              required
+              error={fieldErrors.profilePhoto}
+            />
 
             <div className="grid gap-4 sm:grid-cols-2">
               <PasswordInput

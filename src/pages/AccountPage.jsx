@@ -14,6 +14,8 @@ import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { LoadingState } from '../components/ui/LoadingState';
 import { PasswordInput } from '../components/ui/PasswordInput';
+import { ProfileAvatar } from '../components/ui/ProfileAvatar';
+import { ProfilePhotoField } from '../components/ui/ProfilePhotoField';
 
 function DetailRow({ label, value }) {
   const display = value && String(value).trim() ? value : null;
@@ -47,10 +49,15 @@ const passwordInitial = {
 };
 
 export function AccountPage() {
-  const { student } = useAuth();
+  const { student, uploadPhoto } = useAuth();
   const [parents, setParents] = useState([]);
   const [parentsStatus, setParentsStatus] = useState('loading');
   const [parentsError, setParentsError] = useState('');
+
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoError, setPhotoError] = useState('');
+  const [photoSuccess, setPhotoSuccess] = useState('');
+  const [photoSubmitting, setPhotoSubmitting] = useState(false);
 
   const [passwordForm, setPasswordForm] = useState(passwordInitial);
   const [passwordErrors, setPasswordErrors] = useState({});
@@ -126,6 +133,27 @@ export function AccountPage() {
     }
   }
 
+  async function handlePhotoSubmit(event) {
+    event.preventDefault();
+    setPhotoError('');
+    setPhotoSuccess('');
+    if (!photoFile) {
+      setPhotoError('Please choose a photo to upload.');
+      return;
+    }
+
+    setPhotoSubmitting(true);
+    try {
+      const data = await uploadPhoto(photoFile);
+      setPhotoFile(null);
+      setPhotoSuccess(data.message || 'Profile photo updated successfully.');
+    } catch (err) {
+      setPhotoError(getErrorMessage(err, 'Could not upload photo. Please try again.'));
+    } finally {
+      setPhotoSubmitting(false);
+    }
+  }
+
   if (!student) {
     return (
       <PageShell embedded title="My account" description="Your student profile details.">
@@ -144,7 +172,16 @@ export function AccountPage() {
       eyebrow="👤 Account"
       title="My account"
       description="These details were saved during registration and will appear on results and certificates later."
-      actions={<Badge tone="lagoon">{classLabel(student)}</Badge>}
+      actions={
+        <div className="flex items-center gap-3">
+          <ProfileAvatar
+            src={student.profilePhotoUrl}
+            name={student.fullName}
+            size="lg"
+          />
+          <Badge tone="lagoon">{classLabel(student)}</Badge>
+        </div>
+      }
     >
       <Alert type="info" title="Need a change?" className="mb-4">
         Profile details cannot be edited here. Contact the academy admin to update your information
@@ -168,14 +205,16 @@ export function AccountPage() {
         <Link to="/contact" className="font-semibold text-lagoon-700 underline underline-offset-2">
           contact form
         </Link>
-        . You can change your password below.
+        . You can upload or update your profile photo and change your password below.
       </Alert>
 
       <Card>
         <div className="mb-4 flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lagoon-100 text-2xl">
-            🎓
-          </span>
+          <ProfileAvatar
+            src={student.profilePhotoUrl}
+            name={student.fullName}
+            size="md"
+          />
           <div className="min-w-0">
             <h2 className="font-display text-xl font-bold text-ink-900">{student.fullName}</h2>
             <p className="truncate text-sm text-ink-900/55">{student.email}</p>
@@ -193,6 +232,38 @@ export function AccountPage() {
           <DetailRow label="Member since" value={formatDate(student.createdAt)} />
           <DetailRow label="Last login" value={formatDate(student.lastLoginAt)} />
         </dl>
+      </Card>
+
+      <Card className="mt-6">
+        <h2 className="font-display text-lg font-bold text-ink-900">Profile photo</h2>
+        <p className="mt-1 text-sm text-ink-900/55">
+          Upload a recent photo. It appears on your account, student lists, and quiz certificates.
+        </p>
+
+        {photoError ? (
+          <Alert type="error" title="Upload failed" onClose={() => setPhotoError('')} className="mt-4">
+            {photoError}
+          </Alert>
+        ) : null}
+
+        {photoSuccess ? (
+          <Alert type="success" title="Photo updated" onClose={() => setPhotoSuccess('')} className="mt-4">
+            {photoSuccess}
+          </Alert>
+        ) : null}
+
+        <form className="mt-4 space-y-4" onSubmit={handlePhotoSubmit}>
+          <ProfilePhotoField
+            value={photoFile}
+            onChange={setPhotoFile}
+            existingUrl={student.profilePhotoUrl}
+            name={student.fullName}
+            label="Upload recent photo / Take photo"
+          />
+          <Button type="submit" loading={photoSubmitting} disabled={!photoFile}>
+            Save photo
+          </Button>
+        </form>
       </Card>
 
       <Card className="mt-6">

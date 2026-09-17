@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BarChart3, FileText, Pencil, Plus, Trash2 } from 'lucide-react';
+import { BarChart3, Download, FileText, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useStaffContent } from '../../context/StaffContentContext';
+import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
 import {
   classOptionsFromItems,
   itemMatchesClassFilter,
 } from '../../utils/contentClasses';
+import { formatBytes } from '../../utils/formatBytes';
 import { formatDateTime, formatMarks } from '../../utils/quizFormat';
 import {
   confirmEditPublishedMessage,
@@ -62,7 +64,8 @@ export function AdminSlipTestsPage() {
   );
 
   function handleEdit(item) {
-    if (item.isPublished || item.attemptCount > 0) {
+    const isFile = item.contentMode === 'file';
+    if (!isFile && (item.isPublished || item.attemptCount > 0)) {
       if (!window.confirm(confirmEditPublishedMessage(item.title, item.attemptCount || 0))) {
         return;
       }
@@ -71,7 +74,8 @@ export function AdminSlipTestsPage() {
   }
 
   async function handleTogglePublish(item) {
-    if (item.isPublished) {
+    const isFile = item.contentMode === 'file';
+    if (!isFile && item.isPublished) {
       if (!window.confirm(confirmUnpublishMessage(item.title, item.attemptCount || 0))) {
         return;
       }
@@ -80,21 +84,30 @@ export function AdminSlipTestsPage() {
     setBusyId(item.id);
     setActionError('');
     try {
-      const payload = item.isPublished
-        ? { isPublished: false, confirmWipeAttempts: true }
-        : { isPublished: true };
-      await api.updateSlipTest(item.id, payload);
-      setSlipTests((prev) =>
-        prev.map((s) =>
-          s.id === item.id
-            ? {
-                ...s,
-                isPublished: !item.isPublished,
-                ...(item.isPublished ? { attemptCount: 0, resultsReleased: false } : {}),
-              }
-            : s
-        )
-      );
+      if (isFile) {
+        const formData = new FormData();
+        formData.append('isPublished', item.isPublished ? 'false' : 'true');
+        const { data } = await api.updateSlipTest(item.id, formData);
+        setSlipTests((prev) =>
+          prev.map((s) => (s.id === item.id ? { ...s, ...data.data.slipTest } : s))
+        );
+      } else {
+        const payload = item.isPublished
+          ? { isPublished: false, confirmWipeAttempts: true }
+          : { isPublished: true };
+        await api.updateSlipTest(item.id, payload);
+        setSlipTests((prev) =>
+          prev.map((s) =>
+            s.id === item.id
+              ? {
+                  ...s,
+                  isPublished: !item.isPublished,
+                  ...(item.isPublished ? { attemptCount: 0, resultsReleased: false } : {}),
+                }
+              : s
+          )
+        );
+      }
     } catch (err) {
       setActionError(getErrorMessage(err, 'Could not update publish status.'));
     } finally {
@@ -103,9 +116,11 @@ export function AdminSlipTestsPage() {
   }
 
   async function handleDelete(item) {
-    const warning = item.attemptCount
-      ? `Delete "${item.title}"? ${item.attemptCount} student result(s) will be deleted too.`
-      : `Delete "${item.title}"?`;
+    const isFile = item.contentMode === 'file';
+    const warning =
+      !isFile && item.attemptCount
+        ? `Delete "${item.title}"? ${item.attemptCount} student result(s) will be deleted too.`
+        : `Delete "${item.title}"?`;
     if (!window.confirm(warning)) return;
 
     setBusyId(item.id);
@@ -125,7 +140,7 @@ export function AdminSlipTestsPage() {
       embedded
       eyebrow="Admin"
       title="Slip tests"
-      description="Short chapter and topic based tests. Build the questions here and students of that class attempt them online."
+      description="Create an online exam with questions, or upload a file for students to download — like worksheets."
       actions={
         <div className="flex flex-wrap items-end gap-3">
           {classes.length > 1 ? (
@@ -165,7 +180,7 @@ export function AdminSlipTestsPage() {
       {status === 'ready' && slipTests.length === 0 ? (
         <EmptyState
           title="No slip tests yet"
-          description="Create a chapter or topic based test, add MCQ questions, and publish it to a class."
+          description="Create an online MCQ slip test, or upload a printable file for a chapter."
           icon={FileText}
           action={
             <Link to={`${basePath}/slip-tests/new`}>
@@ -184,67 +199,100 @@ export function AdminSlipTestsPage() {
 
       {status === 'ready' && visible.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          {visible.map((item) => (
-            <Card key={item.id}>
-              <div className="mb-2 flex flex-wrap gap-2">
-                <Badge tone={item.isPublished ? 'lagoon' : 'ink'}>
-                  {item.isPublished ? 'Published' : 'Draft'}
-                </Badge>
-                <Badge tone={item.resultsReleased ? 'lagoon' : 'ember'}>
-                  {item.resultsReleased ? 'Results out' : 'Results held'}
-                </Badge>
-                <Badge tone="ink">{classLabel(item)}</Badge>
-                <Badge tone="ember">{item.chapter}</Badge>
-                {item.endDate ? (
-                  <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
+          {visible.map((item) => {
+            const isFile = item.contentMode === 'file';
+            return (
+              <Card key={item.id} className={isFile ? 'overflow-hidden p-0' : undefined}>
+                {isFile && item.coverImageUrl ? (
+                  <div className="relative aspect-[16/10] bg-ink-900/5">
+                    <img
+                      src={mediaUrl(item.coverImageUrl)}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
                 ) : null}
-              </div>
+                <div className={isFile ? 'p-4' : undefined}>
+                  <div className="mb-2 flex flex-wrap gap-2">
+                    <Badge tone={item.isPublished ? 'lagoon' : 'ink'}>
+                      {item.isPublished ? 'Published' : 'Draft'}
+                    </Badge>
+                    <Badge tone={isFile ? 'ember' : 'lagoon'}>
+                      {isFile ? 'File upload' : 'Online exam'}
+                    </Badge>
+                    {!isFile ? (
+                      <Badge tone={item.resultsReleased ? 'lagoon' : 'ember'}>
+                        {item.resultsReleased ? 'Results out' : 'Results held'}
+                      </Badge>
+                    ) : null}
+                    <Badge tone="ink">{classLabel(item)}</Badge>
+                    <Badge tone="ember">{item.chapter}</Badge>
+                    {item.endDate ? (
+                      <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
+                    ) : null}
+                  </div>
 
-              <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
-              <p className="mt-0.5 text-sm font-medium text-lagoon-700">
-                {[item.subject, item.topic].filter(Boolean).join(' · ')}
-              </p>
-              {item.description ? (
-                <ExpandableText text={item.description} lines={2} />
-              ) : null}
+                  <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
+                  <p className="mt-0.5 text-sm font-medium text-lagoon-700">
+                    {[item.subject, item.topic].filter(Boolean).join(' · ')}
+                  </p>
+                  {item.description ? (
+                    <ExpandableText text={item.description} lines={2} />
+                  ) : null}
 
-              <p className="mt-3 text-xs text-ink-900/55">
-                {item.questionCount} question{item.questionCount === 1 ? '' : 's'} ·{' '}
-                {formatMarks(item.totalMarks)} marks · {item.durationMinutes} min ·{' '}
-                {item.attemptCount} attempt{item.attemptCount === 1 ? '' : 's'}
-              </p>
+                  <p className="mt-3 text-xs text-ink-900/55">
+                    {isFile
+                      ? `${item.fileName || 'File'}${item.fileSize ? ` · ${formatBytes(item.fileSize)}` : ''}`
+                      : `${item.questionCount} question${item.questionCount === 1 ? '' : 's'} · ${formatMarks(item.totalMarks)} marks · ${item.durationMinutes} min · ${item.attemptCount} attempt${item.attemptCount === 1 ? '' : 's'}`}
+                  </p>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Link to={`${basePath}/slip-tests/${item.id}/results`}>
-                  <Button variant="secondary" size="sm">
-                    <BarChart3 className="h-4 w-4" />
-                    Results
-                  </Button>
-                </Link>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  loading={busyId === item.id}
-                  onClick={() => handleTogglePublish(item)}
-                >
-                  {item.isPublished ? 'Unpublish' : 'Publish'}
-                </Button>
-                <Button variant="secondary" size="sm" onClick={() => handleEdit(item)}>
-                  <Pencil className="h-4 w-4" />
-                  Edit
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  loading={busyId === item.id}
-                  onClick={() => handleDelete(item)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete
-                </Button>
-              </div>
-            </Card>
-          ))}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {isFile && item.fileUrl ? (
+                      <a
+                        href={mediaUrl(item.fileUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={item.fileName || undefined}
+                      >
+                        <Button variant="secondary" size="sm">
+                          <Download className="h-4 w-4" />
+                          Download
+                        </Button>
+                      </a>
+                    ) : (
+                      <Link to={`${basePath}/slip-tests/${item.id}/results`}>
+                        <Button variant="secondary" size="sm">
+                          <BarChart3 className="h-4 w-4" />
+                          Results
+                        </Button>
+                      </Link>
+                    )}
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      loading={busyId === item.id}
+                      onClick={() => handleTogglePublish(item)}
+                    >
+                      {item.isPublished ? 'Unpublish' : 'Publish'}
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={() => handleEdit(item)}>
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      loading={busyId === item.id}
+                      onClick={() => handleDelete(item)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
         </div>
       ) : null}
     </PageShell>

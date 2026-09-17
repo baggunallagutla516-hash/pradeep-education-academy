@@ -11,6 +11,7 @@ import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
+import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 export function ParentChildrenPage() {
   const [children, setChildren] = useState([]);
@@ -59,14 +60,17 @@ export function ParentChildrenPage() {
               key={child.id}
               className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
             >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-display text-lg font-bold text-ink-900">{child.fullName}</h2>
-                  <Badge>{classLabel(child)}</Badge>
+              <div className="flex min-w-0 items-start gap-3">
+                <ProfileAvatar src={child.profilePhotoUrl} name={child.fullName} size="md" />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="font-display text-lg font-bold text-ink-900">{child.fullName}</h2>
+                    <Badge>{classLabel(child)}</Badge>
+                  </div>
+                  <p className="mt-1 text-sm text-ink-900/55">
+                    {child.email} · {child.phone}
+                  </p>
                 </div>
-                <p className="mt-1 text-sm text-ink-900/55">
-                  {child.email} · {child.phone}
-                </p>
               </div>
               <Link to={`/parent/children/${child.id}`}>
                 <Button variant="secondary" size="sm">

@@ -13,6 +13,7 @@ import { Alert } from '../../components/ui/Alert';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
+import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 export function ParentDashboardPage() {
   const { parent } = useParentAuth();
@@ -60,9 +61,12 @@ export function ParentDashboardPage() {
           {children.map((child) => (
             <Card key={child.id}>
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h2 className="font-display text-lg font-bold text-ink-900">{child.fullName}</h2>
-                  <p className="mt-1 truncate text-sm text-ink-900/55">{child.email}</p>
+                <div className="flex min-w-0 items-start gap-3">
+                  <ProfileAvatar src={child.profilePhotoUrl} name={child.fullName} size="md" />
+                  <div className="min-w-0">
+                    <h2 className="font-display text-lg font-bold text-ink-900">{child.fullName}</h2>
+                    <p className="mt-1 truncate text-sm text-ink-900/55">{child.email}</p>
+                  </div>
                 </div>
                 <Badge>{classLabel(child)}</Badge>
               </div>

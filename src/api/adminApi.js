@@ -31,6 +31,11 @@ export const adminApi = {
   updateStudent(id, payload) {
     return api.patch(`/admin/students/${id}`, payload);
   },
+  uploadStudentPhoto(id, formData) {
+    return api.post(`/admin/students/${id}/photo`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
   setStudentActive(id, isActive) {
     return api.patch(`/admin/students/${id}/active`, { isActive });
   },
@@ -280,9 +285,19 @@ export const adminApi = {
     return api.delete(`/admin/slip-tests/${id}/attempts/${attemptId}`);
   },
   createSlipTest(payload) {
+    if (payload instanceof FormData) {
+      return api.post('/admin/slip-tests', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    }
     return api.post('/admin/slip-tests', payload);
   },
   updateSlipTest(id, payload) {
+    if (payload instanceof FormData) {
+      return api.patch(`/admin/slip-tests/${id}`, payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    }
     return api.patch(`/admin/slip-tests/${id}`, payload);
   },
   deleteSlipTest(id) {

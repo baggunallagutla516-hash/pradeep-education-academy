@@ -3,6 +3,7 @@ import { Camera, Printer, X } from 'lucide-react';
 import { classLabel } from '../../utils/classLabel';
 import { formatDate, formatMarks } from '../../utils/quizFormat';
 import { Button } from '../ui/Button';
+import { ProfileAvatar } from '../ui/ProfileAvatar';
 
 const CERTIFICATE_LOGO = '/logo.png';
 
@@ -62,6 +63,17 @@ async function loadLogoImage() {
   });
 }
 
+async function loadProfileImage(url) {
+  if (!url) return null;
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
 /** Build a downloadable PNG of the certificate (no external libs). */
 async function downloadCertificatePng({ result, student, kindLabel, activityLabel, dateValue, fileBase }) {
   const percentage = Math.round(Number(result.percentage) || 0);
@@ -78,7 +90,29 @@ async function downloadCertificatePng({ result, student, kindLabel, activityLabe
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, width, height);
 
-  const logo = await loadLogoImage();
+  const [logo, profilePhoto] = await Promise.all([
+    loadLogoImage(),
+    loadProfileImage(student?.profilePhotoUrl),
+  ]);
+
+  if (profilePhoto) {
+    const size = 96;
+    const x = 56;
+    const y = 48;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(profilePhoto, x, y, size, size);
+    ctx.restore();
+    ctx.strokeStyle = '#d6e2ea';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
   if (logo) {
     const size = 112;
     ctx.save();
@@ -302,7 +336,17 @@ export function ResultCertificateModal({
 
         <div className="min-h-0 flex-1 overflow-y-auto rounded-2xl bg-[#e8f2f8] p-3 sm:p-5 print:bg-white print:p-0">
           <div className="result-certificate-print mx-auto w-full max-w-lg rounded-xl bg-white px-5 py-6 shadow-lift sm:px-7 sm:py-8">
-            <div className="flex flex-col items-center text-center">
+            <div className="relative flex flex-col items-center text-center">
+              {student?.profilePhotoUrl ? (
+                <div className="absolute left-0 top-0">
+                  <ProfileAvatar
+                    src={student.profilePhotoUrl}
+                    name={student?.fullName}
+                    size="lg"
+                    className="ring-ink-900/10"
+                  />
+                </div>
+              ) : null}
               <img
                 src={CERTIFICATE_LOGO}
                 alt=""
