@@ -27,6 +27,7 @@ import { GuestRoute } from './components/GuestRoute';
 import { HomePage } from './pages/HomePage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
@@ -130,6 +131,7 @@ export default function App() {
                   <Route index element={<HomePage />} />
                   <Route path="about" element={<AboutPage />} />
                   <Route path="contact" element={<ContactPage />} />
+                  <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
                   <Route path="toppers" element={<ToppersPage />} />
                   <Route path="quizzes/:id" element={<QuizIntroPage />} />
 

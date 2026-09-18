@@ -31,6 +31,11 @@ export function Footer() {
               </Link>
             </li>
             <li>
+              <Link className="hover:text-white" to="/privacy-policy" onClick={scrollPageToTop}>
+                Privacy Policy
+              </Link>
+            </li>
+            <li>
               <Link className="hover:text-white" to="/register" onClick={scrollPageToTop}>
                 Student registration
               </Link>
@@ -70,7 +75,13 @@ export function Footer() {
           <p>
             © {year} {SITE.name}. All rights reserved.
           </p>
-          <p>Built for students who want steady progress.</p>
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <Link className="hover:text-white" to="/privacy-policy" onClick={scrollPageToTop}>
+              Privacy Policy
+            </Link>
+            <span className="text-white/30">·</span>
+            <span>Built for students who want steady progress.</span>
+          </p>
         </div>
       </div>
     </footer>
