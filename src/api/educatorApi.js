@@ -60,6 +60,38 @@ export const educatorApi = {
       return api.get(`/educator/quizzes/${id}/result`);
     },
   },
+  classroom: {
+    get(id) {
+      return api.get(`/educator/quizzes/${id}/classroom`);
+    },
+    open(id, payload) {
+      return api.post(`/educator/quizzes/${id}/classroom`, payload || {});
+    },
+    updateGroups(id, payload) {
+      return api.patch(`/educator/quizzes/${id}/classroom/groups`, payload);
+    },
+    start(id) {
+      return api.post(`/educator/quizzes/${id}/classroom/start`);
+    },
+    answer(id, payload) {
+      return api.post(`/educator/quizzes/${id}/classroom/answer`, payload);
+    },
+    pass(id) {
+      return api.post(`/educator/quizzes/${id}/classroom/pass`);
+    },
+    next(id) {
+      return api.post(`/educator/quizzes/${id}/classroom/next`);
+    },
+    award(id, payload) {
+      return api.post(`/educator/quizzes/${id}/classroom/award`, payload);
+    },
+    finish(id) {
+      return api.post(`/educator/quizzes/${id}/classroom/finish`);
+    },
+    publishResults(id, payload) {
+      return api.post(`/educator/quizzes/${id}/classroom/results`, payload);
+    },
+  },
   assessments: {
     list(params) {
       return api.get('/educator/assessments', { params });

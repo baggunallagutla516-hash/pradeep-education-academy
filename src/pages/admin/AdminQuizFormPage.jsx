@@ -32,6 +32,8 @@ const emptyForm = {
   startDate: toDateTimeLocalValue(),
   endDate: toDateTimeLocalValue(undefined, { endOfDay: true }),
   durationMinutes: '15',
+  playMode: 'individual',
+  accessMode: 'both',
   negativeMarkPerWrong: '0',
   allowPartialCredit: 'true',
   showAnswersAfterSubmit: 'true',
@@ -83,6 +85,8 @@ export function AdminQuizFormPage() {
             description: item.description || '',
             studentClasses: selectedClassIdsFromItem(item),
             subject: item.subject || '',
+            playMode: item.playMode || 'individual',
+            accessMode: item.accessMode || 'both',
             startDate: toDateTimeLocalValue(item.startDate),
             endDate: toDateTimeLocalValue(item.endDate),
             durationMinutes: String(item.durationMinutes ?? '15'),
@@ -161,6 +165,8 @@ export function AdminQuizFormPage() {
       description: form.description.trim(),
       studentClasses: form.studentClasses,
       subject: form.subject.trim(),
+      playMode: form.playMode,
+      accessMode: form.playMode === 'individual' ? form.accessMode : 'both',
       startDate: toApiDateTime(form.startDate),
       endDate: toApiDateTime(form.endDate),
       durationMinutes: Number(form.durationMinutes),
@@ -209,7 +215,7 @@ export function AdminQuizFormPage() {
       embedded
       eyebrow="QUIZ"
       title={isEdit ? 'Edit quiz' : 'New quiz'}
-      description="Publish a quiz to one or more classes. Use single-select and multi-select questions only."
+      description="Choose individual play, or a live classroom where groups answer in turn."
       actions={
         <Link to={`${basePath}/quizzes`}>
           <Button variant="secondary" size="sm">
@@ -284,6 +290,50 @@ export function AdminQuizFormPage() {
             />
           </div>
 
+          <Select
+            label="How this quiz is played"
+            name="playMode"
+            value={form.playMode}
+            onChange={updateField}
+            hint={
+              form.playMode === 'classroom'
+                ? 'Groups play live. The master runs the board and can award marks later.'
+                : 'Each student answers alone and gets their own score.'
+            }
+          >
+            <option value="individual">Individual</option>
+            <option value="classroom">Classroom</option>
+          </Select>
+
+          {form.playMode === 'individual' ? (
+            <Select
+              label="How students start"
+              name="accessMode"
+              value={form.accessMode}
+              onChange={updateField}
+              hint={
+                form.accessMode === 'code'
+                  ? 'Students open this quiz by scanning the QR or entering the code.'
+                  : form.accessMode === 'list'
+                    ? 'Students start this quiz from their quiz list.'
+                    : 'Students can scan the QR, enter the code, or start it from their quiz list.'
+              }
+            >
+              <option value="code">QR or code</option>
+              <option value="list">Normal start</option>
+              <option value="both">QR or code, and normal start</option>
+            </Select>
+          ) : null}
+
+          {form.playMode === 'classroom' ? (
+            <div className="rounded-2xl border border-ember-400/40 bg-ember-400/10 px-4 py-3 text-sm text-ink-900/80">
+              Scores stay sorted from highest to lowest. A correct answer adds the marks on offer.
+              A wrong answer locks, shows the correct option, and takes off half of the question marks.
+              Pass carries half the marks to the next group and keeps the answer hidden. If two groups
+              miss, those marks go to the master, who can later give them to a group with a reason.
+            </div>
+          ) : null}
+
           <Input
             label="Duration (minutes)"
             name="durationMinutes"
@@ -294,7 +344,11 @@ export function AdminQuizFormPage() {
             onChange={updateField}
             required
             error={fieldErrors.durationMinutes}
-            hint="The quiz submits automatically when time runs out"
+            hint={
+              form.playMode === 'classroom'
+                ? 'Not used in the classroom. The master moves to the next question.'
+                : 'The quiz submits automatically when time runs out'
+            }
           />
 
           <Textarea
@@ -305,8 +359,20 @@ export function AdminQuizFormPage() {
             rows={3}
             hint="Optional notes shown to students before they start"
           />
+
+          <Select
+            label="Status"
+            name="isPublished"
+            value={form.isPublished}
+            onChange={updateField}
+            hint="Students only see published quizzes for their class"
+          >
+            <option value="true">Published</option>
+            <option value="false">Draft</option>
+          </Select>
         </Card>
 
+        {form.playMode === 'individual' ? (
         <Card className="space-y-4">
           <h3 className="font-display text-lg font-bold text-ink-900">Scoring rules</h3>
 
@@ -335,28 +401,17 @@ export function AdminQuizFormPage() {
             </Select>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Select
-              label="Answer key"
-              name="showAnswersAfterSubmit"
-              value={form.showAnswersAfterSubmit}
-              onChange={updateField}
-            >
-              <option value="true">Show answers after submitting</option>
-              <option value="false">Hide answers</option>
-            </Select>
-            <Select
-              label="Status"
-              name="isPublished"
-              value={form.isPublished}
-              onChange={updateField}
-              hint="Students only see published quizzes for their class"
-            >
-              <option value="true">Published</option>
-              <option value="false">Draft</option>
-            </Select>
-          </div>
+          <Select
+            label="Answer key"
+            name="showAnswersAfterSubmit"
+            value={form.showAnswersAfterSubmit}
+            onChange={updateField}
+          >
+            <option value="true">Show answers after submitting</option>
+            <option value="false">Hide answers</option>
+          </Select>
         </Card>
+        ) : null}
 
         <Card>
           <QuestionBuilder

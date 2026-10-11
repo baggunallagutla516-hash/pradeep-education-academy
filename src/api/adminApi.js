@@ -261,6 +261,38 @@ export const adminApi = {
   deleteQuiz(id) {
     return api.delete(`/admin/quizzes/${id}`);
   },
+  classroom: {
+    get(id) {
+      return api.get(`/admin/quizzes/${id}/classroom`);
+    },
+    open(id, payload) {
+      return api.post(`/admin/quizzes/${id}/classroom`, payload || {});
+    },
+    updateGroups(id, payload) {
+      return api.patch(`/admin/quizzes/${id}/classroom/groups`, payload);
+    },
+    start(id) {
+      return api.post(`/admin/quizzes/${id}/classroom/start`);
+    },
+    answer(id, payload) {
+      return api.post(`/admin/quizzes/${id}/classroom/answer`, payload);
+    },
+    pass(id) {
+      return api.post(`/admin/quizzes/${id}/classroom/pass`);
+    },
+    next(id) {
+      return api.post(`/admin/quizzes/${id}/classroom/next`);
+    },
+    award(id, payload) {
+      return api.post(`/admin/quizzes/${id}/classroom/award`, payload);
+    },
+    finish(id) {
+      return api.post(`/admin/quizzes/${id}/classroom/finish`);
+    },
+    publishResults(id, payload) {
+      return api.post(`/admin/quizzes/${id}/classroom/results`, payload);
+    },
+  },
   slipTests() {
     return api.get('/admin/slip-tests');
   },
@@ -361,6 +393,9 @@ export const contentApi = {
   quizIntro(id) {
     return api.get(`/content/quizzes/${id}`);
   },
+  classroomCode(code) {
+    return api.get(`/content/classroom-code/${encodeURIComponent(code)}`);
+  },
 };
 
 export const worksheetApi = {
@@ -444,6 +479,20 @@ export const quizApi = {
   },
   result(id) {
     return api.get(`/quizzes/${id}/result`);
+  },
+  classroom: {
+    get(id) {
+      return api.get(`/quizzes/${id}/classroom`);
+    },
+    join(id, payload) {
+      return api.post(`/quizzes/${id}/classroom/join`, payload);
+    },
+    answer(id, payload) {
+      return api.post(`/quizzes/${id}/classroom/answer`, payload);
+    },
+    pass(id) {
+      return api.post(`/quizzes/${id}/classroom/pass`);
+    },
   },
 };
 

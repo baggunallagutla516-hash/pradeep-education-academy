@@ -7,6 +7,7 @@ export function EducatorQuizzesPage() {
       api={educatorApi.quizzes}
       basePath="/educator/quizzes"
       badgeLabel="Educator"
+      audience="educator"
     />
   );
 }

@@ -53,7 +53,21 @@ export function AdminGuestRoute({ children }) {
 }
 
 export function AdminLayout() {
+  const location = useLocation();
+  const presenting = location.pathname.includes('/classroom');
   const [expanded, setExpanded] = useAdminSidebarExpanded();
+
+  if (presenting) {
+    return (
+      <StaffContentProvider basePath="/admin">
+        <div className="min-h-screen bg-sand-50">
+          <main className="min-h-screen w-full px-5 py-5 sm:px-8 sm:py-6">
+            <Outlet />
+          </main>
+        </div>
+      </StaffContentProvider>
+    );
+  }
 
   return (
     <StaffContentProvider basePath="/admin">

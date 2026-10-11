@@ -66,6 +66,7 @@ import { AdminDppsPage } from './pages/admin/AdminDppsPage';
 import { AdminDppFormPage } from './pages/admin/AdminDppFormPage';
 import { AdminDppResultsPage } from './pages/admin/AdminDppResultsPage';
 import { AdminQuizzesPage } from './pages/admin/AdminQuizzesPage';
+import { AdminClassroomPage } from './pages/admin/AdminClassroomPage';
 import { AdminQuizFormPage } from './pages/admin/AdminQuizFormPage';
 import { AdminQuizResultsPage } from './pages/admin/AdminQuizResultsPage';
 import { AdminSlipTestsPage } from './pages/admin/AdminSlipTestsPage';
@@ -83,6 +84,8 @@ import { DppsPage } from './pages/DppsPage';
 import { DppAttemptPage } from './pages/DppAttemptPage';
 import { DppResultPage } from './pages/DppResultPage';
 import { QuizzesPage } from './pages/QuizzesPage';
+import { ClassroomPlayPage } from './pages/ClassroomPlayPage';
+import { JoinQuizPage } from './pages/JoinQuizPage';
 import { QuizAttemptPage } from './pages/QuizAttemptPage';
 import { QuizResultPage } from './pages/QuizResultPage';
 import { SlipTestsPage } from './pages/SlipTestsPage';
@@ -102,6 +105,7 @@ import { EducatorUnitTestsPage } from './pages/educator/EducatorUnitTestsPage';
 import { EducatorCetsPage } from './pages/educator/EducatorCetsPage';
 import { EducatorAccountPage } from './pages/educator/EducatorAccountPage';
 import { EducatorQuizzesPage } from './pages/educator/EducatorQuizzesPage';
+import { EducatorClassroomPage } from './pages/educator/EducatorClassroomPage';
 import { EducatorQuizAttemptPage } from './pages/educator/EducatorQuizAttemptPage';
 import { EducatorQuizResultPage } from './pages/educator/EducatorQuizResultPage';
 import { EducatorAssessmentsPage } from './pages/educator/EducatorAssessmentsPage';
@@ -134,6 +138,8 @@ export default function App() {
                   <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
                   <Route path="toppers" element={<ToppersPage />} />
                   <Route path="quizzes/:id" element={<QuizIntroPage />} />
+                  <Route path="join" element={<JoinQuizPage />} />
+                  <Route path="join/:code" element={<JoinQuizPage />} />
 
                   <Route
                     path="login"
@@ -289,6 +295,7 @@ export default function App() {
                   <Route path="dpps/:id/attempt" element={<DppAttemptPage />} />
                   <Route path="dpps/:id/result" element={<DppResultPage />} />
                   <Route path="quizzes" element={<QuizzesPage />} />
+                  <Route path="quizzes/:id/classroom" element={<ClassroomPlayPage />} />
                   <Route path="quizzes/:id/attempt" element={<QuizAttemptPage />} />
                   <Route path="quizzes/:id/result" element={<QuizResultPage />} />
                   <Route path="slip-tests" element={<SlipTestsPage />} />
@@ -338,6 +345,7 @@ export default function App() {
                   <Route path="educator/dpps/:id/attempt" element={<EducatorDppAttemptPage />} />
                   <Route path="educator/dpps/:id/result" element={<EducatorDppResultPage />} />
                   <Route path="educator/quizzes" element={<EducatorQuizzesPage />} />
+                  <Route path="educator/quizzes/:id/classroom" element={<EducatorClassroomPage />} />
                   <Route path="educator/quizzes/:id/attempt" element={<EducatorQuizAttemptPage />} />
                   <Route path="educator/quizzes/:id/result" element={<EducatorQuizResultPage />} />
                   <Route path="educator/slip-tests" element={<EducatorSlipTestsPage />} />
@@ -422,6 +430,7 @@ export default function App() {
                   <Route path="dpps/:id/edit" element={<AdminDppFormPage />} />
                   <Route path="dpps/:id/results" element={<AdminDppResultsPage />} />
                   <Route path="quizzes" element={<AdminQuizzesPage />} />
+                  <Route path="quizzes/:id/classroom" element={<AdminClassroomPage />} />
                   <Route path="quizzes/new" element={<AdminQuizFormPage />} />
                   <Route path="quizzes/:id/edit" element={<AdminQuizFormPage />} />
                   <Route path="quizzes/:id/results" element={<AdminQuizResultsPage />} />

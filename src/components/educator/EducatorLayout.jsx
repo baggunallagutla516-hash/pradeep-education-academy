@@ -52,7 +52,19 @@ export function EducatorGuestRoute({ children }) {
 }
 
 export function EducatorLayout() {
+  const location = useLocation();
+  const presenting = location.pathname.includes('/classroom');
   const [expanded, setExpanded] = useEducatorSidebarExpanded();
+
+  if (presenting) {
+    return (
+      <div className="min-h-screen bg-sand-50">
+        <main className="min-h-screen w-full px-5 py-5 sm:px-8 sm:py-6">
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-sand-50">

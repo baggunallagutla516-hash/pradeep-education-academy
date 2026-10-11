@@ -23,6 +23,7 @@ import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
+import { ShareQuizCodeDialog } from '../../components/quiz/ShareQuizCodeDialog';
 
 export function AdminQuizzesPage() {
   const { basePath, api } = useStaffContent();
@@ -33,6 +34,7 @@ export function AdminQuizzesPage() {
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');
+  const [shareQuiz, setShareQuiz] = useState(null);
 
   async function load() {
     setStatus('loading');
@@ -122,7 +124,7 @@ export function AdminQuizzesPage() {
       embedded
       eyebrow="Admin"
       title="QUIZ"
-      description="Assign quizzes to one or more classes. Students and educators in those classes can attempt after publish."
+      description="Individual quizzes are answered alone. Classroom quizzes are hosted live: groups, a master, and a scoreboard."
       actions={
         <div className="flex flex-wrap items-end gap-3">
           {classes.length > 1 ? (
@@ -151,6 +153,7 @@ export function AdminQuizzesPage() {
         </div>
       }
     >
+      <ShareQuizCodeDialog quiz={shareQuiz} onClose={() => setShareQuiz(null)} />
       {actionError ? (
         <Alert type="error" title="Action failed" onClose={() => setActionError('')} className="mb-4">
           {actionError}
@@ -181,6 +184,9 @@ export function AdminQuizzesPage() {
           {visible.map((item) => (
             <Card key={item.id}>
               <div className="mb-2 flex flex-wrap gap-2">
+                <Badge tone={item.playMode === 'classroom' ? 'ember' : 'ink'}>
+                  {item.playMode === 'classroom' ? 'Classroom' : 'Individual'}
+                </Badge>
                 <Badge tone={item.isPublished ? 'lagoon' : 'ink'}>
                   {item.isPublished ? 'Published' : 'Draft'}
                 </Badge>
@@ -208,12 +214,25 @@ export function AdminQuizzesPage() {
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <Link to={`${basePath}/quizzes/${item.id}/results`}>
-                  <Button variant="secondary" size="sm">
-                    <BarChart3 className="h-4 w-4" />
-                    Results
-                  </Button>
-                </Link>
+                {item.playMode === 'classroom' ? (
+                  <Link to={`${basePath}/quizzes/${item.id}/classroom`}>
+                    <Button size="sm">Host classroom</Button>
+                  </Link>
+                ) : (
+                  <>
+                    {item.joinCode && item.accessMode !== 'list' ? (
+                      <Button size="sm" onClick={() => setShareQuiz(item)}>
+                        Code & QR
+                      </Button>
+                    ) : null}
+                    <Link to={`${basePath}/quizzes/${item.id}/results`}>
+                      <Button variant="secondary" size="sm">
+                        <BarChart3 className="h-4 w-4" />
+                        Results
+                      </Button>
+                    </Link>
+                  </>
+                )}
                 <Button
                   variant="secondary"
                   size="sm"

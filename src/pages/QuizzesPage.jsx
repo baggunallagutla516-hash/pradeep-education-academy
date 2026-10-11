@@ -12,6 +12,7 @@ import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ExpandableText } from '../components/ui/ExpandableText';
+import { JoinQuizDialog } from '../components/quiz/JoinQuizDialog';
 
 function scoreTone(percentage) {
   if (percentage >= 75) return 'text-lagoon-700';
@@ -23,10 +24,12 @@ export function QuizzesPage({
   api = quizApi,
   basePath = '/quizzes',
   badgeLabel = 'Everyone',
+  audience = 'student',
 } = {}) {
   const [quizzes, setQuizzes] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
+  const [joinOpen, setJoinOpen] = useState(false);
 
   async function load() {
     setStatus('loading');
@@ -50,9 +53,19 @@ export function QuizzesPage({
       embedded
       eyebrow="Practice"
       title="QUIZ"
-      description="Open quizzes for every login — students, educators, and parents. Scores appear after the academy releases results."
-      actions={<Badge>{badgeLabel}</Badge>}
+      description="Individual quizzes are answered alone. Classroom quizzes are played live in groups, with scores sorted from highest to lowest."
+      actions={
+        <div className="flex flex-wrap items-center gap-2">
+          {audience === 'student' ? (
+            <Button size="sm" variant="secondary" onClick={() => setJoinOpen(true)}>
+              Enter code
+            </Button>
+          ) : null}
+          <Badge>{badgeLabel}</Badge>
+        </div>
+      }
     >
+      <JoinQuizDialog open={joinOpen} onClose={() => setJoinOpen(false)} basePath={basePath} />
       {status === 'loading' ? <LoadingState label="Loading quizzes…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
       {status === 'ready' && quizzes.length === 0 ? (
@@ -66,14 +79,18 @@ export function QuizzesPage({
       {status === 'ready' && quizzes.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {quizzes.map((item) => {
+            const classroom = item.playMode === 'classroom';
             const done = item.attemptStatus === 'submitted';
-            const inProgress = item.attemptStatus === 'in_progress';
+            const inProgress = !classroom && item.attemptStatus === 'in_progress';
             const notYetOpen = item.isNotYetOpen && !done && !inProgress;
             const closed = item.isClosed && !done && !inProgress;
 
             return (
               <Card key={item.id} className="flex h-full flex-col">
                 <div className="mb-2 flex flex-wrap gap-2">
+                  <Badge tone={classroom ? 'ember' : 'ink'}>
+                    {classroom ? 'Classroom' : 'Individual'}
+                  </Badge>
                   {item.startDate ? (
                     <Badge tone="ember">{formatDateTime(item.startDate)}</Badge>
                   ) : null}
@@ -144,7 +161,43 @@ export function QuizzesPage({
                 ) : null}
 
                 <div className="mt-auto pt-4">
-                  {done ? (
+                  {classroom && audience === 'parent' && !(done && item.resultsReleased) ? (
+                    <p className="text-sm text-ink-900/55">Played live in class by groups.</p>
+                  ) : classroom && audience === 'educator' ? (
+                    <Link to={`${basePath}/${item.id}/classroom`}>
+                      <Button size="sm">
+                        Host classroom
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  ) : classroom && done && item.resultsReleased ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link to={`${basePath}/${item.id}/result`}>
+                        <Button size="sm">
+                          <CheckCircle2 className="h-4 w-4" />
+                          View result
+                        </Button>
+                      </Link>
+                      {item.classroomStatus === 'finished' ? (
+                        <Link to={`${basePath}/${item.id}/classroom`}>
+                          <Button size="sm" variant="secondary">
+                            Class board
+                          </Button>
+                        </Link>
+                      ) : null}
+                    </div>
+                  ) : classroom ? (
+                    <Link to={`${basePath}/${item.id}/classroom`}>
+                      <Button size="sm">
+                        {item.classroomStatus === 'live'
+                          ? 'Join classroom'
+                          : item.classroomStatus === 'finished'
+                            ? 'View scores'
+                            : 'Classroom'}
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  ) : done ? (
                     <Link to={`${basePath}/${item.id}/result`}>
                       <Button variant="secondary" size="sm">
                         <CheckCircle2 className="h-4 w-4" />
