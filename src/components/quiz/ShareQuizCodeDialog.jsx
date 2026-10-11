@@ -3,7 +3,7 @@ import QRCode from 'qrcode';
 import { X } from 'lucide-react';
 import { Button } from '../ui/Button';
 
-export function ShareQuizCodeDialog({ quiz, onClose }) {
+export function ShareQuizCodeDialog({ quiz, onClose, noun = 'quiz' }) {
   const [src, setSrc] = useState('');
   const code = quiz?.joinCode || '';
   const link = code ? `${window.location.origin}/join/${code}` : '';
@@ -39,7 +39,7 @@ export function ShareQuizCodeDialog({ quiz, onClose }) {
               {quiz.title}
             </h2>
             <p className="mt-1 text-sm text-ink-900/60">
-              Students scan this QR or enter the code, then start the quiz.
+              Students scan this QR or enter the code, then open the {noun}.
             </p>
           </div>
           <button
@@ -54,7 +54,7 @@ export function ShareQuizCodeDialog({ quiz, onClose }) {
         {src ? <img src={src} alt={`QR code for ${code}`} className="mx-auto h-56 w-56" /> : null}
         <p className="mt-3 font-display text-4xl font-extrabold tracking-[0.2em] text-ink-900">{code}</p>
         {!quiz.isPublished ? (
-          <p className="mt-2 text-sm text-ink-900/60">Publish the quiz before students can use this code.</p>
+          <p className="mt-2 text-sm text-ink-900/60">Publish this before students can use the code.</p>
         ) : null}
         <Button className="mt-4" variant="secondary" fullWidth onClick={onClose}>
           Done

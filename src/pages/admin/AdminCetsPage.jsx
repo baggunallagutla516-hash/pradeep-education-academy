@@ -22,6 +22,7 @@ import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
+import { ShareQuizCodeDialog } from '../../components/quiz/ShareQuizCodeDialog';
 
 export function AdminCetsPage() {
   const { basePath, api } = useStaffContent();
@@ -31,6 +32,7 @@ export function AdminCetsPage() {
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');
+  const [shareItem, setShareItem] = useState(null);
 
   async function load() {
     setStatus('loading');
@@ -130,6 +132,7 @@ export function AdminCetsPage() {
         </Alert>
       ) : null}
 
+      <ShareQuizCodeDialog quiz={shareItem} noun="C.E.T." onClose={() => setShareItem(null)} />
       {status === 'loading' ? <LoadingState label="Loading C.E.T. papers…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
       {status === 'ready' && cets.length === 0 ? (
@@ -192,6 +195,11 @@ export function AdminCetsPage() {
                   </p>
                 ) : null}
                 <div className="mt-4 flex flex-wrap gap-2">
+                  {item.joinCode && item.accessMode !== 'list' ? (
+                    <Button size="sm" onClick={() => setShareItem(item)}>
+                      Code & QR
+                    </Button>
+                  ) : null}
                   <Button
                     variant="secondary"
                     size="sm"

@@ -16,6 +16,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
+import { AccessModeSelect } from '../../components/quiz/AccessModeSelect';
 import { ClassMultiSelect } from '../../components/ui/ClassMultiSelect';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
@@ -29,6 +30,7 @@ const emptyForm = {
   chapterName: '',
   startDate: toDateTimeLocalValue(),
   endDate: toDateTimeLocalValue(undefined, { endOfDay: true }),
+  accessMode: 'both',
   isPublished: 'true',
 };
 
@@ -75,6 +77,7 @@ export function AdminCetFormPage() {
             chapterName: item.chapterName || '',
             startDate: toDateTimeLocalValue(item.startDate),
             endDate: toDateTimeLocalValue(item.endDate),
+            accessMode: item.accessMode || 'both',
             isPublished: item.isPublished ? 'true' : 'false',
           });
           setCoverPreview(item.coverImageUrl ? mediaUrl(item.coverImageUrl) : '');
@@ -162,6 +165,7 @@ export function AdminCetFormPage() {
     fd.append('chapterName', form.chapterName.trim());
     fd.append('startDate', toApiDateTime(form.startDate));
     fd.append('endDate', toApiDateTime(form.endDate));
+    fd.append('accessMode', form.accessMode || 'both');
     fd.append('isPublished', form.isPublished);
     if (coverFile) fd.append('coverImage', coverFile);
     if (removeCover && !coverFile) fd.append('removeCoverImage', 'true');
@@ -289,6 +293,7 @@ export function AdminCetFormPage() {
               hint="After this time students can no longer download the paper"
             />
           </div>
+          <AccessModeSelect value={form.accessMode} onChange={updateField} noun="C.E.T." />
           <Select
             label="Status"
             name="isPublished"

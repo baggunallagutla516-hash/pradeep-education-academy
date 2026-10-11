@@ -17,6 +17,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
+import { AccessModeSelect } from '../../components/quiz/AccessModeSelect';
 import { ClassMultiSelect } from '../../components/ui/ClassMultiSelect';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
@@ -42,6 +43,7 @@ const emptyForm = {
   negativeMarkPerWrong: '0',
   allowPartialCredit: 'true',
   showAnswersAfterSubmit: 'true',
+  accessMode: 'both',
   isPublished: 'false',
 };
 
@@ -107,6 +109,7 @@ export function AdminSlipTestFormPage() {
             negativeMarkPerWrong: String(item.negativeMarkPerWrong ?? '0'),
             allowPartialCredit: item.allowPartialCredit ? 'true' : 'false',
             showAnswersAfterSubmit: item.showAnswersAfterSubmit ? 'true' : 'false',
+            accessMode: item.accessMode || 'both',
             isPublished: item.isPublished ? 'true' : 'false',
           });
           if (contentMode === 'exam') {
@@ -214,6 +217,7 @@ export function AdminSlipTestFormPage() {
         fd.append('topic', form.topic.trim());
         fd.append('startDate', toApiDateTime(form.startDate));
         fd.append('endDate', toApiDateTime(form.endDate));
+        fd.append('accessMode', form.accessMode || 'both');
         fd.append('isPublished', form.isPublished);
         if (coverFile) fd.append('coverImage', coverFile);
         if (resourceFile) fd.append('file', resourceFile);
@@ -235,6 +239,7 @@ export function AdminSlipTestFormPage() {
           negativeMarkPerWrong: Number(form.negativeMarkPerWrong),
           allowPartialCredit: form.allowPartialCredit === 'true',
           showAnswersAfterSubmit: form.showAnswersAfterSubmit === 'true',
+          accessMode: form.accessMode || 'both',
           isPublished: form.isPublished === 'true',
           questions: toApiQuestions(questions),
         };
@@ -429,6 +434,8 @@ export function AdminSlipTestFormPage() {
           />
 
           {isFileMode ? (
+            <>
+            <AccessModeSelect value={form.accessMode} onChange={updateField} noun="slip test" />
             <Select
               label="Status"
               name="isPublished"
@@ -439,6 +446,7 @@ export function AdminSlipTestFormPage() {
               <option value="true">Published</option>
               <option value="false">Draft</option>
             </Select>
+            </>
           ) : null}
         </Card>
 
@@ -527,6 +535,7 @@ export function AdminSlipTestFormPage() {
                   <option value="true">Show answers after submitting</option>
                   <option value="false">Hide answers</option>
                 </Select>
+                <AccessModeSelect value={form.accessMode} onChange={updateField} noun="slip test" />
                 <Select
                   label="Status"
                   name="isPublished"

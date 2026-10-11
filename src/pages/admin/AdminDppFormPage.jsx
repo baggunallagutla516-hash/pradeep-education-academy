@@ -13,6 +13,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
+import { AccessModeSelect } from '../../components/quiz/AccessModeSelect';
 import { ClassMultiSelect } from '../../components/ui/ClassMultiSelect';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
@@ -35,6 +36,7 @@ const emptyForm = {
   negativeMarkPerWrong: '0',
   allowPartialCredit: 'true',
   showAnswersAfterSubmit: 'true',
+  accessMode: 'both',
   isPublished: 'false',
 };
 
@@ -91,6 +93,7 @@ export function AdminDppFormPage() {
             negativeMarkPerWrong: String(item.negativeMarkPerWrong ?? '0'),
             allowPartialCredit: item.allowPartialCredit ? 'true' : 'false',
             showAnswersAfterSubmit: item.showAnswersAfterSubmit ? 'true' : 'false',
+            accessMode: item.accessMode || 'both',
             isPublished: item.isPublished ? 'true' : 'false',
           });
           setQuestions((item.questions || []).map(toEditableQuestion));
@@ -169,6 +172,7 @@ export function AdminDppFormPage() {
       negativeMarkPerWrong: Number(form.negativeMarkPerWrong),
       allowPartialCredit: form.allowPartialCredit === 'true',
       showAnswersAfterSubmit: form.showAnswersAfterSubmit === 'true',
+      accessMode: form.accessMode || 'both',
       isPublished: form.isPublished === 'true',
       questions: toApiQuestions(questions),
     };
@@ -347,6 +351,7 @@ export function AdminDppFormPage() {
               <option value="true">Show answers after submitting</option>
               <option value="false">Hide answers</option>
             </Select>
+            <AccessModeSelect value={form.accessMode} onChange={updateField} noun="DPP" />
             <Select
               label="Status"
               name="isPublished"

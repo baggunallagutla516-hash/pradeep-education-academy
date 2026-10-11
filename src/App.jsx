@@ -75,6 +75,8 @@ import { AdminSlipTestResultsPage } from './pages/admin/AdminSlipTestResultsPage
 import { AdminContactQueriesPage } from './pages/admin/AdminContactQueriesPage';
 import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
 import { WorksheetsPage } from './pages/WorksheetsPage';
+import { OpenDownloadPage } from './pages/OpenDownloadPage';
+import { cetApi, slipTestApi, unitTestApi, worksheetApi } from './api/adminApi';
 import { UnitTestsPage } from './pages/UnitTestsPage';
 import { CetsPage } from './pages/CetsPage';
 import { AssessmentsPage } from './pages/AssessmentsPage';
@@ -286,8 +288,41 @@ export default function App() {
                 >
                   <Route path="dashboard" element={<DashboardPage />} />
                   <Route path="worksheets" element={<WorksheetsPage />} />
+                  <Route
+                    path="worksheets/:id"
+                    element={
+                      <OpenDownloadPage
+                        api={worksheetApi}
+                        dataKey="worksheet"
+                        eyebrow="Worksheet"
+                        fallbackTitle="Worksheet"
+                      />
+                    }
+                  />
                   <Route path="unit-tests" element={<UnitTestsPage />} />
+                  <Route
+                    path="unit-tests/:id"
+                    element={
+                      <OpenDownloadPage
+                        api={unitTestApi}
+                        dataKey="unitTest"
+                        eyebrow="Exam"
+                        fallbackTitle="Exam"
+                      />
+                    }
+                  />
                   <Route path="cets" element={<CetsPage />} />
+                  <Route
+                    path="cets/:id"
+                    element={
+                      <OpenDownloadPage
+                        api={cetApi}
+                        dataKey="cet"
+                        eyebrow="C.E.T."
+                        fallbackTitle="C.E.T."
+                      />
+                    }
+                  />
                   <Route path="assessments" element={<AssessmentsPage />} />
                   <Route path="assessments/:id/attempt" element={<AssessmentAttemptPage />} />
                   <Route path="assessments/:id/result" element={<AssessmentResultPage />} />
@@ -299,6 +334,17 @@ export default function App() {
                   <Route path="quizzes/:id/attempt" element={<QuizAttemptPage />} />
                   <Route path="quizzes/:id/result" element={<QuizResultPage />} />
                   <Route path="slip-tests" element={<SlipTestsPage />} />
+                  <Route
+                    path="slip-tests/:id"
+                    element={
+                      <OpenDownloadPage
+                        api={slipTestApi}
+                        dataKey="slipTest"
+                        eyebrow="Slip test"
+                        fallbackTitle="Slip test"
+                      />
+                    }
+                  />
                   <Route path="slip-tests/:id/attempt" element={<SlipTestAttemptPage />} />
                   <Route path="slip-tests/:id/result" element={<SlipTestResultPage />} />
                   <Route path="account" element={<AccountPage />} />

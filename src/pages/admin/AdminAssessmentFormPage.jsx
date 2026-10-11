@@ -14,6 +14,7 @@ import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
 import { ClassMultiSelect } from '../../components/ui/ClassMultiSelect';
+import { AccessModeSelect } from '../../components/quiz/AccessModeSelect';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
@@ -35,6 +36,7 @@ const emptyForm = {
   negativeMarkPerWrong: '0',
   allowPartialCredit: 'true',
   showAnswersAfterSubmit: 'true',
+  accessMode: 'both',
   isPublished: 'false',
 };
 
@@ -98,6 +100,7 @@ export function AdminAssessmentFormPage() {
             negativeMarkPerWrong: String(item.negativeMarkPerWrong ?? '0'),
             allowPartialCredit: item.allowPartialCredit ? 'true' : 'false',
             showAnswersAfterSubmit: item.showAnswersAfterSubmit ? 'true' : 'false',
+            accessMode: item.accessMode || 'both',
             isPublished: item.isPublished ? 'true' : 'false',
           });
           setSections(nextSections);
@@ -235,6 +238,7 @@ export function AdminAssessmentFormPage() {
       negativeMarkPerWrong: Number(form.negativeMarkPerWrong),
       allowPartialCredit: form.allowPartialCredit === 'true',
       showAnswersAfterSubmit: form.showAnswersAfterSubmit === 'true',
+      accessMode: form.accessMode || 'both',
       isPublished: form.isPublished === 'true',
       sections: cleanedSections.map((name) => ({ name })),
       questions: payloadQuestions,
@@ -456,6 +460,7 @@ export function AdminAssessmentFormPage() {
               <option value="true">Show answers after submitting</option>
               <option value="false">Hide answers</option>
             </Select>
+            <AccessModeSelect value={form.accessMode} onChange={updateField} noun="assessment" />
             <Select
               label="Status"
               name="isPublished"

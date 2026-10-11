@@ -15,6 +15,7 @@ import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ExpandableText } from '../components/ui/ExpandableText';
+import { EnterCodeButton } from '../components/quiz/EnterCodeButton';
 
 function scoreTone(percentage) {
   if (percentage >= 75) return 'text-lagoon-700';
@@ -74,7 +75,12 @@ export function AssessmentsPage({
           ? 'Timed online assessments for every class. Attempt them like a student — leaving fullscreen too many times auto-submits.'
           : 'Timed online assessments for your class. The test runs fullscreen — leaving it more than 3 times auto-submits.'
       }
-      actions={<Badge>{badge}</Badge>}
+      actions={
+        <div className="flex flex-wrap items-center gap-2">
+          {!enableClassFilter ? <EnterCodeButton /> : null}
+          <Badge>{badge}</Badge>
+        </div>
+      }
     >
       {enableClassFilter && classes.length > 0 ? (
         <div className="mb-6 max-w-xs">

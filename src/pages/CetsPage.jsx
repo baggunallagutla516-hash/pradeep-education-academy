@@ -16,6 +16,7 @@ import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ExpandableText } from '../components/ui/ExpandableText';
+import { EnterCodeButton } from '../components/quiz/EnterCodeButton';
 
 function DownloadAction({ item }) {
   if (item.isNotYetOpen) {
@@ -79,7 +80,12 @@ export function CetsPage() {
       eyebrow="Practice"
       title="C.E.T."
       description="Download Chapter End Test question papers for your class."
-      actions={<Badge>{classLabel(student) || 'Student'}</Badge>}
+      actions={
+        <div className="flex flex-wrap items-center gap-2">
+          <EnterCodeButton />
+          <Badge>{classLabel(student) || 'Student'}</Badge>
+        </div>
+      }
     >
       {status === 'loading' ? <LoadingState label="Loading C.E.T. papers…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}

@@ -23,6 +23,7 @@ import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
+import { ShareQuizCodeDialog } from '../../components/quiz/ShareQuizCodeDialog';
 
 export function AdminDppsPage() {
   const { basePath, api } = useStaffContent();
@@ -33,6 +34,7 @@ export function AdminDppsPage() {
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');
+  const [shareItem, setShareItem] = useState(null);
 
   async function load() {
     setStatus('loading');
@@ -151,6 +153,7 @@ export function AdminDppsPage() {
         </div>
       }
     >
+      <ShareQuizCodeDialog quiz={shareItem} noun="DPP" onClose={() => setShareItem(null)} />
       {actionError ? (
         <Alert type="error" title="Action failed" onClose={() => setActionError('')} className="mb-4">
           {actionError}
@@ -212,6 +215,11 @@ export function AdminDppsPage() {
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
+                {item.joinCode && item.accessMode !== 'list' ? (
+                  <Button size="sm" onClick={() => setShareItem(item)}>
+                    Code & QR
+                  </Button>
+                ) : null}
                 <Link to={`${basePath}/dpps/${item.id}/results`}>
                   <Button variant="secondary" size="sm">
                     <BarChart3 className="h-4 w-4" />

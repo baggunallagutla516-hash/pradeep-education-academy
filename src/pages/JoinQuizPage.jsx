@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { contentApi } from '../api/adminApi';
+import { pathForJoin } from '../utils/joinTarget';
 import { useAuth } from '../context/AuthContext';
 import { getErrorMessage } from '../utils/errors';
 import { rememberQuizReturnPath } from '../utils/quizReturnPath';
@@ -9,11 +10,6 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Alert } from '../components/ui/Alert';
-
-function quizPath(data) {
-  if (data.playMode === 'individual') return `/quizzes/${data.quizId}`;
-  return `/quizzes/${data.quizId}/classroom`;
-}
 
 export function JoinQuizPage() {
   const { code: codeParam = '' } = useParams();
@@ -34,7 +30,7 @@ export function JoinQuizPage() {
       setError('');
       try {
         const { data } = await contentApi.classroomCode(next);
-        const path = quizPath(data.data);
+        const path = pathForJoin(data.data);
         if (status === 'authenticated') {
           navigate(path, { replace: true });
           return;

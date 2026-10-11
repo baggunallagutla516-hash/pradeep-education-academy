@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { contentApi } from '../../api/adminApi';
+import { pathForJoin } from '../../utils/joinTarget';
 import { getErrorMessage } from '../../utils/errors';
 import { cn } from '../../utils/cn';
 import { Button } from '../ui/Button';
@@ -50,11 +51,7 @@ export function JoinQuizDialog({ open, onClose, basePath = '/quizzes' }) {
       setError('');
       try {
         const { data } = await contentApi.classroomCode(next);
-        const quizPath =
-          data.data.playMode === 'individual'
-            ? `${basePath}/${data.data.quizId}`
-            : `${basePath}/${data.data.quizId}/classroom`;
-        navigate(quizPath);
+        navigate(pathForJoin(data.data, basePath));
         onClose();
       } catch (err) {
         setError(getErrorMessage(err, 'No quiz is open for that code.'));

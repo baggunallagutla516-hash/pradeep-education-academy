@@ -16,6 +16,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
+import { AccessModeSelect } from '../../components/quiz/AccessModeSelect';
 import { ClassMultiSelect } from '../../components/ui/ClassMultiSelect';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
@@ -27,6 +28,7 @@ const emptyForm = {
   studentClasses: [],
   startDate: toDateTimeLocalValue(),
   endDate: toDateTimeLocalValue(undefined, { endOfDay: true }),
+  accessMode: 'both',
   isPublished: 'true',
 };
 
@@ -70,6 +72,7 @@ export function AdminWorksheetFormPage() {
             studentClasses: selectedClassIdsFromItem(item),
             startDate: toDateTimeLocalValue(item.startDate),
             endDate: toDateTimeLocalValue(item.endDate),
+            accessMode: item.accessMode || 'both',
             isPublished: item.isPublished ? 'true' : 'false',
           });
           setCoverPreview(mediaUrl(item.coverImageUrl));
@@ -139,6 +142,7 @@ export function AdminWorksheetFormPage() {
     appendStudentClasses(fd, form.studentClasses);
     fd.append('startDate', toApiDateTime(form.startDate));
     fd.append('endDate', toApiDateTime(form.endDate));
+    fd.append('accessMode', form.accessMode || 'both');
     fd.append('isPublished', form.isPublished);
     if (coverFile) fd.append('coverImage', coverFile);
     if (resourceFile) fd.append('file', resourceFile);
@@ -243,6 +247,7 @@ export function AdminWorksheetFormPage() {
               hint="After this time students can no longer download the file"
             />
           </div>
+          <AccessModeSelect value={form.accessMode} onChange={updateField} noun="worksheet" />
           <Select
             label="Status"
             name="isPublished"

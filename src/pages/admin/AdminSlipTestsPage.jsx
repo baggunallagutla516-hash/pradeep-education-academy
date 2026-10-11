@@ -25,6 +25,7 @@ import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
+import { ShareQuizCodeDialog } from '../../components/quiz/ShareQuizCodeDialog';
 
 export function AdminSlipTestsPage() {
   const { basePath, api } = useStaffContent();
@@ -35,6 +36,7 @@ export function AdminSlipTestsPage() {
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');
+  const [shareItem, setShareItem] = useState(null);
 
   async function load() {
     setStatus('loading');
@@ -175,6 +177,7 @@ export function AdminSlipTestsPage() {
         </Alert>
       ) : null}
 
+      <ShareQuizCodeDialog quiz={shareItem} noun="slip test" onClose={() => setShareItem(null)} />
       {status === 'loading' ? <LoadingState label="Loading slip tests…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
       {status === 'ready' && slipTests.length === 0 ? (
@@ -247,6 +250,11 @@ export function AdminSlipTestsPage() {
                   </p>
 
                   <div className="mt-4 flex flex-wrap gap-2">
+                    {item.joinCode && item.accessMode !== 'list' ? (
+                      <Button size="sm" onClick={() => setShareItem(item)}>
+                        Code & QR
+                      </Button>
+                    ) : null}
                     {isFile && item.fileUrl ? (
                       <a
                         href={mediaUrl(item.fileUrl)}

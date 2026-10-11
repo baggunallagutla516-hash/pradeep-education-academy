@@ -15,6 +15,7 @@ import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ExpandableText } from '../components/ui/ExpandableText';
+import { EnterCodeButton } from '../components/quiz/EnterCodeButton';
 
 function DownloadAction({ item }) {
   if (item.isNotYetOpen) {
@@ -78,7 +79,12 @@ export function WorksheetsPage() {
       eyebrow="Resources"
       title="Worksheets & files"
       description="Download question papers, slides, and study resources for your class."
-      actions={<Badge>{classLabel(student) || 'Student'}</Badge>}
+      actions={
+        <div className="flex flex-wrap items-center gap-2">
+          <EnterCodeButton />
+          <Badge>{classLabel(student) || 'Student'}</Badge>
+        </div>
+      }
     >
       {status === 'loading' ? <LoadingState label="Loading worksheets…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
