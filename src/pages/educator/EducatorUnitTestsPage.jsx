@@ -5,7 +5,6 @@ import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
 import { formatBytes } from '../../utils/formatBytes';
-import { unitLabel } from '../../utils/unitLabel';
 import { formatDateTime } from '../../utils/quizFormat';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
@@ -134,14 +133,17 @@ export function EducatorUnitTestsPage() {
                     <PenLine className="h-10 w-10" aria-hidden />
                   </div>
                 )}
-                <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-                  <Badge>{classLabel(item)}</Badge>
-                  <Badge tone="ember">{unitLabel(item)}</Badge>
-                  {item.isNotYetOpen ? <Badge tone="ember">Not open yet</Badge> : null}
-                  {item.isClosed ? <Badge tone="ink">Closed</Badge> : null}
-                </div>
+                {item.isNotYetOpen || item.isClosed ? (
+                  <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+                    {item.isNotYetOpen ? <Badge tone="ember">Not open yet</Badge> : null}
+                    {item.isClosed ? <Badge tone="ink">Closed</Badge> : null}
+                  </div>
+                ) : null}
               </div>
               <div className="p-4">
+                <div className="mb-2 flex flex-wrap gap-2">
+                  <Badge>{classLabel(item)}</Badge>
+                </div>
                 <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
                 {item.description ? <ExpandableText text={item.description} /> : null}
                 <p className="mt-3 text-xs text-ink-900/50">

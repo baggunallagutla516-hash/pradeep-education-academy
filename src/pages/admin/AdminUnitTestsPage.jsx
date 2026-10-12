@@ -6,7 +6,6 @@ import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
 import { classLabel } from '../../utils/classLabel';
 import { formatBytes } from '../../utils/formatBytes';
-import { unitLabel } from '../../utils/unitLabel';
 import { formatDateTime } from '../../utils/quizFormat';
 import {
   classOptionsFromItems,
@@ -143,7 +142,7 @@ export function AdminUnitTestsPage() {
       {status === 'ready' && unitTests.length === 0 ? (
         <EmptyState
           title="No exams yet"
-          description="Pick a class and unit, then upload the question paper as a PDF or Word file."
+          description="Pick a class and subject, then upload the question paper as a PDF or Word file."
           icon={PenLine}
           action={
             <Link to={`${basePath}/unit-tests/new`}>
@@ -181,7 +180,6 @@ export function AdminUnitTestsPage() {
                     {item.isPublished ? 'Published' : 'Draft'}
                   </Badge>
                   <Badge tone="ink">{classLabel(item)}</Badge>
-                  <Badge tone="ember">{unitLabel(item)}</Badge>
                   {item.endDate ? (
                     <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
                   ) : null}

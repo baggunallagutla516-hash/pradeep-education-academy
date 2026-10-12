@@ -26,8 +26,7 @@ const emptyForm = {
   title: '',
   description: '',
   studentClasses: [],
-  unitNumber: '',
-  unitName: '',
+  subjectName: '',
   startDate: toDateTimeLocalValue(),
   endDate: toDateTimeLocalValue(undefined, { endOfDay: true }),
   accessMode: 'both',
@@ -73,8 +72,7 @@ export function AdminUnitTestFormPage() {
             title: item.title,
             description: item.description || '',
             studentClasses: selectedClassIdsFromItem(item),
-            unitNumber: String(item.unitNumber ?? ''),
-            unitName: item.unitName || '',
+            subjectName: item.subjectName || '',
             startDate: toDateTimeLocalValue(item.startDate),
             endDate: toDateTimeLocalValue(item.endDate),
             accessMode: item.accessMode || 'both',
@@ -134,13 +132,7 @@ export function AdminUnitTestFormPage() {
     const next = {};
     if (!form.title.trim()) next.title = 'Title is required.';
     if (!form.studentClasses.length) next.studentClasses = 'Select at least one class.';
-
-    const unit = Number(form.unitNumber);
-    if (!form.unitNumber.trim()) {
-      next.unitNumber = 'Unit number is required.';
-    } else if (!Number.isInteger(unit) || unit < 1 || unit > 200) {
-      next.unitNumber = 'Enter a whole number between 1 and 200.';
-    }
+    if (!form.subjectName.trim()) next.subjectName = 'Subject name is required.';
 
     if (!isEdit && !resourceFile) next.file = 'Question paper file is required.';
     if (!form.startDate) next.startDate = 'Starting date and time is required.';
@@ -161,8 +153,7 @@ export function AdminUnitTestFormPage() {
     fd.append('title', form.title.trim());
     fd.append('description', form.description.trim());
     appendStudentClasses(fd, form.studentClasses);
-    fd.append('unitNumber', form.unitNumber.trim());
-    fd.append('unitName', form.unitName.trim());
+    fd.append('subjectName', form.subjectName.trim());
     fd.append('startDate', toApiDateTime(form.startDate));
     fd.append('endDate', toApiDateTime(form.endDate));
     fd.append('accessMode', form.accessMode || 'both');
@@ -207,7 +198,7 @@ export function AdminUnitTestFormPage() {
       embedded
       eyebrow="EXAMS"
       title={isEdit ? 'Edit exam' : 'New exam'}
-      description="Set when students can download the paper. Pick the classes and unit, then upload the question paper as a PDF or Word file."
+      description="Set when students can download the paper. Pick the classes and subject, then upload the question paper as a PDF or Word file."
       actions={
         <Link to={`${basePath}/unit-tests`}>
           <Button variant="secondary" size="sm">
@@ -232,7 +223,7 @@ export function AdminUnitTestFormPage() {
             onChange={updateField}
             required
             error={fieldErrors.title}
-            hint="Example: Unit 3 Test — Trigonometry"
+            hint="Example: Term 1 / Half Yearly — Exam"
           />
           <ClassMultiSelect
             classes={classes}
@@ -243,27 +234,15 @@ export function AdminUnitTestFormPage() {
             }}
             error={fieldErrors.studentClasses}
           />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              label="Unit number"
-              name="unitNumber"
-              type="number"
-              min="1"
-              max="200"
-              step="1"
-              value={form.unitNumber}
-              onChange={updateField}
-              required
-              error={fieldErrors.unitNumber}
-            />
-            <Input
-              label="Unit name"
-              name="unitName"
-              value={form.unitName}
-              onChange={updateField}
-              hint="Optional chapter name"
-            />
-          </div>
+          <Input
+            label="Subject name"
+            name="subjectName"
+            value={form.subjectName}
+            onChange={updateField}
+            required
+            error={fieldErrors.subjectName}
+            hint="Example: Science, Mathematics, English"
+          />
           <Textarea
             label="Description"
             name="description"
