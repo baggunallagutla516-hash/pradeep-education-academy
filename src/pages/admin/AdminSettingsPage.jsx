@@ -15,6 +15,8 @@ import { EmptyState } from '../../components/ui/EmptyState';
 
 export function AdminSettingsPage() {
   const [logoUrl, setLogoUrl] = useState('');
+  const [upiId, setUpiId] = useState('9505820072@ybl');
+  const [upiPayeeName, setUpiPayeeName] = useState('Pradeep Sir');
   const [classes, setClasses] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
@@ -22,6 +24,7 @@ export function AdminSettingsPage() {
   const [className, setClassName] = useState('');
   const [editingId, setEditingId] = useState('');
   const [savingClass, setSavingClass] = useState(false);
+  const [savingUpi, setSavingUpi] = useState(false);
   const [busyId, setBusyId] = useState('');
   const [logoBusy, setLogoBusy] = useState(false);
 
@@ -31,6 +34,8 @@ export function AdminSettingsPage() {
     try {
       const { data } = await adminApi.settings();
       setLogoUrl(data.data.settings.logoUrl || '');
+      setUpiId(data.data.settings.upiId || '9505820072@ybl');
+      setUpiPayeeName(data.data.settings.upiPayeeName || 'Pradeep Sir');
       setClasses(data.data.classes || []);
       setStatus('ready');
     } catch (err) {
@@ -42,6 +47,24 @@ export function AdminSettingsPage() {
   useEffect(() => {
     load();
   }, []);
+
+  async function handleUpiSave(event) {
+    event.preventDefault();
+    setSavingUpi(true);
+    setFormError('');
+    try {
+      const { data } = await adminApi.updateUpi({
+        upiId: upiId.trim(),
+        upiPayeeName: upiPayeeName.trim(),
+      });
+      setUpiId(data.data.settings.upiId || '');
+      setUpiPayeeName(data.data.settings.upiPayeeName || '');
+    } catch (err) {
+      setFormError(getErrorMessage(err, 'Could not save UPI details.'));
+    } finally {
+      setSavingUpi(false);
+    }
+  }
 
   async function handleLogoChange(event) {
     const file = event.target.files?.[0];
@@ -140,7 +163,7 @@ export function AdminSettingsPage() {
       embedded
       eyebrow="Admin"
       title="Settings"
-      description="Upload the website logo and manage classes shown in registration and worksheet dropdowns."
+      description="Upload the website logo, set your UPI Id for paper payments, and manage classes."
     >
       {status === 'loading' ? <LoadingState label="Loading settings…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
@@ -197,6 +220,32 @@ export function AdminSettingsPage() {
                 ) : null}
               </div>
             </div>
+          </Card>
+
+          <Card>
+            <h2 className="font-display text-lg font-bold text-ink-900">UPI payments</h2>
+            <p className="mt-1 text-sm text-ink-900/55">
+              Students and educators pay for question papers, marking schemes, and blue prints to
+              this UPI Id.
+            </p>
+            <form className="mt-4 space-y-4" onSubmit={handleUpiSave}>
+              <Input
+                label="UPI Id"
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                placeholder="9505820072@ybl"
+                required
+              />
+              <Input
+                label="Payee name"
+                value={upiPayeeName}
+                onChange={(e) => setUpiPayeeName(e.target.value)}
+                placeholder="Pradeep Sir"
+              />
+              <Button type="submit" size="sm" loading={savingUpi}>
+                Save UPI details
+              </Button>
+            </form>
           </Card>
 
           <Card>

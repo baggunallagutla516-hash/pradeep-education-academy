@@ -96,6 +96,19 @@ export const adminApi = {
   deleteNews(id) {
     return api.delete(`/admin/news/${id}`);
   },
+  onlineClasses() {
+    return api.get('/admin/online-classes');
+  },
+  createOnlineClass(payload) {
+    return api.post('/admin/online-classes', payload);
+  },
+  updateOnlineClass(id, payload) {
+    return api.patch(`/admin/online-classes/${id}`, payload);
+  },
+  deleteOnlineClass(id) {
+    return api.delete(`/admin/online-classes/${id}`);
+  },
+
   carousel() {
     return api.get('/admin/carousel');
   },
@@ -349,6 +362,15 @@ export const adminApi = {
   },
   settings() {
     return api.get('/admin/settings');
+  },
+  updateUpi(payload) {
+    return api.patch('/admin/settings/upi', payload);
+  },
+  contentPayments(contentType, contentId) {
+    return api.get(`/admin/payments/${contentType}/${contentId}`);
+  },
+  enableContentPayment(contentType, contentId, payload) {
+    return api.post(`/admin/payments/${contentType}/${contentId}/enable`, payload);
   },
   uploadLogo(formData) {
     return api.post('/admin/settings/logo', formData, {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BarChart3, Download, FileText, Pencil, Plus, Trash2 } from 'lucide-react';
+import { BarChart3, Download, FileText, Pencil, Plus, Trash2, IndianRupee } from 'lucide-react';
 import { useStaffContent } from '../../context/StaffContentContext';
 import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
@@ -26,6 +26,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
 import { ShareQuizCodeDialog } from '../../components/quiz/ShareQuizCodeDialog';
+import { AdminPaperPaymentsDialog } from '../../components/papers/AdminPaperPaymentsDialog';
 
 export function AdminSlipTestsPage() {
   const { basePath, api } = useStaffContent();
@@ -37,6 +38,7 @@ export function AdminSlipTestsPage() {
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');
   const [shareItem, setShareItem] = useState(null);
+  const [paymentsItem, setPaymentsItem] = useState(null);
 
   async function load() {
     setStatus('loading');
@@ -178,6 +180,14 @@ export function AdminSlipTestsPage() {
       ) : null}
 
       <ShareQuizCodeDialog quiz={shareItem} noun="slip test" onClose={() => setShareItem(null)} />
+      {paymentsItem ? (
+        <AdminPaperPaymentsDialog
+          contentType="slip-test"
+          contentId={paymentsItem.id}
+          title={paymentsItem.title}
+          onClose={() => setPaymentsItem(null)}
+        />
+      ) : null}
       {status === 'loading' ? <LoadingState label="Loading slip tests…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
       {status === 'ready' && slipTests.length === 0 ? (
@@ -296,6 +306,12 @@ export function AdminSlipTestsPage() {
                       <Trash2 className="h-4 w-4" />
                       Delete
                     </Button>
+                    {isFile && item.needsPayment ? (
+                      <Button size="sm" variant="secondary" onClick={() => setPaymentsItem(item)}>
+                        <IndianRupee className="h-4 w-4" />
+                        Payments
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               </Card>

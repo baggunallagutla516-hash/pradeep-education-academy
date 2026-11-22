@@ -11,6 +11,7 @@ import {
   ScrollText,
   ClipboardCheck,
   UserRound,
+  Video,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { SITE } from '../../constants/site';
@@ -28,6 +29,7 @@ const links = [
   { to: '/assessments', label: 'ONLINE ASSESSMENTS', icon: ClipboardCheck },
   { to: '/dpps', label: 'D.P.P.', icon: ClipboardList },
   { to: '/quizzes', label: 'QUIZ', icon: HelpCircle },
+  { to: '/online-classes', label: 'ONLINE CLASSES', icon: Video },
   { to: '/slip-tests', label: 'SLIP TESTS', icon: FileText },
   { to: '/account', label: 'MY ACCOUNT', icon: UserRound },
 ];

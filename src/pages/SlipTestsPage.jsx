@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, Clock, Download, FileText } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock, FileText } from 'lucide-react';
 import { slipTestApi } from '../api/adminApi';
 import { useAuth } from '../context/AuthContext';
 import { mediaUrl } from '../utils/media';
@@ -18,44 +18,12 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ExpandableText } from '../components/ui/ExpandableText';
 import { EnterCodeButton } from '../components/quiz/EnterCodeButton';
+import { PaperDownloadPanel } from '../components/papers/PaperDownloadPanel';
 
 function scoreTone(percentage) {
   if (percentage >= 75) return 'text-lagoon-700';
   if (percentage >= 40) return 'text-ember-600';
   return 'text-red-600';
-}
-
-function FileDownloadAction({ item }) {
-  if (item.isNotYetOpen) {
-    return (
-      <p className="mt-3 text-sm text-ink-900/55">
-        Download opens on {formatDateTime(item.startDate)}.
-      </p>
-    );
-  }
-  if (item.isClosed) {
-    return (
-      <p className="mt-3 text-sm text-ink-900/55">
-        Download closed on {formatDateTime(item.endDate)}.
-      </p>
-    );
-  }
-  if (!item.fileUrl) return null;
-
-  return (
-    <a
-      href={mediaUrl(item.fileUrl)}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="mt-auto inline-flex pt-4"
-      download={item.fileName || undefined}
-    >
-      <Button size="sm">
-        <Download className="h-4 w-4" />
-        Download
-      </Button>
-    </a>
-  );
 }
 
 export function SlipTestsPage({
@@ -92,6 +60,42 @@ export function SlipTestsPage({
     load();
   }, [load]);
 
+  const fileItems = useMemo(
+    () => slipTests.filter((item) => item.contentMode === 'file'),
+    [slipTests]
+  );
+  const examItems = useMemo(
+    () => slipTests.filter((item) => item.contentMode !== 'file'),
+    [slipTests]
+  );
+
+  function applyUnlocked(unlocked) {
+    const byId = new Map(
+      (unlocked || [])
+        .filter((row) => row.contentType === 'slip-test')
+        .map((row) => [String(row.contentId), row])
+    );
+    if (!byId.size) {
+      load();
+      return;
+    }
+    setSlipTests((prev) =>
+      prev.map((item) => {
+        const row = byId.get(String(item.id));
+        if (!row) return item;
+        return {
+          ...item,
+          isPurchased: Boolean(row.isPurchased),
+          isPaymentPending: Boolean(row.isPaymentPending || row.paymentStatus === 'pending'),
+          paymentStatus: row.paymentStatus || 'pending',
+          paymentUtr: row.paymentUtr || item.paymentUtr || '',
+          fileUrl: row.fileUrl || '',
+          fileName: row.fileName || item.fileName,
+        };
+      })
+    );
+  }
+
   const badge =
     badgeLabel ||
     (enableClassFilter
@@ -107,8 +111,8 @@ export function SlipTestsPage({
       title="Slip tests"
       description={
         enableClassFilter
-          ? 'Short chapter tests — attempt online exams or download uploaded papers.'
-          : 'Short chapter and topic tests for your class. Attempt online or download uploaded papers.'
+          ? 'Short chapter tests — attempt online exams or download uploaded papers. Paid papers unlock after UPI payment.'
+          : 'Short chapter and topic tests for your class. Attempt online or download uploaded papers. Paid papers unlock after UPI payment.'
       }
       actions={
         <div className="flex flex-wrap items-center gap-2">
@@ -149,41 +153,106 @@ export function SlipTestsPage({
       ) : null}
 
       {status === 'ready' && slipTests.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {slipTests.map((item) => {
-            const isFile = item.contentMode === 'file';
-            const done = !isFile && item.attemptStatus === 'submitted';
-            const inProgress = !isFile && item.attemptStatus === 'in_progress';
-            const notYetOpen = item.isNotYetOpen && !done && !inProgress;
-            const closed = item.isClosed && !done && !inProgress;
-            const classBadge =
-              !enableClassFilter && student
-                ? classLabel(student)
-                : item.studentClassName;
+        <div className="space-y-6 pb-24">
+          {fileItems.length > 0 ? (
+            <PaperDownloadPanel
+              items={fileItems}
+              contentType="slip-test"
+              onItemsUpdated={applyUnlocked}
+              renderCard={({ item, priceBadge, selection, action }) => {
+                const classBadge =
+                  !enableClassFilter && student
+                    ? classLabel(student)
+                    : item.studentClassName;
 
-            if (isFile) {
-              return (
-                <Card key={item.id} className="flex h-full flex-col overflow-hidden p-0">
-                  {item.coverImageUrl ? (
+                return (
+                  <Card key={item.id} className="flex h-full flex-col overflow-hidden p-0">
                     <div className="relative aspect-[16/10] bg-ink-900/5">
-                      <img
-                        src={mediaUrl(item.coverImageUrl)}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
+                      {item.coverImageUrl ? (
+                        <img
+                          src={mediaUrl(item.coverImageUrl)}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-lagoon-100 text-lagoon-700">
+                          <FileText className="h-10 w-10" aria-hidden />
+                        </div>
+                      )}
+                      <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+                        {priceBadge}
+                        <Badge tone="ember">{item.chapter}</Badge>
+                        <Badge tone="lagoon">File</Badge>
+                        {classBadge ? <Badge tone="ink">{classBadge}</Badge> : null}
+                        {item.isNotYetOpen ? <Badge tone="ember">Not open yet</Badge> : null}
+                        {item.isClosed ? <Badge tone="ink">Closed</Badge> : null}
+                      </div>
                     </div>
-                  ) : null}
-                  <div className="flex flex-1 flex-col p-4">
+                    <div className="flex flex-1 flex-col p-4">
+                      <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
+                      {item.subject || item.topic ? (
+                        <p className="mt-0.5 text-sm font-medium text-lagoon-700">
+                          {[item.subject, item.topic].filter(Boolean).join(' · ')}
+                        </p>
+                      ) : null}
+                      {item.description ? (
+                        <ExpandableText text={item.description} lines={2} />
+                      ) : null}
+                      <p className="mt-3 text-xs text-ink-900/50">
+                        {item.fileName || 'File'}
+                        {item.fileSize ? ` · ${formatBytes(item.fileSize)}` : ''}
+                      </p>
+                      {item.endDate && !item.isClosed && !item.isNotYetOpen ? (
+                        <p className="mt-1 text-xs text-ink-900/45">
+                          Ends {formatDateTime(item.endDate)}
+                        </p>
+                      ) : null}
+                      {selection}
+                      <div className="mt-auto">{action}</div>
+                    </div>
+                  </Card>
+                );
+              }}
+            />
+          ) : null}
+
+          {examItems.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {examItems.map((item) => {
+                const done = item.attemptStatus === 'submitted';
+                const inProgress = item.attemptStatus === 'in_progress';
+                const notYetOpen = item.isNotYetOpen && !done && !inProgress;
+                const closed = item.isClosed && !done && !inProgress;
+                const classBadge =
+                  !enableClassFilter && student
+                    ? classLabel(student)
+                    : item.studentClassName;
+
+                return (
+                  <Card key={item.id} className="flex h-full flex-col">
                     <div className="mb-2 flex flex-wrap gap-2">
                       <Badge tone="ember">{item.chapter}</Badge>
-                      <Badge tone="lagoon">File</Badge>
+                      <Badge tone="lagoon">Online</Badge>
                       {classBadge ? <Badge tone="ink">{classBadge}</Badge> : null}
-                      {notYetOpen ? <Badge tone="ember">Not open yet</Badge> : null}
-                      {closed ? <Badge tone="ink">Closed</Badge> : null}
-                      {item.endDate && !closed && !notYetOpen ? (
+                      {item.startDate ? (
+                        <Badge tone="ember">{formatDateTime(item.startDate)}</Badge>
+                      ) : null}
+                      {item.endDate ? (
                         <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
                       ) : null}
+                      {done ? (
+                        <Badge tone={item.resultsReleased ? 'lagoon' : 'ember'}>
+                          {item.resultsReleased ? 'Completed' : 'Awaiting release'}
+                        </Badge>
+                      ) : inProgress ? (
+                        <Badge tone="ink">In progress</Badge>
+                      ) : notYetOpen ? (
+                        <Badge tone="ember">Not open yet</Badge>
+                      ) : closed ? (
+                        <Badge tone="ink">Closed</Badge>
+                      ) : null}
                     </div>
+
                     <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
                     {item.subject || item.topic ? (
                       <p className="mt-0.5 text-sm font-medium text-lagoon-700">
@@ -193,121 +262,81 @@ export function SlipTestsPage({
                     {item.description ? (
                       <ExpandableText text={item.description} lines={2} />
                     ) : null}
-                    <p className="mt-3 text-xs text-ink-900/50">
-                      {item.fileName || 'File'}
-                      {item.fileSize ? ` · ${formatBytes(item.fileSize)}` : ''}
+
+                    <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-900/55">
+                      <span>
+                        {item.questionCount} question{item.questionCount === 1 ? '' : 's'}
+                      </span>
+                      <span>·</span>
+                      <span>{formatMarks(item.totalMarks)} marks</span>
+                      <span>·</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {item.durationMinutes} min
+                      </span>
                     </p>
-                    <FileDownloadAction item={item} />
-                  </div>
-                </Card>
-              );
-            }
 
-            return (
-              <Card key={item.id} className="flex h-full flex-col">
-                <div className="mb-2 flex flex-wrap gap-2">
-                  <Badge tone="ember">{item.chapter}</Badge>
-                  <Badge tone="lagoon">Online</Badge>
-                  {classBadge ? <Badge tone="ink">{classBadge}</Badge> : null}
-                  {item.startDate ? (
-                    <Badge tone="ember">{formatDateTime(item.startDate)}</Badge>
-                  ) : null}
-                  {item.endDate ? (
-                    <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
-                  ) : null}
-                  {done ? (
-                    <Badge tone={item.resultsReleased ? 'lagoon' : 'ember'}>
-                      {item.resultsReleased ? 'Completed' : 'Awaiting release'}
-                    </Badge>
-                  ) : inProgress ? (
-                    <Badge tone="ink">In progress</Badge>
-                  ) : notYetOpen ? (
-                    <Badge tone="ember">Not open yet</Badge>
-                  ) : closed ? (
-                    <Badge tone="ink">Closed</Badge>
-                  ) : null}
-                </div>
+                    {done && item.resultsReleased ? (
+                      <p className="mt-3 flex items-baseline gap-2">
+                        <span
+                          className={`font-display text-2xl font-extrabold ${scoreTone(item.percentage)}`}
+                        >
+                          {formatMarks(item.scoredMarks)}
+                        </span>
+                        <span className="text-sm text-ink-900/45">
+                          / {formatMarks(item.totalMarks)} · {Math.round(item.percentage)}%
+                        </span>
+                      </p>
+                    ) : null}
 
-                <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
-                {item.subject || item.topic ? (
-                  <p className="mt-0.5 text-sm font-medium text-lagoon-700">
-                    {[item.subject, item.topic].filter(Boolean).join(' · ')}
-                  </p>
-                ) : null}
-                {item.description ? (
-                  <ExpandableText text={item.description} lines={2} />
-                ) : null}
+                    {done && !item.resultsReleased ? (
+                      <p className="mt-3 text-sm text-ink-900/55">
+                        Submitted. Scores will show here after results are released.
+                      </p>
+                    ) : null}
 
-                <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-900/55">
-                  <span>
-                    {item.questionCount} question{item.questionCount === 1 ? '' : 's'}
-                  </span>
-                  <span>·</span>
-                  <span>{formatMarks(item.totalMarks)} marks</span>
-                  <span>·</span>
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    {item.durationMinutes} min
-                  </span>
-                </p>
+                    {notYetOpen ? (
+                      <p className="mt-3 text-sm text-ink-900/55">
+                        Opens on {formatDateTime(item.startDate)}.
+                      </p>
+                    ) : null}
 
-                {done && item.resultsReleased ? (
-                  <p className="mt-3 flex items-baseline gap-2">
-                    <span className={`font-display text-2xl font-extrabold ${scoreTone(item.percentage)}`}>
-                      {formatMarks(item.scoredMarks)}
-                    </span>
-                    <span className="text-sm text-ink-900/45">
-                      / {formatMarks(item.totalMarks)} · {Math.round(item.percentage)}%
-                    </span>
-                  </p>
-                ) : null}
+                    {closed ? (
+                      <p className="mt-3 text-sm text-ink-900/55">
+                        This slip test closed on {formatDateTime(item.endDate)}.
+                      </p>
+                    ) : null}
 
-                {done && !item.resultsReleased ? (
-                  <p className="mt-3 text-sm text-ink-900/55">
-                    Submitted. Scores will show here after results are released.
-                  </p>
-                ) : null}
-
-                {notYetOpen ? (
-                  <p className="mt-3 text-sm text-ink-900/55">
-                    Opens on {formatDateTime(item.startDate)}.
-                  </p>
-                ) : null}
-
-                {closed ? (
-                  <p className="mt-3 text-sm text-ink-900/55">
-                    This slip test closed on {formatDateTime(item.endDate)}.
-                  </p>
-                ) : null}
-
-                <div className="mt-auto pt-4">
-                  {done ? (
-                    <Link to={`${basePath}/${item.id}/result`}>
-                      <Button variant="secondary" size="sm">
-                        <CheckCircle2 className="h-4 w-4" />
-                        {item.resultsReleased ? 'View result' : 'Submission status'}
-                      </Button>
-                    </Link>
-                  ) : notYetOpen ? (
-                    <Button size="sm" disabled>
-                      Not open yet
-                    </Button>
-                  ) : closed ? (
-                    <Button size="sm" disabled>
-                      Closed
-                    </Button>
-                  ) : (
-                    <Link to={`${basePath}/${item.id}/attempt`}>
-                      <Button size="sm">
-                        {inProgress ? 'Resume' : 'Start'}
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              </Card>
-            );
-          })}
+                    <div className="mt-auto pt-4">
+                      {done ? (
+                        <Link to={`${basePath}/${item.id}/result`}>
+                          <Button variant="secondary" size="sm">
+                            <CheckCircle2 className="h-4 w-4" />
+                            {item.resultsReleased ? 'View result' : 'Submission status'}
+                          </Button>
+                        </Link>
+                      ) : notYetOpen ? (
+                        <Button size="sm" disabled>
+                          Not open yet
+                        </Button>
+                      ) : closed ? (
+                        <Button size="sm" disabled>
+                          Closed
+                        </Button>
+                      ) : (
+                        <Link to={`${basePath}/${item.id}/attempt`}>
+                          <Button size="sm">
+                            {inProgress ? 'Resume' : 'Start'}
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </PageShell>

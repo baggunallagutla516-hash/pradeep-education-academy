@@ -25,9 +25,13 @@ export const educatorApi = {
   resetPassword(payload) {
     return api.post('/educator/reset-password', payload);
   },
+  onlineClasses() {
+    return api.get('/educator/online-classes');
+  },
   worksheets(params) {
     return api.get('/educator/worksheets', { params });
   },
+
   worksheet(id) {
     return api.get(`/educator/worksheets/${id}`);
   },

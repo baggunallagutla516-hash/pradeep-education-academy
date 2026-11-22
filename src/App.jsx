@@ -93,6 +93,7 @@ import { QuizResultPage } from './pages/QuizResultPage';
 import { SlipTestsPage } from './pages/SlipTestsPage';
 import { SlipTestAttemptPage } from './pages/SlipTestAttemptPage';
 import { SlipTestResultPage } from './pages/SlipTestResultPage';
+import { OnlineClassesPage } from './pages/OnlineClassesPage';
 import { ParentLoginPage } from './pages/parent/ParentLoginPage';
 import { ParentRegisterPage } from './pages/parent/ParentRegisterPage';
 import { ParentDashboardPage } from './pages/parent/ParentDashboardPage';
@@ -122,6 +123,9 @@ import { EducatorSlipTestResultPage } from './pages/educator/EducatorSlipTestRes
 import { ParentQuizzesPage } from './pages/parent/ParentQuizzesPage';
 import { ParentQuizAttemptPage } from './pages/parent/ParentQuizAttemptPage';
 import { ParentQuizResultPage } from './pages/parent/ParentQuizResultPage';
+import { ParentOnlineClassesPage } from './pages/parent/ParentOnlineClassesPage';
+import { EducatorOnlineClassesPage } from './pages/educator/EducatorOnlineClassesPage';
+import { AdminOnlineClassesPage } from './pages/admin/AdminOnlineClassesPage';
 
 export default function App() {
   return (
@@ -296,6 +300,7 @@ export default function App() {
                         dataKey="worksheet"
                         eyebrow="Worksheet"
                         fallbackTitle="Worksheet"
+                        contentType="worksheet"
                       />
                     }
                   />
@@ -308,6 +313,7 @@ export default function App() {
                         dataKey="unitTest"
                         eyebrow="Exam"
                         fallbackTitle="Exam"
+                        contentType="unit-test"
                       />
                     }
                   />
@@ -320,6 +326,7 @@ export default function App() {
                         dataKey="cet"
                         eyebrow="C.E.T."
                         fallbackTitle="C.E.T."
+                        contentType="cet"
                       />
                     }
                   />
@@ -334,6 +341,7 @@ export default function App() {
                   <Route path="quizzes/:id/attempt" element={<QuizAttemptPage />} />
                   <Route path="quizzes/:id/result" element={<QuizResultPage />} />
                   <Route path="slip-tests" element={<SlipTestsPage />} />
+                  <Route path="online-classes" element={<OnlineClassesPage />} />
                   <Route
                     path="slip-tests/:id"
                     element={
@@ -342,6 +350,7 @@ export default function App() {
                         dataKey="slipTest"
                         eyebrow="Slip test"
                         fallbackTitle="Slip test"
+                        contentType="slip-test"
                       />
                     }
                   />
@@ -363,6 +372,7 @@ export default function App() {
                   <Route path="parent/quizzes" element={<ParentQuizzesPage />} />
                   <Route path="parent/quizzes/:id/attempt" element={<ParentQuizAttemptPage />} />
                   <Route path="parent/quizzes/:id/result" element={<ParentQuizResultPage />} />
+                  <Route path="parent/online-classes" element={<ParentOnlineClassesPage />} />
                   <Route path="parent/link" element={<Navigate to="/parent/dashboard" replace />} />
                   <Route path="parent/account" element={<ParentAccountPage />} />
                 </Route>
@@ -403,6 +413,7 @@ export default function App() {
                     path="educator/slip-tests/:id/result"
                     element={<EducatorSlipTestResultPage />}
                   />
+                  <Route path="educator/online-classes" element={<EducatorOnlineClassesPage />} />
                   <Route path="educator/account" element={<EducatorAccountPage />} />
                 </Route>
 
@@ -485,6 +496,7 @@ export default function App() {
                   <Route path="slip-tests/:id/edit" element={<AdminSlipTestFormPage />} />
                   <Route path="slip-tests/:id/results" element={<AdminSlipTestResultsPage />} />
                   <Route path="news" element={<AdminNewsPage />} />
+                  <Route path="online-classes" element={<AdminOnlineClassesPage />} />
                   <Route path="carousel" element={<AdminCarouselPage />} />
                   <Route path="contact-queries" element={<AdminContactQueriesPage />} />
                   <Route path="settings" element={<AdminSettingsPage />} />

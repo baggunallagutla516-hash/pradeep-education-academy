@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Download, ScrollText } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download, ScrollText, IndianRupee } from 'lucide-react';
 import { useStaffContent } from '../../context/StaffContentContext';
 import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
@@ -23,6 +23,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
 import { ShareQuizCodeDialog } from '../../components/quiz/ShareQuizCodeDialog';
+import { AdminPaperPaymentsDialog } from '../../components/papers/AdminPaperPaymentsDialog';
 
 export function AdminCetsPage() {
   const { basePath, api } = useStaffContent();
@@ -33,6 +34,7 @@ export function AdminCetsPage() {
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');
   const [shareItem, setShareItem] = useState(null);
+  const [paymentsItem, setPaymentsItem] = useState(null);
 
   async function load() {
     setStatus('loading');
@@ -133,6 +135,14 @@ export function AdminCetsPage() {
       ) : null}
 
       <ShareQuizCodeDialog quiz={shareItem} noun="C.E.T." onClose={() => setShareItem(null)} />
+      {paymentsItem ? (
+        <AdminPaperPaymentsDialog
+          contentType="cet"
+          contentId={paymentsItem.id}
+          title={paymentsItem.title}
+          onClose={() => setPaymentsItem(null)}
+        />
+      ) : null}
       {status === 'loading' ? <LoadingState label="Loading C.E.T. papers…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
       {status === 'ready' && cets.length === 0 ? (
@@ -223,6 +233,12 @@ export function AdminCetsPage() {
                     <Trash2 className="h-4 w-4" />
                     Delete
                   </Button>
+                  {item.needsPayment ? (
+                    <Button size="sm" variant="secondary" onClick={() => setPaymentsItem(item)}>
+                      <IndianRupee className="h-4 w-4" />
+                      Payments
+                    </Button>
+                  ) : null}
                 </div>
               </div>
             </Card>

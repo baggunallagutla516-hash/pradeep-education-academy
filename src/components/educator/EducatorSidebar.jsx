@@ -11,6 +11,7 @@ import {
   ScrollText,
   Target,
   UserRound,
+  Video,
 } from 'lucide-react';
 import { useEducatorAuth } from '../../context/EducatorAuthContext';
 import { SITE } from '../../constants/site';
@@ -29,6 +30,7 @@ const links = [
   { to: '/educator/assessments', label: 'ASSESSMENTS', icon: ClipboardList },
   { to: '/educator/dpps', label: 'D.P.P.', icon: Target },
   { to: '/educator/quizzes', label: 'QUIZ', icon: HelpCircle },
+  { to: '/educator/online-classes', label: 'ONLINE CLASSES', icon: Video },
   { to: '/educator/slip-tests', label: 'SLIP TESTS', icon: NotebookPen },
   { to: '/educator/account', label: 'MY ACCOUNT', icon: UserRound },
 ];

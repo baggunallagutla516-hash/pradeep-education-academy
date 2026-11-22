@@ -34,6 +34,9 @@ export const parentApi = {
   childResults(studentId) {
     return api.get(`/parent/children/${studentId}/results`);
   },
+  onlineClasses() {
+    return api.get('/parent/online-classes');
+  },
   quizzes: {
     list() {
       return api.get('/parent/quizzes');

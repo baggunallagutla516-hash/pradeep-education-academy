@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { HelpCircle, LayoutDashboard, LogOut, UserRound, Users } from 'lucide-react';
+import { HelpCircle, LayoutDashboard, LogOut, UserRound, Users, Video } from 'lucide-react';
 import { useParentAuth } from '../../context/ParentAuthContext';
 import { SITE } from '../../constants/site';
 import { getErrorMessage } from '../../utils/errors';
@@ -14,6 +14,7 @@ const links = [
   { to: '/parent/dashboard', label: 'DASHBOARD', icon: LayoutDashboard, end: true },
   { to: '/parent/children', label: 'MY CHILDREN', icon: Users },
   { to: '/parent/quizzes', label: 'QUIZ', icon: HelpCircle },
+  { to: '/parent/online-classes', label: 'ONLINE CLASSES', icon: Video },
   { to: '/parent/account', label: 'MY ACCOUNT', icon: UserRound },
 ];
 

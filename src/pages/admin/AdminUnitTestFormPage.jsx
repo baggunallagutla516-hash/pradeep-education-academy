@@ -17,6 +17,7 @@ import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
 import { AccessModeSelect } from '../../components/quiz/AccessModeSelect';
+import { PriceTypeSelect } from '../../components/papers/PriceTypeSelect';
 import { ClassMultiSelect } from '../../components/ui/ClassMultiSelect';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
@@ -30,6 +31,7 @@ const emptyForm = {
   startDate: toDateTimeLocalValue(),
   endDate: toDateTimeLocalValue(undefined, { endOfDay: true }),
   accessMode: 'both',
+  priceType: 'free',
   isPublished: 'true',
 };
 
@@ -76,6 +78,7 @@ export function AdminUnitTestFormPage() {
             startDate: toDateTimeLocalValue(item.startDate),
             endDate: toDateTimeLocalValue(item.endDate),
             accessMode: item.accessMode || 'both',
+            priceType: item.priceType || 'free',
             isPublished: item.isPublished ? 'true' : 'false',
           });
           setCoverPreview(item.coverImageUrl ? mediaUrl(item.coverImageUrl) : '');
@@ -157,6 +160,7 @@ export function AdminUnitTestFormPage() {
     fd.append('startDate', toApiDateTime(form.startDate));
     fd.append('endDate', toApiDateTime(form.endDate));
     fd.append('accessMode', form.accessMode || 'both');
+    fd.append('priceType', form.priceType || 'free');
     fd.append('isPublished', form.isPublished);
     if (coverFile) fd.append('coverImage', coverFile);
     if (removeCover && !coverFile) fd.append('removeCoverImage', 'true');
@@ -273,6 +277,7 @@ export function AdminUnitTestFormPage() {
             />
           </div>
           <AccessModeSelect value={form.accessMode} onChange={updateField} noun="exam" />
+          <PriceTypeSelect value={form.priceType} onChange={updateField} error={fieldErrors.priceType} />
           <Select
             label="Status"
             name="isPublished"

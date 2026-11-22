@@ -18,6 +18,7 @@ import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Select } from '../../components/ui/Select';
 import { AccessModeSelect } from '../../components/quiz/AccessModeSelect';
+import { PriceTypeSelect } from '../../components/papers/PriceTypeSelect';
 import { ClassMultiSelect } from '../../components/ui/ClassMultiSelect';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingState } from '../../components/ui/LoadingState';
@@ -44,6 +45,7 @@ const emptyForm = {
   allowPartialCredit: 'true',
   showAnswersAfterSubmit: 'true',
   accessMode: 'both',
+  priceType: 'free',
   isPublished: 'false',
 };
 
@@ -110,6 +112,7 @@ export function AdminSlipTestFormPage() {
             allowPartialCredit: item.allowPartialCredit ? 'true' : 'false',
             showAnswersAfterSubmit: item.showAnswersAfterSubmit ? 'true' : 'false',
             accessMode: item.accessMode || 'both',
+            priceType: item.priceType || 'free',
             isPublished: item.isPublished ? 'true' : 'false',
           });
           if (contentMode === 'exam') {
@@ -218,6 +221,7 @@ export function AdminSlipTestFormPage() {
         fd.append('startDate', toApiDateTime(form.startDate));
         fd.append('endDate', toApiDateTime(form.endDate));
         fd.append('accessMode', form.accessMode || 'both');
+        fd.append('priceType', form.priceType || 'free');
         fd.append('isPublished', form.isPublished);
         if (coverFile) fd.append('coverImage', coverFile);
         if (resourceFile) fd.append('file', resourceFile);
@@ -435,17 +439,18 @@ export function AdminSlipTestFormPage() {
 
           {isFileMode ? (
             <>
-            <AccessModeSelect value={form.accessMode} onChange={updateField} noun="slip test" />
-            <Select
-              label="Status"
-              name="isPublished"
-              value={form.isPublished}
-              onChange={updateField}
-              hint="Students only see published slip tests"
-            >
-              <option value="true">Published</option>
-              <option value="false">Draft</option>
-            </Select>
+              <AccessModeSelect value={form.accessMode} onChange={updateField} noun="slip test" />
+              <PriceTypeSelect value={form.priceType} onChange={updateField} />
+              <Select
+                label="Status"
+                name="isPublished"
+                value={form.isPublished}
+                onChange={updateField}
+                hint="Students only see published slip tests"
+              >
+                <option value="true">Published</option>
+                <option value="false">Draft</option>
+              </Select>
             </>
           ) : null}
         </Card>

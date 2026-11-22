@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Download, PenLine } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download, PenLine, IndianRupee } from 'lucide-react';
 import { useStaffContent } from '../../context/StaffContentContext';
 import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
@@ -22,6 +22,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { ExpandableText } from '../../components/ui/ExpandableText';
 import { Alert } from '../../components/ui/Alert';
 import { ShareQuizCodeDialog } from '../../components/quiz/ShareQuizCodeDialog';
+import { AdminPaperPaymentsDialog } from '../../components/papers/AdminPaperPaymentsDialog';
 
 export function AdminUnitTestsPage() {
   const { basePath, api } = useStaffContent();
@@ -32,6 +33,7 @@ export function AdminUnitTestsPage() {
   const [actionError, setActionError] = useState('');
   const [busyId, setBusyId] = useState('');
   const [shareItem, setShareItem] = useState(null);
+  const [paymentsItem, setPaymentsItem] = useState(null);
 
   async function load() {
     setStatus('loading');
@@ -137,6 +139,14 @@ export function AdminUnitTestsPage() {
       ) : null}
 
       <ShareQuizCodeDialog quiz={shareItem} noun="exam" onClose={() => setShareItem(null)} />
+      {paymentsItem ? (
+        <AdminPaperPaymentsDialog
+          contentType="unit-test"
+          contentId={paymentsItem.id}
+          title={paymentsItem.title}
+          onClose={() => setPaymentsItem(null)}
+        />
+      ) : null}
       {status === 'loading' ? <LoadingState label="Loading exams…" /> : null}
       {status === 'error' ? <ErrorState description={error} onRetry={load} /> : null}
       {status === 'ready' && unitTests.length === 0 ? (
@@ -178,6 +188,9 @@ export function AdminUnitTestsPage() {
                 <div className="mb-2 flex flex-wrap gap-2">
                   <Badge tone={item.isPublished ? 'lagoon' : 'ink'}>
                     {item.isPublished ? 'Published' : 'Draft'}
+                  </Badge>
+                  <Badge tone={item.needsPayment ? 'ember' : 'lagoon'}>
+                    {item.priceLabel || 'Free of cost'}
                   </Badge>
                   <Badge tone="ink">{classLabel(item)}</Badge>
                   {item.endDate ? (
@@ -226,6 +239,12 @@ export function AdminUnitTestsPage() {
                     <Trash2 className="h-4 w-4" />
                     Delete
                   </Button>
+                  {item.needsPayment ? (
+                    <Button size="sm" variant="secondary" onClick={() => setPaymentsItem(item)}>
+                      <IndianRupee className="h-4 w-4" />
+                      Payments
+                    </Button>
+                  ) : null}
                 </div>
               </div>
             </Card>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Download, FileStack } from 'lucide-react';
+import { FileStack } from 'lucide-react';
 import { educatorApi } from '../../api/educatorApi';
 import { mediaUrl } from '../../utils/media';
 import { getErrorMessage } from '../../utils/errors';
@@ -8,46 +8,13 @@ import { formatBytes } from '../../utils/formatBytes';
 import { formatDateTime } from '../../utils/quizFormat';
 import { PageShell } from '../../components/layout/PageShell';
 import { Card } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Select';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ExpandableText } from '../../components/ui/ExpandableText';
-
-function DownloadAction({ item }) {
-  if (item.isNotYetOpen) {
-    return (
-      <p className="mt-4 text-sm text-ink-900/55">
-        Download opens on {formatDateTime(item.startDate)}.
-      </p>
-    );
-  }
-  if (item.isClosed) {
-    return (
-      <p className="mt-4 text-sm text-ink-900/55">
-        Download closed on {formatDateTime(item.endDate)}.
-      </p>
-    );
-  }
-  if (!item.fileUrl) return null;
-
-  return (
-    <a
-      href={mediaUrl(item.fileUrl)}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="mt-4 inline-flex"
-      download={item.fileName || undefined}
-    >
-      <Button size="sm">
-        <Download className="h-4 w-4" />
-        Download
-      </Button>
-    </a>
-  );
-}
+import { PaperDownloadPanel } from '../../components/papers/PaperDownloadPanel';
 
 export function EducatorWorksheetsPage() {
   const [worksheets, setWorksheets] = useState([]);
@@ -77,12 +44,39 @@ export function EducatorWorksheetsPage() {
     load();
   }, [load]);
 
+  function applyUnlocked(unlocked) {
+    const byId = new Map(
+      (unlocked || [])
+        .filter((row) => row.contentType === 'worksheet')
+        .map((row) => [String(row.contentId), row])
+    );
+    if (!byId.size) {
+      load();
+      return;
+    }
+    setWorksheets((prev) =>
+      prev.map((item) => {
+        const row = byId.get(String(item.id));
+        if (!row) return item;
+        return {
+          ...item,
+          isPurchased: Boolean(row.isPurchased),
+          isPaymentPending: Boolean(row.isPaymentPending || row.paymentStatus === 'pending'),
+          paymentStatus: row.paymentStatus || 'pending',
+          paymentUtr: row.paymentUtr || item.paymentUtr || '',
+          fileUrl: row.fileUrl || '',
+          fileName: row.fileName || item.fileName,
+        };
+      })
+    );
+  }
+
   return (
     <PageShell
       embedded
       eyebrow="Resources"
       title="Worksheets & files"
-      description="Published resources for all classes. Filter by class if you want a shorter list."
+      description="Published resources for all classes. Paid papers unlock after UPI payment."
       actions={
         <div className="w-full min-w-[11rem] sm:w-48">
           <Select
@@ -118,37 +112,50 @@ export function EducatorWorksheetsPage() {
       ) : null}
 
       {status === 'ready' && worksheets.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {worksheets.map((item) => (
-            <Card key={item.id} className="overflow-hidden p-0">
-              <div className="relative aspect-[16/10] bg-ink-900/5">
-                <img
-                  src={mediaUrl(item.coverImageUrl)}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute left-3 top-3">
-                  <Badge>{classLabel(item)}</Badge>
+        <div className="pb-24">
+          <PaperDownloadPanel
+            items={worksheets}
+            contentType="worksheet"
+            onItemsUpdated={applyUnlocked}
+            renderCard={({ item, priceBadge, selection, action }) => (
+              <Card key={item.id} className="overflow-hidden p-0">
+                <div className="relative aspect-[16/10] bg-ink-900/5">
+                  {item.coverImageUrl ? (
+                    <img
+                      src={mediaUrl(item.coverImageUrl)}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-lagoon-100 text-lagoon-700">
+                      <FileStack className="h-10 w-10" aria-hidden />
+                    </div>
+                  )}
+                  <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+                    {priceBadge}
+                    <Badge>{classLabel(item)}</Badge>
+                    {item.isNotYetOpen ? <Badge tone="ember">Not open yet</Badge> : null}
+                    {item.isClosed ? <Badge tone="ink">Closed</Badge> : null}
+                  </div>
                 </div>
-              </div>
-              <div className="p-4">
-                <div className="mb-2 flex flex-wrap gap-2">
-                  {item.isNotYetOpen ? <Badge tone="ember">Not open yet</Badge> : null}
-                  {item.isClosed ? <Badge tone="ink">Closed</Badge> : null}
+                <div className="p-4">
+                  <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
+                  {item.description ? <ExpandableText text={item.description} /> : null}
+                  <p className="mt-3 text-xs text-ink-900/50">
+                    {item.fileName || 'File'}
+                    {item.fileSize ? ` · ${formatBytes(item.fileSize)}` : ''}
+                  </p>
                   {item.endDate && !item.isClosed && !item.isNotYetOpen ? (
-                    <Badge tone="ink">Ends {formatDateTime(item.endDate)}</Badge>
+                    <p className="mt-1 text-xs text-ink-900/45">
+                      Ends {formatDateTime(item.endDate)}
+                    </p>
                   ) : null}
+                  {selection}
+                  {action}
                 </div>
-                <h3 className="font-display text-lg font-bold text-ink-900">{item.title}</h3>
-                {item.description ? <ExpandableText text={item.description} /> : null}
-                <p className="mt-3 text-xs text-ink-900/50">
-                  {item.fileName || 'File'}
-                  {item.fileSize ? ` · ${formatBytes(item.fileSize)}` : ''}
-                </p>
-                <DownloadAction item={item} />
-              </div>
-            </Card>
-          ))}
+              </Card>
+            )}
+          />
         </div>
       ) : null}
     </PageShell>
