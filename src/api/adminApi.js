@@ -372,6 +372,9 @@ export const adminApi = {
   enableContentPayment(contentType, contentId, payload) {
     return api.post(`/admin/payments/${contentType}/${contentId}/enable`, payload);
   },
+  lockContentPayment(contentType, contentId, payload) {
+    return api.post(`/admin/payments/${contentType}/${contentId}/lock`, payload);
+  },
   uploadLogo(formData) {
     return api.post('/admin/settings/logo', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },

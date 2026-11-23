@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, IndianRupee, X } from 'lucide-react';
+import { CheckCircle2, Lock, X } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { getErrorMessage } from '../../utils/errors';
 import { formatRupees } from '../../utils/paperPricing';
@@ -12,7 +12,7 @@ import { LoadingState } from '../ui/LoadingState';
 function statusBadge(status) {
   if (status === 'confirmed') return <Badge tone="lagoon">Paid / unlocked</Badge>;
   if (status === 'pending') return <Badge tone="ember">UTR submitted</Badge>;
-  if (status === 'rejected') return <Badge tone="ink">Rejected</Badge>;
+  if (status === 'rejected') return <Badge tone="ink">Locked</Badge>;
   return <Badge tone="ink">Not paid</Badge>;
 }
 
@@ -56,6 +56,23 @@ export function AdminPaperPaymentsDialog({ contentType, contentId, title, onClos
       await load();
     } catch (err) {
       setError(getErrorMessage(err, 'Could not enable payment.'));
+    } finally {
+      setBusyKey('');
+    }
+  }
+
+  async function lockEntry(entry) {
+    const key = `${entry.buyerType}:${entry.buyerId}`;
+    setBusyKey(key);
+    setError('');
+    try {
+      await adminApi.lockContentPayment(contentType, contentId, {
+        buyerType: entry.buyerType,
+        buyerId: entry.buyerId,
+      });
+      await load();
+    } catch (err) {
+      setError(getErrorMessage(err, 'Could not lock payment.'));
     } finally {
       setBusyKey('');
     }
@@ -120,7 +137,7 @@ export function AdminPaperPaymentsDialog({ contentType, contentId, title, onClos
             <ul className="divide-y divide-ink-900/8">
               {entries.map((entry) => {
                 const key = `${entry.buyerType}:${entry.buyerId}`;
-                const canEnable = entry.status !== 'confirmed';
+                const isUnlocked = entry.status === 'confirmed';
                 return (
                   <li key={key} className="flex flex-wrap items-center justify-between gap-3 py-3">
                     <div className="min-w-0">
@@ -150,7 +167,18 @@ export function AdminPaperPaymentsDialog({ contentType, contentId, title, onClos
                         <p className="mt-0.5 text-xs text-ink-900/45">{formatRupees(entry.amount)}</p>
                       ) : null}
                     </div>
-                    {canEnable ? (
+                    {isUnlocked ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        loading={busyKey === key}
+                        onClick={() => lockEntry(entry)}
+                      >
+                        <Lock className="h-4 w-4" />
+                        Lock
+                      </Button>
+                    ) : (
                       <Button
                         type="button"
                         size="sm"
@@ -160,11 +188,6 @@ export function AdminPaperPaymentsDialog({ contentType, contentId, title, onClos
                         <CheckCircle2 className="h-4 w-4" />
                         Enable payment
                       </Button>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-sm font-semibold text-lagoon-700">
-                        <IndianRupee className="h-4 w-4" />
-                        Unlocked
-                      </span>
                     )}
                   </li>
                 );

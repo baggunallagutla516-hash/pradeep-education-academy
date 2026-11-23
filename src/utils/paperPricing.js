@@ -5,25 +5,23 @@ export const PAPER_PRICE_OPTIONS = [
     label: 'Free of cost',
     caption: 'Free of cost',
   },
-  {
-    value: '30',
-    amount: 30,
-    label: 'Rs. 30/-',
-    caption: 'Question paper',
-  },
-  {
-    value: '25',
-    amount: 25,
-    label: 'Rs. 25/-',
-    caption: 'Marking scheme',
-  },
-  {
-    value: '20',
-    amount: 20,
-    label: 'Rs. 20/-',
-    caption: 'Blue Print',
-  },
 ];
+
+/** Convert stored priceType ("free" | "30" | "150") to a number for inputs. */
+export function priceTypeToAmount(priceType) {
+  if (priceType === undefined || priceType === null || priceType === '' || priceType === 'free') {
+    return 0;
+  }
+  const n = Number(priceType);
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
+}
+
+/** Convert a manual amount to API priceType. */
+export function amountToPriceType(amount) {
+  const n = Number(amount);
+  if (!Number.isFinite(n) || n <= 0) return 'free';
+  return String(Math.round(n));
+}
 
 export function formatRupees(amount) {
   const n = Number(amount) || 0;
